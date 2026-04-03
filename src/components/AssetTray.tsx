@@ -24,7 +24,7 @@ export default function AssetTray() {
   const visibleAssets = useMemo(() => {
     let filtered = [...assets];
     if (filterRating > 0) {
-      filtered = filtered.filter(a => (a.rating || 0) >= filterRating);
+      filtered = filtered.filter(a => (a.rating || 0) === filterRating);
     }
     
     if (sortMode === 'rating') {
@@ -161,18 +161,13 @@ export default function AssetTray() {
                 <span 
                   key={star}
                   onClick={() => setFilterRating(filterRating === star ? 0 : star)}
-                  className={`cursor-pointer ${star <= filterRating ? 'text-white' : 'text-orange-900'} hover:text-orange-200 transition-colors drop-shadow-sm`}
-                  title={`Filter ${star} stars or higher (Click to toggle)`}
+                  className={`cursor-pointer ${star === filterRating ? 'text-white' : 'text-orange-900'} hover:text-orange-200 transition-colors drop-shadow-sm`}
+                  title={`Filter exactly ${star} stars (Click to toggle)`}
                 >
                   ★
                 </span>
               ))}
             </div>
-            {filterRating > 0 && (
-              <span className="text-orange-200 text-xs font-bold tracking-widest ml-2 drop-shadow-sm">
-                +PLUS
-              </span>
-            )}
           </div>
           <span className="text-sm font-medium text-neutral-400 dark:text-neutral-500 ml-4 hidden md:inline">
             Showing {visibleAssets.length} of {assets.length} images
