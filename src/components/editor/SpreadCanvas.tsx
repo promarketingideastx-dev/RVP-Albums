@@ -183,13 +183,43 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
   };
 
   return (
-    <Stage
-      width={stageWidth}
-      height={stageHeight}
-      onMouseDown={checkDeselect}
-      onTouchStart={checkDeselect}
-      style={{ boxShadow: '0px 10px 30px rgba(0,0,0,0.1)' }}
+    <div 
+      className="flex-1 w-full h-full"
+      onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }}
+      onDrop={(e) => {
+        e.preventDefault();
+        try {
+          const payload = JSON.parse(e.dataTransfer.getData('application/json'));
+          if (payload && payload.type === 'image') {
+            // For stability, offset by default.
+            
+            useEditorStore.getState().addElement(activeSpreadId, {
+              id: `el_${Date.now()}`,
+              type: 'image',
+              previewUrl: payload.previewUrl,
+              originalUrl: payload.originalUrl,
+              previewBlobId: payload.previewBlobId,
+              originalBlobId: payload.originalBlobId,
+              x_mm: 20, // default injection x
+              y_mm: 20, // default injection y
+              w_mm: 80,
+              h_mm: 80,
+              rotation_deg: 0,
+              zIndex: 0
+            });
+          }
+        } catch {
+          // Ignore invalid drags
+        }
+      }}
     >
+      <Stage
+        width={stageWidth}
+        height={stageHeight}
+        onMouseDown={checkDeselect}
+        onTouchStart={checkDeselect}
+        style={{ boxShadow: '0px 10px 30px rgba(0,0,0,0.1)' }}
+      >
       <Layer scaleX={scale} scaleY={scale}>
         {/* Background Paper */}
         <Rect
@@ -248,7 +278,8 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
            dash={[4 / scale, 4 / scale]}
            listening={false}
         />
-      </Layer>
-    </Stage>
+        </Layer>
+      </Stage>
+    </div>
   );
 }

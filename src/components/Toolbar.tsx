@@ -20,6 +20,7 @@ export default function Toolbar() {
   const bringForward = useEditorStore((state) => state.bringForward);
   const sendBackward = useEditorStore((state) => state.sendBackward);
   const project = useEditorStore((state) => state.project);
+  const unloadProject = useEditorStore((state) => state.unloadProject);
   
   const [isExporting, setIsExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -221,7 +222,18 @@ export default function Toolbar() {
       )}
 
       <header className="h-14 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 px-4 flex items-center justify-between relative z-40">
-        <div className="font-bold text-lg">{t('title')}</div>
+        <div className="flex items-center gap-3">
+          <button 
+             onClick={unloadProject}
+             className="w-8 h-8 flex items-center justify-center bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 rounded-full transition"
+             title="Back to Projects"
+          >
+             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+             </svg>
+          </button>
+          <div className="font-bold text-lg hidden sm:block">{t('title')}</div>
+        </div>
         
         <div className="flex items-center gap-2">
           {selectedElementId && activeSpreadId && (

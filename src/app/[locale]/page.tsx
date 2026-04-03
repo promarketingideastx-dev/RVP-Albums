@@ -8,6 +8,7 @@ import Sidebar from '@/components/Sidebar';
 import Toolbar from '@/components/Toolbar';
 import Inspector from '@/components/Inspector';
 import EditorWorkspace from '@/components/editor/EditorWorkspace';
+import AssetTray from '@/components/AssetTray';
 import ProjectPicker from '@/components/project/ProjectPicker';
 import SetupModal from '@/components/project/SetupModal';
 import { saveProjectToDB, loadProjectFromDB, listProjectsFromDB } from '@/utils/persistence';
@@ -150,6 +151,13 @@ export default function AppPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeSpreadId, selectedElementId, removeElement]);
 
+  // WATCH FOR PROJECT UNLOAD
+  useEffect(() => {
+    if (viewMode === 'editor' && !project) {
+      setViewMode('picker');
+    }
+  }, [project, viewMode]);
+
   useEffect(() => {
     if (!mounted || viewMode !== 'editor' || !project) return;
     setSaveStatus(t('saving'));
@@ -182,12 +190,14 @@ export default function AppPage() {
       <div className="flex-1 flex overflow-hidden">
         <Sidebar />
         <main className="flex-1 relative flex flex-col h-full w-full">
-          {/* Editor Workspace dynamically calculates zoom and stages SpreadCanvas */}
-          <EditorWorkspace />
+          <div className="flex-1 relative overflow-hidden">
+            <EditorWorkspace />
+          </div>
+          <AssetTray />
           
           {/* MOCK SAVING INDICATOR UI */}
           {saveStatus && (
-            <div className="absolute bottom-4 right-4 bg-black text-white text-xs px-3 py-1 rounded shadow-lg opacity-50">
+            <div className="absolute top-4 right-4 bg-black text-white text-xs px-3 py-1 rounded shadow-lg opacity-50 z-50">
               {saveStatus}
             </div>
           )}

@@ -30,6 +30,15 @@ export interface Size {
   h_mm: number;
 }
 
+export interface ProjectAsset {
+  id: string;
+  name: string;
+  previewUrl?: string;
+  originalUrl?: string;
+  previewBlobId?: string;
+  originalBlobId?: string;
+}
+
 export interface EditorProject {
   id: string;
   title: string;
@@ -44,4 +53,5 @@ export interface EditorProject {
   bleed_mm: number;
   safe_zone_mm: number;
   spreads: Spread[];
+  assets?: ProjectAsset[];
 }

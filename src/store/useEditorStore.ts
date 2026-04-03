@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { EditorProject, EditorElement } from '@/types/editor';
+import { EditorProject, EditorElement, ProjectAsset } from '@/types/editor';
 
 interface EditorState {
   project: EditorProject | null;
@@ -14,6 +14,9 @@ interface EditorState {
   updateElement: (spreadId: string, elementId: string, changes: Partial<EditorElement>) => void;
   addElement: (spreadId: string, element: EditorElement) => void;
   removeElement: (spreadId: string, elementId: string) => void;
+
+  addAsset: (asset: ProjectAsset) => void;
+  removeAsset: (assetId: string) => void;
 
   bringForward: (spreadId: string, elementId: string) => void;
   sendBackward: (spreadId: string, elementId: string) => void;
@@ -87,6 +90,31 @@ export const useEditorStore = create<EditorState>((set) => ({
     // Reset selection if deleting the selected item
     const newSelectedId = state.selectedElementId === elementId ? null : state.selectedElementId;
     return { project: { ...state.project, spreads: newSpreads }, selectedElementId: newSelectedId };
+  }),
+
+  addAsset: (asset) => set((state) => {
+    if (!state.project) return state;
+    const assets = state.project.assets || [];
+    return { project: { ...state.project, assets: [...assets, asset] } };
+  }),
+
+  removeAsset: (assetId) => set((state) => {
+    if (!state.project) return state;
+    const assets = state.project.assets || [];
+    const asset = assets.find(a => a.id === assetId);
+    
+    // Garbage collection
+    if (asset?.previewUrl && asset.previewUrl.startsWith('blob:')) URL.revokeObjectURL(asset.previewUrl);
+    if (asset?.originalUrl && asset.originalUrl.startsWith('blob:')) URL.revokeObjectURL(asset.originalUrl);
+    
+    if (asset?.previewBlobId) {
+      import('idb-keyval').then(({ del }) => del(asset.previewBlobId as string)).catch(console.error);
+    }
+    if (asset?.originalBlobId) {
+      import('idb-keyval').then(({ del }) => del(asset.originalBlobId as string)).catch(console.error);
+    }
+
+    return { project: { ...state.project, assets: assets.filter(a => a.id !== assetId) } };
   }),
 
   bringForward: (spreadId, elementId) => set((state) => {

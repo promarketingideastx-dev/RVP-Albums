@@ -89,5 +89,20 @@ export async function loadProjectFromDB(id: string): Promise<EditorProject | nul
     return { ...spread, elements: hydratedElements };
   }));
 
-  return { ...project, spreads: hydratedSpreads };
+  // Map Asset Tray Blobs
+  const rawAssets = project.assets || [];
+  const hydratedAssets = await Promise.all(rawAssets.map(async (asset) => {
+      const newAsset = { ...asset };
+      if (asset.previewBlobId) {
+          const previewBlob = await idbGet<Blob>(asset.previewBlobId);
+          if (previewBlob) newAsset.previewUrl = URL.createObjectURL(previewBlob);
+      }
+      if (asset.originalBlobId) {
+          const originalBlob = await idbGet<Blob>(asset.originalBlobId);
+          if (originalBlob) newAsset.originalUrl = URL.createObjectURL(originalBlob);
+      }
+      return newAsset;
+  }));
+
+  return { ...project, spreads: hydratedSpreads, assets: hydratedAssets };
 }
