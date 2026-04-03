@@ -103,14 +103,16 @@ export default function AppPage() {
   };
 
   // CREATE PROJECT HANDLER
-  const handleCreateProject = async (name: string, type: string, labPresetId: string) => {
+  const handleCreateProject = async (name: string, bookLine: string, labPresetId: string, sizeStr?: string) => {
     // Dynamic Geometry Extraction parsing the selected size string. e.g "Flushmount 10x10" or "Custom 12x12in"
     let w_mm = 508;
     let h_mm = 254;
 
+    const sourceSize = sizeStr || bookLine; // fallback gracefully if 4th arg is missing
+
     try {
-      if (type.startsWith('Custom ')) {
-        const parts = type.replace('Custom ', '').replace('in', '').split('x');
+      if (sourceSize.startsWith('Custom ')) {
+        const parts = sourceSize.replace('Custom ', '').replace('in', '').split('x');
         if (parts.length === 2) {
           const wInches = parseFloat(parts[0]);
           const hInches = parseFloat(parts[1]);
@@ -118,9 +120,9 @@ export default function AppPage() {
           w_mm = Math.round((wInches * 2) * 25.4);
           h_mm = Math.round(hInches * 25.4);
         }
-      } else if (type.includes('x')) {
+      } else if (sourceSize.includes('x')) {
         // Handlers for "Flushmount 10x10", "Flushmount 5x5", "Flushmount 20x8", etc.
-        const match = type.match(/(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)/);
+        const match = sourceSize.match(/(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)/);
         if (match) {
           const wInches = parseFloat(match[1]);
           const hInches = parseFloat(match[2]);
@@ -136,7 +138,7 @@ export default function AppPage() {
     const newProject: EditorProject = {
       id: newId,
       title: name,
-      type: type,
+      type: bookLine,
       labPresetId: labPresetId,
       labPresetName: labPresetId === 'pic-pro-lab' ? 'Pic Pro Lab' : 'Custom Lab',
       storageMode: 'local',
