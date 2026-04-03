@@ -91,29 +91,14 @@ export default function AssetTray() {
     <div className="h-64 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 flex flex-col shrink-0">
       
       {/* Top Toolbar */}
-      <div className="h-16 bg-white dark:bg-neutral-950 flex items-center px-4 justify-between border-b border-neutral-200 dark:border-neutral-800 py-2">
+      <div className="h-14 bg-white dark:bg-neutral-950 flex items-center px-4 justify-between border-b border-neutral-200 dark:border-neutral-800 py-2">
         <div className="flex items-center gap-4">
-          <button className="px-6 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-full text-sm font-medium tracking-wide flex items-center gap-2 transition-colors">
-            <span>&lt;</span> SORT
-          </button>
-          <button className="px-6 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-full text-sm font-medium tracking-wide flex items-center gap-2 transition-colors">
-            <span>&lt;</span> FILTER
-          </button>
-          <span className="text-sm font-medium text-neutral-400 dark:text-neutral-500 ml-4">
-            Showing {assets.length} of {assets.length} images
+          <span className="text-sm font-medium text-neutral-400 dark:text-neutral-500">
+            Showing {assets.length} image{assets.length !== 1 ? 's' : ''}
           </span>
         </div>
 
         <div className="flex items-center gap-3">
-          <button className="px-4 py-1.5 text-blue-500 border border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full text-xs font-semibold tracking-wide transition-colors">
-            DESIGN FOR ME
-          </button>
-          <button className="px-4 py-1.5 text-blue-500 border border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full text-xs font-semibold tracking-wide transition-colors">
-            DESIGN WIZARD
-          </button>
-          <button className="px-4 py-1.5 bg-neutral-800 text-white hover:bg-neutral-700 rounded-full text-xs font-semibold tracking-wide transition-colors">
-            CLEAR
-          </button>
           <button
             onClick={() => fileInputRef.current?.click()}
             className="px-6 py-1.5 bg-neutral-800 text-white hover:bg-neutral-700 rounded-full text-xs font-semibold tracking-wide transition-colors flex items-center gap-2"
@@ -170,20 +155,6 @@ export default function AssetTray() {
                   alt={asset.name}
                   className="w-full h-full object-cover pointer-events-none"
                 />
-              </div>
-              
-              {/* Placholder Metadata Strip */}
-              <div className="h-8 bg-white dark:bg-neutral-800 flex items-center justify-between px-2 shrink-0 border-t border-neutral-100 dark:border-neutral-700">
-                 <div className="flex gap-1 text-neutral-300 dark:text-neutral-600 text-xs tracking-tighter">
-                   <span className="hover:text-orange-400 cursor-pointer">★</span>
-                   <span className="hover:text-orange-400 cursor-pointer">★</span>
-                   <span className="hover:text-orange-400 cursor-pointer">★</span>
-                   <span className="hover:text-orange-400 cursor-pointer">★</span>
-                   <span className="hover:text-orange-400 cursor-pointer">★</span>
-                 </div>
-                 <div className="text-orange-500 hover:text-red-500 cursor-pointer text-sm">
-                   ♡
-                 </div>
               </div>
             </div>
           );

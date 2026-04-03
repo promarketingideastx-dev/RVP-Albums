@@ -7,6 +7,8 @@ import { usePathname } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import { exportSpreadToJPG } from '@/utils/exportEngine';
 import { exportProjectToFile } from '@/utils/exportImport';
+import { saveProjectToDB } from '@/utils/persistence';
+import { v4 as uuidv4 } from 'uuid';
 
 type ExportIntent = 'web' | 'print' | 'proof';
 type ExportQuality = 'web' | 'high' | 'print';
@@ -124,6 +126,36 @@ export default function Toolbar() {
     return `${safeProjectName}-spread-${paddedIndex}.jpg`; 
   };
 
+  const handleRename = async () => {
+    if (!project) return;
+    const newName = window.prompt("Enter new project name:", project.title);
+    if (newName && newName.trim() !== '') {
+       // Deep copy needed to ensure state isn't mutated directly
+       const updatedProject = { ...project, title: newName.trim(), updatedAt: new Date().toISOString() };
+       useEditorStore.setState({ project: updatedProject });
+       await saveProjectToDB(updatedProject);
+    }
+  };
+
+  const handleDuplicate = async () => {
+    if (!project) return;
+    try {
+      setIsExporting(true); // Spin loader during heavy IDB cloning
+      const clonedProject = JSON.parse(JSON.stringify(project));
+      clonedProject.id = uuidv4();
+      clonedProject.title = `${project.title} (Copy)`;
+      clonedProject.updatedAt = new Date().toISOString();
+      await saveProjectToDB(clonedProject);
+      alert('Project Duplicated successfully! Return to Projects menu to open it.');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to duplicate project.');
+    } finally {
+      setIsExporting(false);
+      setIsMenuOpen(false);
+    }
+  };
+
   return (
     <>
       {/* GLOBAL EXPORT OVERLAY */}
@@ -233,7 +265,13 @@ export default function Toolbar() {
                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
              </svg>
           </button>
-          <div className="font-bold text-lg hidden sm:block">{t('title')}</div>
+          <div 
+              onClick={handleRename}
+              className="font-bold text-lg hidden sm:block cursor-text hover:text-blue-500 transition-colors px-2 py-1 rounded"
+              title="Click to Rename Project"
+           >
+              {project?.title || t('title')}
+           </div>
         </div>
         
         <div className="flex items-center gap-2">
@@ -281,11 +319,20 @@ export default function Toolbar() {
                    {t('export_dropdown_proof')}
                  </button>
                  <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1"></div>
+                 
+                 <div className="px-3 pt-2 pb-1 text-xs font-semibold text-neutral-400 uppercase tracking-wider">Project Actions</div>
+                 
                  <button 
                    onClick={() => { if (project) exportProjectToFile(project); setIsMenuOpen(false); }} 
                    className="w-full text-left px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition font-medium"
                  >
                    Export Session (.rvp)
+                 </button>
+                 <button 
+                   onClick={handleDuplicate} 
+                   className="w-full text-left px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition rounded-b-md"
+                 >
+                   Duplicate Project
                  </button>
               </div>
             )}

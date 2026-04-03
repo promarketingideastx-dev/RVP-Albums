@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect } from 'react';
-import { Stage, Layer, Rect, Ellipse, Transformer, Image as KonvaImage } from 'react-konva';
+import { Stage, Layer, Rect, Ellipse, Transformer, Image as KonvaImage, Text } from 'react-konva';
 import { useEditorStore } from '@/store/useEditorStore';
 import { EditorElement } from '@/types/editor';
 import useImage from 'use-image';
@@ -256,6 +256,22 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
             />
           );
         })}
+
+        {/* Empty State Indicator */}
+        {elements.length === 0 && (
+           <Text
+             text="Drag images here to begin designing"
+             x={project.size.w_mm / 2}
+             y={project.size.h_mm / 2}
+             fontSize={12}
+             fill="#aaaaaa"
+             align="center"
+             verticalAlign="middle"
+             listening={false}
+             offsetX={80}
+             offsetY={6}
+           />
+        )}
 
         {/* Print Guides (Bleed and Safe Zone) - overlay on top, no events */}
         <Rect

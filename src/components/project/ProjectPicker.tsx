@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { listProjectsFromDB, deleteProjectFromDB, ProjectMetadata, saveProjectToDB } from '@/utils/persistence';
+import { listProjectsFromDB, deleteProjectFromDB, ProjectMetadata, saveProjectToDB, loadProjectFromDB } from '@/utils/persistence';
 import { importProjectFromFile } from '@/utils/exportImport';
 import { useRef } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 interface ProjectPickerProps {
   onOpenProject: (id: string) => void;
@@ -58,6 +59,28 @@ export default function ProjectPicker({ onOpenProject, onNewProject }: ProjectPi
     } finally {
       setLoading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDuplicate = async (id: string, title: string) => {
+    try {
+      setLoading(true);
+      const fullProjectToClone = await loadProjectFromDB(id);
+      if (!fullProjectToClone) {
+        alert("Could not load the project to duplicate it.");
+        return;
+      }
+      const clonedProject = JSON.parse(JSON.stringify(fullProjectToClone));
+      clonedProject.id = uuidv4();
+      clonedProject.title = `${title} (Copy)`;
+      clonedProject.updatedAt = new Date().toISOString();
+      await saveProjectToDB(clonedProject);
+      fetchProjects();
+    } catch (e) {
+      console.error(e);
+      alert('Failed to duplicate project.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -135,13 +158,19 @@ export default function ProjectPicker({ onOpenProject, onNewProject }: ProjectPi
               <div className="flex space-x-3 mt-4 pt-4 border-t border-neutral-100 dark:border-neutral-800">
                 <button
                   onClick={() => onOpenProject(p.id)}
-                  className="flex-1 py-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-900 dark:text-white font-medium rounded-lg transition-colors"
+                  className="flex-1 py-1 px-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-900 dark:text-white font-medium rounded-lg transition-colors text-sm"
                 >
                   {t('btn_open')}
                 </button>
                 <button
+                  onClick={() => handleDuplicate(p.id, p.title)}
+                  className="flex-1 py-1 px-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-900 dark:text-white font-medium rounded-lg transition-colors text-sm"
+                >
+                  Duplicate
+                </button>
+                <button
                   onClick={() => handleDelete(p.id)}
-                  className="px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 font-medium rounded-lg transition-colors"
+                  className="px-3 py-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 font-medium rounded-lg transition-colors text-sm"
                 >
                   {t('btn_delete')}
                 </button>

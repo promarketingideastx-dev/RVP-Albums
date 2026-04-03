@@ -10,7 +10,7 @@ const ALBUM_SIZES = [
   "Flushmount 5x5", "Flushmount 5x7", "Flushmount 6x6", "Flushmount 7x5",
   "Flushmount 8x8", "Flushmount 8x10", "Flushmount 9x12", "Flushmount 10x8",
   "Flushmount 10x10", "Flushmount 20x8", "Flushmount 11x14", "Flushmount 12x9",
-  "Flushmount 12x12", "Flushmount 12x16", "Flushmount 14x11", "Flushmount 16x12", "Flushmount 16x20"
+  "Flushmount 12x12", "Flushmount 12x16", "Flushmount 14x11", "Flushmount 16x12", "Flushmount 16x20", "Custom Size"
 ];
 
 export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
@@ -25,6 +25,8 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
   const [bookLine, setBookLine] = useState('type_album');
   const [albumSize, setAlbumSize] = useState('Flushmount 10x10');
   const [searchSize, setSearchSize] = useState('');
+  const [customWidth, setCustomWidth] = useState('');
+  const [customHeight, setCustomHeight] = useState('');
   const [coverType, setCoverType] = useState('none');
 
   const filteredSizes = ALBUM_SIZES.filter(s => s.toLowerCase().includes(searchSize.toLowerCase()));
@@ -37,7 +39,18 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
   };
   
   const handleSubmit = () => {
-    onCreate(name || 'Untitled Album', bookLine, printCompany, albumSize);
+    let finalSize = albumSize;
+    if (albumSize === 'Custom Size') {
+      const w = parseFloat(customWidth);
+      const h = parseFloat(customHeight);
+      if (!w || !h || w <= 0 || h <= 0) {
+        alert('Please enter valid width and height numbers greater than 0.');
+        setStep(3);
+        return;
+      }
+      finalSize = `Custom ${w}x${h}in`;
+    }
+    onCreate(name || 'Untitled Album', bookLine, printCompany, finalSize);
   };
 
   const StepItem = ({ num, label, isActive }: { num: number, label: string, isActive: boolean }) => (
@@ -152,6 +165,24 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
                         {size}
                       </div>
                     ))}
+                    {albumSize === 'Custom Size' && (
+                      <div className="p-4 bg-white dark:bg-neutral-900 mt-2 rounded border border-neutral-300 dark:border-neutral-700">
+                        <div className="text-sm font-medium mb-3">Custom Dimensions (Inches)</div>
+                        <div className="flex items-center gap-3">
+                          <input 
+                            type="number" min="1" step="0.1"
+                            value={customWidth} onChange={e => setCustomWidth(e.target.value)}
+                            placeholder="Width" className="p-2 border rounded w-24 bg-white dark:bg-neutral-800" 
+                          />
+                          <span className="text-neutral-500">×</span>
+                          <input 
+                            type="number" min="1" step="0.1"
+                            value={customHeight} onChange={e => setCustomHeight(e.target.value)}
+                            placeholder="Height" className="p-2 border rounded w-24 bg-white dark:bg-neutral-800" 
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -227,7 +258,7 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
                     </div>
                     <div>
                       <div className="text-xs text-neutral-400 uppercase tracking-widest font-semibold">Size</div>
-                      <div className="font-medium text-lg mt-1">{albumSize}</div>
+                      <div className="font-medium text-lg mt-1">{albumSize === 'Custom Size' ? `${customWidth || '?'}x${customHeight || '?'}in` : albumSize}</div>
                     </div>
                     <div>
                       <div className="text-xs text-neutral-400 uppercase tracking-widest font-semibold">Cover</div>
