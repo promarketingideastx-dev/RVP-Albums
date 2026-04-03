@@ -96,10 +96,39 @@ export default function Toolbar() {
        const paddedIndex = String(spreadIndex + 1).padStart(2, '0');
        const fileName = `${safeProjectName}-spread-${paddedIndex}.jpg`; 
        
-       a.download = fileName;
-       document.body.appendChild(a);
-       a.click();
-       document.body.removeChild(a);
+       // Detect Native OS Dialog Support (File System Access API)
+       if ('showSaveFilePicker' in window) {
+         try {
+           const blob = await (await fetch(dataUrl)).blob();
+           // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           const fileHandle = await (window as any).showSaveFilePicker({
+             suggestedName: fileName,
+             types: [{
+               description: 'JPEG Image',
+               accept: {'image/jpeg': ['.jpg', '.jpeg']},
+             }],
+           });
+           const writable = await fileHandle.createWritable();
+           await writable.write(blob);
+           await writable.close();
+         } catch (err: unknown) {
+           // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           if ((err as any).name === 'AbortError') {
+             // User explicitly cancelled the native dialog. Stop silently.
+             setIsExporting(false);
+             return;
+           }
+           throw err; // Forward actual writing errors to global trap
+         }
+       } else {
+         // Standard Anchor Fallback for Safari/Legacy
+         const a = document.createElement('a');
+         a.href = dataUrl;
+         a.download = fileName;
+         document.body.appendChild(a);
+         a.click();
+         document.body.removeChild(a);
+       }
 
        setExportStatus('success');
        setTimeout(() => setExportStatus('idle'), 2500);
