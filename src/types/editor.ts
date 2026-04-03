@@ -34,7 +34,7 @@ export interface ProjectAsset {
   id: string;
   name: string;
   previewUrl?: string;
-  originalUrl: string;
+  originalUrl?: string;
   previewBlobId?: string;
   originalBlobId?: string;
   rating?: number; // 0-5 stars
