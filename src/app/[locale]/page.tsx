@@ -36,6 +36,18 @@ export default function AppPage() {
     if (!mounted || init) return;
 
     storage.listProjects().then(async (list) => {
+      const lastSessionId = localStorage.getItem('rvp_last_open_project_id');
+      if (lastSessionId) {
+        const recoveringProject = await storage.openProject(lastSessionId);
+        if (recoveringProject) {
+          localStorage.removeItem('rvp_last_open_project_id');
+          loadProject(recoveringProject);
+          setViewMode('editor');
+          setInit(true);
+          return;
+        }
+      }
+
       if (list.length > 0) {
         setViewMode('picker');
       } else {
@@ -62,12 +74,12 @@ export default function AppPage() {
       const projectToLoad = await storage.openProject(id);
       if (projectToLoad) {
         // GUARD: Healing missing attributes
-        projectToLoad.size = projectToLoad.size || { w_mm: 514, h_mm: 260 };
+        projectToLoad.size = projectToLoad.size || { w_mm: 508, h_mm: 254 };
         // Handle explicit legacy JSON mismatch
         if (typeof projectToLoad.size.w_mm === 'undefined') {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const oldSize = projectToLoad.size as any;
-          projectToLoad.size = { w_mm: oldSize.width || 514, h_mm: oldSize.height || 260 };
+          projectToLoad.size = { w_mm: oldSize.width || 508, h_mm: oldSize.height || 254 };
         }
         if (typeof projectToLoad.bleed_mm === 'undefined') projectToLoad.bleed_mm = 3;
         if (typeof projectToLoad.safe_zone_mm === 'undefined') projectToLoad.safe_zone_mm = 5;
@@ -103,7 +115,7 @@ export default function AppPage() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       projectVersion: 1,
-      size: { w_mm: 514, h_mm: 260 }, // Hardcoded for this phase per strictly constrained scope
+      size: { w_mm: 508, h_mm: 254 }, // Hardcoded precisely 20x10 inches to ensure exact center alignment
       bleed_mm: 3,
       safe_zone_mm: 5,
       spreads: [

@@ -144,6 +144,9 @@ export default function Toolbar() {
   };
 
   const swapLocale = () => {
+    if (project?.id) {
+      localStorage.setItem('rvp_last_open_project_id', project.id);
+    }
     const nextLocale = pathname.startsWith('/es') ? '/en' : '/es';
     window.location.href = nextLocale;
   };
