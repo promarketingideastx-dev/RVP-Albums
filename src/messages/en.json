@@ -5,6 +5,7 @@
     "upload_image": "Upload Custom Image",
     "error_type": "Invalid image type (JPEG/PNG/WEBP only)",
     "error_size": "Image is too large (10MB Max)",
+    "error_ingest": "Image ingestion failed",
     "bring_forward": "Bring Forward",
     "send_backward": "Send Backward",
     "theme_light": "Light Mode",

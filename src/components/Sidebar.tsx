@@ -42,7 +42,7 @@ export default function Sidebar() {
       });
     } catch (err) {
       console.error(err);
-      setErrorMsg('Ingestion failed');
+      setErrorMsg(t('error_ingest'));
     }
     e.target.value = '';
   };

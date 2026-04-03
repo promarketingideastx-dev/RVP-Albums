@@ -5,6 +5,7 @@
     "upload_image": "Subir Fotografía",
     "error_type": "Formato inválido (Solo JPEG/PNG/WEBP)",
     "error_size": "Imagen muy pesada (Máximo 10MB)",
+    "error_ingest": "Error al procesar la imagen",
     "bring_forward": "Traer al Frente",
     "send_backward": "Enviar Atrás",
     "theme_light": "Modo Día",
