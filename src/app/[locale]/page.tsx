@@ -73,8 +73,8 @@ export default function AppPage() {
     try {
       const projectToLoad = await storage.openProject(id);
       if (projectToLoad) {
-        // GUARD: Healing missing attributes
-        projectToLoad.size = projectToLoad.size || { w_mm: 508, h_mm: 254 };
+        // GUARD: Healing missing or old legacy 514mm attributes forcefully
+        projectToLoad.size = { w_mm: 508, h_mm: 254 };
         // Handle explicit legacy JSON mismatch
         if (typeof projectToLoad.size.w_mm === 'undefined') {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
