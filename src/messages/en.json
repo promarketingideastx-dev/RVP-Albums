@@ -74,6 +74,12 @@
     "export_modal_preview": "File Name Preview:",
     "export_modal_helper": "Your browser will handle the download location.",
     "export_modal_cancel": "Cancel",
-    "export_modal_confirm": "Export JPG"
+    "export_modal_confirm": "Export JPG",
+    "filter_label": "FILTER:",
+    "sort": "SORT",
+    "sort_stars": "(STARS)",
+    "filter_plus": "+PLUS",
+    "inches": "INCHES",
+    "centimeters": "CM"
   }
 }

@@ -1,10 +1,12 @@
 import React, { useRef, useState, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import { useEditorStore } from '@/store/useEditorStore';
 import { ProjectAsset } from '@/types/editor';
 import { processLocalImage } from '@/utils/imageIngestion';
 import { v4 as uuidv4 } from 'uuid';
 
 export default function AssetTray() {
+  const t = useTranslations('Editor');
   const project = useEditorStore((state) => state.project);
   const addAsset = useEditorStore((state) => state.addAsset);
   const removeAsset = useEditorStore((state) => state.removeAsset);
@@ -150,12 +152,12 @@ export default function AssetTray() {
             onClick={cycleSortMode}
             className="px-6 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-full text-sm font-medium tracking-wide flex items-center gap-2 transition-colors"
           >
-            <span className={sortMode === 'rating' ? 'rotate-90' : ''}>⇅</span> SORT {sortMode === 'rating' ? '(STARS)' : ''}
+            <span className={sortMode === 'rating' ? 'rotate-90' : ''}>⇅</span> {t('sort')} {sortMode === 'rating' ? t('sort_stars') : ''}
           </button>
           
           {/* Interactive Star Filter Group */}
           <div className="flex items-center bg-orange-600 rounded-full px-5 py-1 gap-1 border border-orange-500 shadow-sm">
-            <span className="text-white text-sm font-bold tracking-wide mr-2 hidden sm:inline">FILTER:</span>
+            <span className="text-white text-sm font-bold tracking-wide mr-2 hidden sm:inline">{t('filter_label')}</span>
             <div className="flex gap-1.5 text-lg leading-none">
               {[1, 2, 3, 4, 5].map(star => (
                 <span 

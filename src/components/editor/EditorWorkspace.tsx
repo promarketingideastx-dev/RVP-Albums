@@ -61,7 +61,7 @@ export default function EditorWorkspace() {
          <div className="text-xs text-neutral-400">Loading Canvas...</div>
        ) : (
          <div 
-           className="absolute transition-all duration-200 overflow-hidden" 
+           className="absolute transition-all duration-200" 
            style={{ width: stageWidth, height: stageHeight }}
          >
            <SpreadCanvas 

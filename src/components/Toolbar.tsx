@@ -338,7 +338,7 @@ export default function Toolbar() {
               className="px-3 py-1.5 flex items-center gap-1.5 rounded-full bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-sm font-bold tracking-wide transition-colors text-neutral-600 dark:text-neutral-300"
               title="Toggle Ruler Units (Inches / Centimeters)"
             >
-              <span>{measurementUnit === 'in' ? '📏 INCHES' : '📏 CM'}</span>
+              <span>📏 {measurementUnit === 'in' ? t('inches') : t('centimeters')}</span>
             </button>
 
             {/* Print Export Button */}

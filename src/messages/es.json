@@ -74,6 +74,12 @@
     "export_modal_preview": "Vista previa del nombre:",
     "export_modal_helper": "Tu navegador gestionará la ubicación de descarga.",
     "export_modal_cancel": "Cancelar",
-    "export_modal_confirm": "Exportar JPG"
+    "export_modal_confirm": "Exportar JPG",
+    "filter_label": "FILTRO:",
+    "sort": "ORDEN",
+    "sort_stars": "(ESTRELLAS)",
+    "filter_plus": "+MÁS",
+    "inches": "PULGADAS",
+    "centimeters": "CM"
   }
 }
