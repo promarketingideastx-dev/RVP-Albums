@@ -18,6 +18,7 @@ interface EditorState {
 
   addAsset: (asset: ProjectAsset) => void;
   removeAsset: (assetId: string) => void;
+  updateAsset: (assetId: string, updates: Partial<ProjectAsset>) => void;
 
   bringForward: (spreadId: string, elementId: string) => void;
   sendBackward: (spreadId: string, elementId: string) => void;
