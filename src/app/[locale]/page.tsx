@@ -144,7 +144,7 @@ export default function AppPage() {
       <Toolbar />
       <div className="flex-1 flex overflow-hidden">
         <Sidebar />
-        <main className="flex-1 relative">
+        <main className="flex-1 relative flex flex-col h-full w-full">
           {/* Editor Workspace dynamically calculates zoom and stages SpreadCanvas */}
           <EditorWorkspace />
           
