@@ -4,7 +4,9 @@ export type ElementType = 'image' | 'text' | 'shape';
 export interface EditorElement {
   id: string;
   type: ElementType;
-  src?: string; // Legacy / general purpose url
+  shapeType?: 'rect' | 'ellipse'; // Block 4: Shape native discriminator
+  fillColor?: string; // Block 4: Hex shape color
+  src?: string; // e.g., image URL
   previewUrl?: string; // Phase 2: Low resolution (e.g. canvas blob) to prevent memory crash
   originalUrl?: string; // Phase 2: High resolution original file for print export
   x_mm: number;

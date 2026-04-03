@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect } from 'react';
-import { Stage, Layer, Rect, Transformer, Image as KonvaImage } from 'react-konva';
+import { Stage, Layer, Rect, Ellipse, Transformer, Image as KonvaImage } from 'react-konva';
 import { useEditorStore } from '@/store/useEditorStore';
 import { EditorElement } from '@/types/editor';
 import useImage from 'use-image';
@@ -81,6 +81,85 @@ const EditorImage = ({ element, spreadId, isSelected, onSelect }: { element: Edi
   );
 };
 
+const EditorShape = ({ element, spreadId, isSelected, onSelect }: { element: EditorElement, spreadId: string, isSelected: boolean, onSelect: () => void }) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const shapeRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const trRef = useRef<any>(null);
+  const updateElement = useEditorStore((state) => state.updateElement);
+
+  useEffect(() => {
+    if (isSelected && trRef.current && shapeRef.current) {
+      trRef.current.nodes([shapeRef.current]);
+      trRef.current.getLayer().batchDraw();
+    }
+  }, [isSelected]);
+
+  const commonProps = {
+    ref: shapeRef,
+    fill: element.fillColor || '#aaaaaa',
+    rotation: element.rotation_deg,
+    draggable: true,
+    onClick: onSelect,
+    onTap: onSelect,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onDragEnd: (e: any) => {
+      updateElement(spreadId, element.id, {
+        x_mm: e.target.x(),
+        y_mm: e.target.y(),
+      });
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onTransformEnd: () => {
+      const node = shapeRef.current;
+      const scaleX = node.scaleX();
+      const scaleY = node.scaleY();
+      node.scaleX(1);
+      node.scaleY(1);
+
+      updateElement(spreadId, element.id, {
+        x_mm: node.x(),
+        y_mm: node.y(),
+        w_mm: Math.max(5, node.width() * scaleX),
+        h_mm: Math.max(5, node.height() * scaleY),
+        rotation_deg: node.rotation()
+      });
+    }
+  };
+
+  return (
+    <React.Fragment>
+      {element.shapeType === 'ellipse' ? (
+        <Ellipse
+          {...commonProps}
+          radiusX={element.w_mm / 2}
+          radiusY={element.h_mm / 2}
+          x={element.x_mm}
+          y={element.y_mm}
+          offset={{ x: -element.w_mm / 2, y: -element.h_mm / 2 }}
+        />
+      ) : (
+        <Rect
+          {...commonProps}
+          x={element.x_mm}
+          y={element.y_mm}
+          width={element.w_mm}
+          height={element.h_mm}
+        />
+      )}
+      {isSelected && (
+        <Transformer
+          ref={trRef}
+          boundBoxFunc={(oldBox, newBox) => {
+            if (newBox.width < 5 || newBox.height < 5) return oldBox;
+            return newBox;
+          }}
+        />
+      )}
+    </React.Fragment>
+  );
+};
+
 export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadCanvasProps) {
   const project = useEditorStore((state) => state.project);
   const activeSpreadId = useEditorStore((state) => state.activeSpreadId);
@@ -125,15 +204,28 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
         />
 
         {/* Elements */}
-        {elements.map((el) => (
-          <EditorImage
-            key={el.id}
-            element={el}
-            spreadId={activeSpreadId}
-            isSelected={selectedElementId === el.id}
-            onSelect={() => setSelectedElement(el.id)}
-          />
-        ))}
+        {elements.map((el) => {
+          if (el.type === 'shape') {
+            return (
+              <EditorShape
+                key={el.id}
+                element={el}
+                spreadId={activeSpreadId}
+                isSelected={selectedElementId === el.id}
+                onSelect={() => setSelectedElement(el.id)}
+              />
+            );
+          }
+          return (
+            <EditorImage
+              key={el.id}
+              element={el}
+              spreadId={activeSpreadId}
+              isSelected={selectedElementId === el.id}
+              onSelect={() => setSelectedElement(el.id)}
+            />
+          );
+        })}
 
         {/* Print Guides (Bleed and Safe Zone) - overlay on top, no events */}
         <Rect

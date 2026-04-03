@@ -7,6 +7,7 @@ import { processLocalImage } from '@/utils/imageIngestion';
 import { useState } from 'react';
 
 export default function Sidebar() {
+  const [activeTab, setActiveTab] = useState<'photos' | 'decorations'>('photos');
   const [errorMsg, setErrorMsg] = useState('');
   const t = useTranslations('Editor');
   const addElement = useEditorStore((state) => state.addElement);
@@ -64,31 +65,64 @@ export default function Sidebar() {
     });
   };
 
-  return (
-    <aside className="w-64 border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 p-4 flex flex-col gap-4">
-      <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">{t('asset_placeholder')}</h2>
-      
-      <label className="w-full py-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-center rounded-md text-sm transition-colors cursor-pointer block border border-neutral-300 dark:border-neutral-700">
-        {t('upload_image')}
-        <input 
-          type="file" 
-          accept="image/jpeg, image/png, image/webp" 
-          className="hidden" 
-          onChange={handleFileUpload} 
-        />
-      </label>
-      {errorMsg && <p className="text-xs text-red-500">{errorMsg}</p>}
+  const handleAddShape = (shapeType: 'rect' | 'ellipse') => {
+    if (!activeSpreadId) return;
+    addElement(activeSpreadId, {
+      id: uuidv4(),
+      type: 'shape',
+      shapeType,
+      fillColor: '#888888',
+      x_mm: 50,
+      y_mm: 50,
+      w_mm: 50,
+      h_mm: 50,
+      rotation_deg: 0,
+      zIndex: 0
+    });
+  };
 
-      <button 
-        onClick={handleAddMockImage}
-        className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors"
-      >
-        {t('add_image')}
-      </button>
-      
-      {/* Mocking generic placeholder assets area */}
-      <div className="flex-1 border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded flex items-center justify-center text-xs text-neutral-400">
-        {t('asset_placeholder')}
+  return (
+    <aside className="w-64 border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col">
+      <div className="flex border-b border-neutral-200 dark:border-neutral-800">
+        <button 
+          onClick={() => setActiveTab('photos')}
+          className={`flex-1 py-3 text-xs font-semibold tracking-wider uppercase transition-colors ${activeTab === 'photos' ? 'bg-neutral-100 dark:bg-neutral-900 border-b-2 border-blue-500' : 'text-neutral-500 hover:bg-neutral-50 dark:hover:bg-neutral-900'}`}
+        >
+          {t('tab_photos')}
+        </button>
+        <button 
+          onClick={() => setActiveTab('decorations')}
+          className={`flex-1 py-3 text-xs font-semibold tracking-wider uppercase transition-colors ${activeTab === 'decorations' ? 'bg-neutral-100 dark:bg-neutral-900 border-b-2 border-blue-500' : 'text-neutral-500 hover:bg-neutral-50 dark:hover:bg-neutral-900'}`}
+        >
+          {t('tab_decorations')}
+        </button>
+      </div>
+
+      <div className="p-4 flex flex-col gap-4 flex-1 overflow-y-auto">
+        {activeTab === 'photos' ? (
+          <>
+            <label className="w-full py-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-center rounded-md text-sm transition-colors cursor-pointer block border border-neutral-300 dark:border-neutral-700">
+              {t('upload_image')}
+              <input type="file" accept="image/jpeg, image/png, image/webp" className="hidden" onChange={handleFileUpload} />
+            </label>
+            {errorMsg && <p className="text-xs text-red-500">{errorMsg}</p>}
+            <button onClick={handleAddMockImage} className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors">
+              {t('add_image')}
+            </button>
+            <div className="flex-1 border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded flex items-center justify-center text-xs text-neutral-400">
+              {t('asset_placeholder')}
+            </div>
+          </>
+        ) : (
+          <>
+            <button onClick={() => handleAddShape('rect')} className="w-full py-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-center rounded-md text-sm transition-colors border border-neutral-300 dark:border-neutral-700">
+              {t('add_rect')}
+            </button>
+            <button onClick={() => handleAddShape('ellipse')} className="w-full py-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-center rounded-md text-sm transition-colors border border-neutral-300 dark:border-neutral-700">
+              {t('add_ellipse')}
+            </button>
+          </>
+        )}
       </div>
     </aside>
   );
