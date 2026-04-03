@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { listProjectsFromDB, deleteProjectFromDB, ProjectMetadata } from '@/utils/persistence';
+import { listProjectsFromDB, deleteProjectFromDB, ProjectMetadata, saveProjectToDB } from '@/utils/persistence';
+import { importProjectFromFile } from '@/utils/exportImport';
+import { useRef } from 'react';
 
 interface ProjectPickerProps {
   onOpenProject: (id: string) => void;
@@ -11,6 +13,7 @@ export default function ProjectPicker({ onOpenProject, onNewProject }: ProjectPi
   const t = useTranslations('Editor');
   const [projects, setProjects] = useState<ProjectMetadata[]>([]);
   const [loading, setLoading] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchProjects = async () => {
     try {
@@ -35,6 +38,29 @@ export default function ProjectPicker({ onOpenProject, onNewProject }: ProjectPi
     }
   };
 
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setLoading(true);
+      const importedProject = await importProjectFromFile(file);
+      if (importedProject) {
+        // Regenerate an ID to avoid conflicts if they import the same project multiple times? 
+        // For now safely save and open. The ID within .rvp stays the same so it acts as an overwrite/restore.
+        await saveProjectToDB(importedProject);
+        fetchProjects();
+        onOpenProject(importedProject.id);
+      } else {
+        alert('Failed to load project file. It may be corrupted or invalid.');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   if (loading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white">
@@ -49,12 +75,27 @@ export default function ProjectPicker({ onOpenProject, onNewProject }: ProjectPi
         <h1 className="text-3xl font-semibold text-neutral-900 dark:text-white">
           {t('projects_title')}
         </h1>
-        <button
-          onClick={onNewProject}
-          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
-        >
-          {t('btn_new_project')}
-        </button>
+        <div className="flex gap-4">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="px-5 py-2.5 bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-900 dark:text-white font-medium rounded-lg shadow-sm transition-colors"
+          >
+            Import .rvp
+          </button>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            accept=".rvp,.json" 
+            className="hidden" 
+            onChange={handleImport} 
+          />
+          <button
+            onClick={onNewProject}
+            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors"
+          >
+            {t('btn_new_project')}
+          </button>
+        </div>
       </div>
 
       {projects.length === 0 ? (

@@ -6,6 +6,7 @@ import { useEditorStore } from '@/store/useEditorStore';
 import { usePathname } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import { exportSpreadToJPG } from '@/utils/exportEngine';
+import { exportProjectToFile } from '@/utils/exportImport';
 
 type ExportIntent = 'web' | 'print' | 'proof';
 type ExportQuality = 'web' | 'high' | 'print';
@@ -278,6 +279,13 @@ export default function Toolbar() {
                  <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1"></div>
                  <button onClick={() => openExportModal('proof')} className="w-full text-left px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition">
                    {t('export_dropdown_proof')}
+                 </button>
+                 <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1"></div>
+                 <button 
+                   onClick={() => { if (project) exportProjectToFile(project); setIsMenuOpen(false); }} 
+                   className="w-full text-left px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition font-medium"
+                 >
+                   Export Session (.rvp)
                  </button>
               </div>
             )}

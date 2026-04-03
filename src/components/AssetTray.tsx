@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useEditorStore } from '@/store/useEditorStore';
 import { ProjectAsset } from '@/types/editor';
 import { processLocalImage } from '@/utils/imageIngestion';
@@ -12,6 +12,7 @@ export default function AssetTray() {
   const addElement = useEditorStore((state) => state.addElement);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedAssetIds, setSelectedAssetIds] = useState<Set<string>>(new Set());
 
   if (!project) return null;
 
@@ -62,8 +63,6 @@ export default function AssetTray() {
 
   const injectToCanvas = (asset: ProjectAsset) => {
     if (!activeSpreadId) return;
-    
-    // Fallback click injection
     addElement(activeSpreadId, {
       id: uuidv4(),
       type: 'image',
@@ -74,24 +73,52 @@ export default function AssetTray() {
       x_mm: 20,
       y_mm: 20,
       w_mm: 100,
-      h_mm: 100, // Roughly square default if actual dims lost
+      h_mm: 100,
       rotation_deg: 0,
       zIndex: 0
     });
   };
 
+  const toggleSelection = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    const newSet = new Set(selectedAssetIds);
+    if (newSet.has(id)) newSet.delete(id);
+    else newSet.add(id);
+    setSelectedAssetIds(newSet);
+  };
+
   return (
-    <div className="h-40 border-t border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex flex-col shrink-0">
-      <div className="h-10 bg-neutral-100 dark:bg-neutral-950 flex items-center px-4 justify-between border-b border-neutral-200 dark:border-neutral-800">
-        <span className="text-xs font-semibold uppercase tracking-wider text-neutral-600 dark:text-neutral-400">
-          Showing {assets.length} images
-        </span>
-        <div className="flex gap-3">
+    <div className="h-64 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 flex flex-col shrink-0">
+      
+      {/* Top Toolbar */}
+      <div className="h-16 bg-white dark:bg-neutral-950 flex items-center px-4 justify-between border-b border-neutral-200 dark:border-neutral-800 py-2">
+        <div className="flex items-center gap-4">
+          <button className="px-6 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-full text-sm font-medium tracking-wide flex items-center gap-2 transition-colors">
+            <span>&lt;</span> SORT
+          </button>
+          <button className="px-6 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-full text-sm font-medium tracking-wide flex items-center gap-2 transition-colors">
+            <span>&lt;</span> FILTER
+          </button>
+          <span className="text-sm font-medium text-neutral-400 dark:text-neutral-500 ml-4">
+            Showing {assets.length} of {assets.length} images
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button className="px-4 py-1.5 text-blue-500 border border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full text-xs font-semibold tracking-wide transition-colors">
+            DESIGN FOR ME
+          </button>
+          <button className="px-4 py-1.5 text-blue-500 border border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full text-xs font-semibold tracking-wide transition-colors">
+            DESIGN WIZARD
+          </button>
+          <button className="px-4 py-1.5 bg-neutral-800 text-white hover:bg-neutral-700 rounded-full text-xs font-semibold tracking-wide transition-colors">
+            CLEAR
+          </button>
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="px-4 py-1.5 bg-neutral-800 dark:bg-neutral-700 hover:bg-neutral-700 dark:hover:bg-neutral-600 text-white rounded-full text-xs font-medium transition-colors"
+            className="px-6 py-1.5 bg-neutral-800 text-white hover:bg-neutral-700 rounded-full text-xs font-semibold tracking-wide transition-colors flex items-center gap-2"
           >
-            + ADD PHOTOS
+            <span>+</span> ADD PHOTOS
           </button>
           <input
             type="file"
@@ -104,31 +131,64 @@ export default function AssetTray() {
         </div>
       </div>
       
-      <div className="flex-1 overflow-x-auto overflow-y-hidden p-2 flex gap-3">
-        {assets.map(asset => (
-          <div
-            key={asset.id}
-            draggable
-            onDragStart={(e) => handleDragStart(e, asset)}
-            onClick={() => injectToCanvas(asset)}
-            className="h-full aspect-[2/3] md:aspect-square bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded overflow-hidden cursor-grab active:cursor-grabbing relative group shrink-0"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img 
-              src={asset.previewUrl} 
-              alt={asset.name}
-              className="w-full h-full object-cover pointer-events-none"
-            />
-            
-            <button
-              onClick={(e) => { e.stopPropagation(); removeAsset(asset.id); }}
-              className="absolute top-1 right-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-              title="Remove Asset"
+      {/* Scrollable Asset Strip */}
+      <div className="flex-1 overflow-x-auto overflow-y-hidden p-3 flex gap-3 h-full">
+        {assets.map(asset => {
+          const isSelected = selectedAssetIds.has(asset.id);
+          return (
+            <div
+              key={asset.id}
+              className={`h-full aspect-[2/3] md:aspect-[3/4] bg-white dark:bg-neutral-800 border-2 ${isSelected ? 'border-orange-500' : 'border-neutral-200 dark:border-neutral-700'} overflow-hidden cursor-grab active:cursor-grabbing relative group shrink-0 flex flex-col shadow-sm hover:shadow-md transition-shadow`}
             >
-              ×
-            </button>
-          </div>
-        ))}
+              {/* Checkbox Hook Layer */}
+              <div 
+                className="absolute top-2 left-2 z-10 w-5 h-5 rounded border border-white bg-black/30 cursor-pointer flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => toggleSelection(e, asset.id)}
+              >
+                {isSelected && <div className="w-3 h-3 bg-orange-500 rounded-sm"></div>}
+              </div>
+
+              {/* Delete Hook Layer */}
+              <button
+                onClick={(e) => { e.stopPropagation(); removeAsset(asset.id); }}
+                className="absolute top-2 right-2 z-10 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center shadow"
+                title="Remove Asset"
+              >
+                ×
+              </button>
+
+              {/* Draggable Image Layer */}
+              <div 
+                 className="flex-1 w-full relative overflow-hidden"
+                 draggable
+                 onDragStart={(e) => handleDragStart(e, asset)}
+                 onClick={() => injectToCanvas(asset)}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img 
+                  src={asset.previewUrl} 
+                  alt={asset.name}
+                  className="w-full h-full object-cover pointer-events-none"
+                />
+              </div>
+              
+              {/* Placholder Metadata Strip */}
+              <div className="h-8 bg-white dark:bg-neutral-800 flex items-center justify-between px-2 shrink-0 border-t border-neutral-100 dark:border-neutral-700">
+                 <div className="flex gap-1 text-neutral-300 dark:text-neutral-600 text-xs tracking-tighter">
+                   <span className="hover:text-orange-400 cursor-pointer">★</span>
+                   <span className="hover:text-orange-400 cursor-pointer">★</span>
+                   <span className="hover:text-orange-400 cursor-pointer">★</span>
+                   <span className="hover:text-orange-400 cursor-pointer">★</span>
+                   <span className="hover:text-orange-400 cursor-pointer">★</span>
+                 </div>
+                 <div className="text-orange-500 hover:text-red-500 cursor-pointer text-sm">
+                   ♡
+                 </div>
+              </div>
+            </div>
+          );
+        })}
+        
         {assets.length === 0 && (
           <div className="flex-1 flex items-center justify-center text-sm text-neutral-400 italic">
             Drag and drop images here, or click &apos;+ ADD PHOTOS&apos;
