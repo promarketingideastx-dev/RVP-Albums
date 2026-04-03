@@ -82,20 +82,34 @@ export default function AssetTray() {
 
   const injectToCanvas = (asset: ProjectAsset) => {
     if (!activeSpreadId) return;
-    addElement(activeSpreadId, {
-      id: uuidv4(),
-      type: 'image',
-      previewUrl: asset.previewUrl,
-      originalUrl: asset.originalUrl,
-      previewBlobId: asset.previewBlobId,
-      originalBlobId: asset.originalBlobId,
-      x_mm: 20,
-      y_mm: 20,
-      w_mm: 100,
-      h_mm: 100,
-      rotation_deg: 0,
-      zIndex: 0
-    });
+
+    const img = new window.Image();
+    img.onload = () => {
+      const aspect = img.width / img.height;
+      let w = 80;
+      let h = 80 / aspect;
+      
+      if (h > 120) {
+         h = 120;
+         w = 120 * aspect;
+      }
+
+      addElement(activeSpreadId, {
+        id: uuidv4(),
+        type: 'image',
+        previewUrl: asset.previewUrl,
+        originalUrl: asset.originalUrl,
+        previewBlobId: asset.previewBlobId,
+        originalBlobId: asset.originalBlobId,
+        x_mm: 20,
+        y_mm: 20,
+        w_mm: w,
+        h_mm: h,
+        rotation_deg: 0,
+        zIndex: 0
+      });
+    };
+    img.src = asset.previewUrl || '';
   };
 
   const toggleSelection = (e: React.MouseEvent, id: string) => {

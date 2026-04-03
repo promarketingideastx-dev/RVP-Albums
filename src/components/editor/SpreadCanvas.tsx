@@ -191,22 +191,33 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
         try {
           const payload = JSON.parse(e.dataTransfer.getData('application/json'));
           if (payload && payload.type === 'image') {
-            // For stability, offset by default.
-            
-            useEditorStore.getState().addElement(activeSpreadId, {
-              id: `el_${Date.now()}`,
-              type: 'image',
-              previewUrl: payload.previewUrl,
-              originalUrl: payload.originalUrl,
-              previewBlobId: payload.previewBlobId,
-              originalBlobId: payload.originalBlobId,
-              x_mm: 20, // default injection x
-              y_mm: 20, // default injection y
-              w_mm: 80,
-              h_mm: 80,
-              rotation_deg: 0,
-              zIndex: 0
-            });
+            const img = new window.Image();
+            img.onload = () => {
+              const aspect = img.width / img.height;
+              let w = 80;
+              let h = 80 / aspect;
+              
+              if (h > 120) {
+                 h = 120;
+                 w = 120 * aspect;
+              }
+
+              useEditorStore.getState().addElement(activeSpreadId, {
+                id: `el_${Date.now()}`,
+                type: 'image',
+                previewUrl: payload.previewUrl,
+                originalUrl: payload.originalUrl,
+                previewBlobId: payload.previewBlobId,
+                originalBlobId: payload.originalBlobId,
+                x_mm: 20, // default injection x
+                y_mm: 20, // default injection y
+                w_mm: w,
+                h_mm: h,
+                rotation_deg: 0,
+                zIndex: 0
+              });
+            };
+            img.src = payload.previewUrl;
           }
         } catch {
           // Ignore invalid drags
