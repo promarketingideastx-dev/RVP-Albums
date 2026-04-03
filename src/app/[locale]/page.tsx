@@ -30,9 +30,32 @@ export default function AppPage() {
     if (!mounted || init) return;
 
     loadProjectFromDB().then((savedProject) => {
-      if (savedProject) {
-        // Hydrate Zustand with the persistent copy
-        loadProject(savedProject);
+      const projectToLoad = savedProject;
+
+      // GUARD: Healing corrupted or legacy IDB schemas (No spreads array)
+      if (projectToLoad && (!projectToLoad.spreads || projectToLoad.spreads.length === 0)) {
+        projectToLoad.spreads = [
+          {
+            id: "spread_1",
+            bg_color: "#ffffff",
+            elements: []
+          }
+        ];
+      }
+
+      if (projectToLoad) {
+        // GUARD: Healing missing attributes
+        projectToLoad.size = projectToLoad.size || { w_mm: 514, h_mm: 260 };
+        if (typeof projectToLoad.bleed_mm === 'undefined') projectToLoad.bleed_mm = 3;
+        if (typeof projectToLoad.safe_zone_mm === 'undefined') projectToLoad.safe_zone_mm = 5;
+
+        // GUARD: Healing missing elements arrays within active spreads
+        projectToLoad.spreads = projectToLoad.spreads.map(s => ({
+          ...s,
+          elements: s.elements || []
+        }));
+
+        loadProject(projectToLoad);
         setInit(true);
       } else {
         // Genesis default project setup if DB misses
@@ -45,7 +68,20 @@ export default function AppPage() {
             {
               id: "spread_1",
               bg_color: "#ffffff",
-              elements: []
+              elements: [
+                {
+                  id: "test_rect_1",
+                  type: "shape",
+                  shapeType: "rect",
+                  x_mm: 50,
+                  y_mm: 50,
+                  w_mm: 100,
+                  h_mm: 100,
+                  rotation_deg: 0,
+                  zIndex: 1,
+                  fillColor: "#14B8A6"
+                }
+              ]
             }
           ]
         });

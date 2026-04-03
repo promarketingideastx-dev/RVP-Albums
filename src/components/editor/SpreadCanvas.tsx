@@ -12,6 +12,7 @@ interface SpreadCanvasProps {
   scale: number;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const EditorImage = ({ element, spreadId, isSelected, onSelect }: { element: EditorElement, spreadId: string, isSelected: boolean, onSelect: () => void }) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const imageRef = useRef<any>(null);
@@ -81,6 +82,7 @@ const EditorImage = ({ element, spreadId, isSelected, onSelect }: { element: Edi
   );
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const EditorShape = ({ element, spreadId, isSelected, onSelect }: { element: EditorElement, spreadId: string, isSelected: boolean, onSelect: () => void }) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const shapeRef = useRef<any>(null);
@@ -160,95 +162,25 @@ const EditorShape = ({ element, spreadId, isSelected, onSelect }: { element: Edi
   );
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadCanvasProps) {
   const project = useEditorStore((state) => state.project);
   const activeSpreadId = useEditorStore((state) => state.activeSpreadId);
-  const selectedElementId = useEditorStore((state) => state.selectedElementId);
-  const setSelectedElement = useEditorStore((state) => state.setSelectedElement);
-
-  if (!project || !activeSpreadId) return null;
-
-  const spread = project.spreads.find((s) => s.id === activeSpreadId);
-  if (!spread) return null;
-
-  // Sorting elements by zIndex to render properly
-  const elements = [...spread.elements].sort((a, b) => a.zIndex - b.zIndex);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const checkDeselect = (e: any) => {
-    const clickedOnEmpty = e.target === e.target.getStage();
-    if (clickedOnEmpty) {
-      setSelectedElement(null);
-    }
-  };
 
   return (
-    <Stage
-      width={stageWidth}
-      height={stageHeight}
-      onMouseDown={checkDeselect}
-      onTouchStart={checkDeselect}
-      style={{ boxShadow: '0px 10px 30px rgba(0,0,0,0.1)' }}
-    >
-      <Layer scaleX={scale} scaleY={scale}>
-        {/* Background Paper */}
-        <Rect
-          x={0}
-          y={0}
-          width={project.size.w_mm}
-          height={project.size.h_mm}
-          fill={spread.bg_color || '#ffffff'}
-          shadowColor="black"
-          shadowBlur={10}
-          shadowOpacity={0.1}
-        />
-
-        {/* Elements */}
-        {elements.map((el) => {
-          if (el.type === 'shape') {
-            return (
-              <EditorShape
-                key={el.id}
-                element={el}
-                spreadId={activeSpreadId}
-                isSelected={selectedElementId === el.id}
-                onSelect={() => setSelectedElement(el.id)}
-              />
-            );
-          }
-          return (
-            <EditorImage
-              key={el.id}
-              element={el}
-              spreadId={activeSpreadId}
-              isSelected={selectedElementId === el.id}
-              onSelect={() => setSelectedElement(el.id)}
-            />
-          );
-        })}
-
-        {/* Print Guides (Bleed and Safe Zone) - overlay on top, no events */}
-        <Rect
-           x={project.bleed_mm}
-           y={project.bleed_mm}
-           width={project.size.w_mm - (project.bleed_mm * 2)}
-           height={project.size.h_mm - (project.bleed_mm * 2)}
-           stroke="red"
-           strokeWidth={0.5 / scale}
-           dash={[4 / scale, 4 / scale]}
-           listening={false}
-        />
-        <Rect
-           x={project.bleed_mm + project.safe_zone_mm}
-           y={project.bleed_mm + project.safe_zone_mm}
-           width={project.size.w_mm - ((project.bleed_mm + project.safe_zone_mm) * 2)}
-           height={project.size.h_mm - ((project.bleed_mm + project.safe_zone_mm) * 2)}
-           stroke="blue"
-           strokeWidth={0.5 / scale}
-           dash={[4 / scale, 4 / scale]}
-           listening={false}
-        />
-      </Layer>
-    </Stage>
+    <React.Fragment>
+      <div className="absolute top-10 left-10 z-[999] bg-black text-white p-4 font-mono text-xl">
+        STRICT DEBUG: SpreadCanvas mounted!
+        <br/>activeSpreadId: {activeSpreadId || 'NULL'}
+        <br/>spreads.length: {project?.spreads?.length || 0}
+        <br/>stage Width: {stageWidth?.toFixed(2) || 'NaN'}
+        <br/>stage Height: {stageHeight?.toFixed(2) || 'NaN'}
+      </div>
+      <Stage width={800} height={400} style={{ backgroundColor: 'yellow', border: '5px solid blue', display: 'block' }}>
+        <Layer>
+          <Rect x={50} y={50} width={200} height={100} fill="red" />
+        </Layer>
+      </Stage>
+    </React.Fragment>
   );
 }
