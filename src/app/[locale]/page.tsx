@@ -73,14 +73,14 @@ export default function AppPage() {
     try {
       const projectToLoad = await storage.openProject(id);
       if (projectToLoad) {
-        // GUARD: Healing missing or old legacy 514mm attributes forcefully
-        projectToLoad.size = { w_mm: 508, h_mm: 254 };
-        // Handle explicit legacy JSON mismatch
-        if (typeof projectToLoad.size.w_mm === 'undefined') {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const oldSize = projectToLoad.size as any;
-          projectToLoad.size = { w_mm: oldSize.width || 508, h_mm: oldSize.height || 254 };
+        // GUARD: Healing missing attributes
+        if (!projectToLoad.size || !projectToLoad.size.w_mm || typeof projectToLoad.size.w_mm === 'undefined') {
+          projectToLoad.size = { w_mm: 508, h_mm: 254 };
+        } else if (projectToLoad.size.w_mm === 514 && projectToLoad.size.h_mm === 260) {
+          // Explicitly heal only the hardcoded 514x260 legacy bug back to exactly 20x10 inches (508x254mm)
+          projectToLoad.size = { w_mm: 508, h_mm: 254 };
         }
+        
         if (typeof projectToLoad.bleed_mm === 'undefined') projectToLoad.bleed_mm = 3;
         if (typeof projectToLoad.safe_zone_mm === 'undefined') projectToLoad.safe_zone_mm = 5;
         if (!projectToLoad.title) projectToLoad.title = 'Untitled Album';
@@ -104,6 +104,34 @@ export default function AppPage() {
 
   // CREATE PROJECT HANDLER
   const handleCreateProject = async (name: string, type: string, labPresetId: string) => {
+    // Dynamic Geometry Extraction parsing the selected size string. e.g "Flushmount 10x10" or "Custom 12x12in"
+    let w_mm = 508;
+    let h_mm = 254;
+
+    try {
+      if (type.startsWith('Custom ')) {
+        const parts = type.replace('Custom ', '').replace('in', '').split('x');
+        if (parts.length === 2) {
+          const wInches = parseFloat(parts[0]);
+          const hInches = parseFloat(parts[1]);
+          // A single page is wInches. The spread is wInches * 2.
+          w_mm = Math.round((wInches * 2) * 25.4);
+          h_mm = Math.round(hInches * 25.4);
+        }
+      } else if (type.includes('x')) {
+        // Handlers for "Flushmount 10x10", "Flushmount 5x5", "Flushmount 20x8", etc.
+        const match = type.match(/(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)/);
+        if (match) {
+          const wInches = parseFloat(match[1]);
+          const hInches = parseFloat(match[2]);
+          w_mm = Math.round((wInches * 2) * 25.4);
+          h_mm = Math.round(hInches * 25.4);
+        }
+      }
+    } catch(err) {
+      console.warn("Failed to parse geometric constraints, falling back to 20x10 default.", err);
+    }
+
     const newId = `proj_${Date.now()}`;
     const newProject: EditorProject = {
       id: newId,
@@ -115,7 +143,8 @@ export default function AppPage() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       projectVersion: 1,
-      size: { w_mm: 508, h_mm: 254 }, // Hardcoded precisely 20x10 inches to ensure exact center alignment
+      size: { w_mm, h_mm },
+
       bleed_mm: 3,
       safe_zone_mm: 5,
       spreads: [
