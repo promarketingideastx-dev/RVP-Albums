@@ -52,9 +52,11 @@ export default function EditorWorkspace() {
   const scale = Math.min(scaleX, scaleY);
   
   if (scale <= 0 || !dimensions.width) {
-      <div ref={containerRef} className="flex-1 h-full w-full flex flex-col items-center justify-center text-xs text-neutral-400">
-        Loading...
-      </div>
+      return (
+        <div ref={containerRef} className="flex-1 h-full w-full flex flex-col items-center justify-center text-xs text-neutral-400">
+          Loading...
+        </div>
+      );
   }
 
   const stageWidth = project.size.w_mm * scale;
