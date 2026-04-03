@@ -7,6 +7,9 @@ interface EditorState {
   activeSpreadId: string | null;
   selectedElementId: string | null;
 
+  measurementUnit: 'in' | 'cm';
+  toggleMeasurementUnit: () => void;
+
   loadProject: (project: EditorProject) => void;
   unloadProject: () => void;
   setActiveSpread: (spreadId: string) => void;
@@ -28,6 +31,9 @@ export const useEditorStore = create<EditorState>((set) => ({
   project: null,
   activeSpreadId: null,
   selectedElementId: null,
+  measurementUnit: 'in',
+
+  toggleMeasurementUnit: () => set((state) => ({ measurementUnit: state.measurementUnit === 'in' ? 'cm' : 'in' })),
 
   loadProject: (project) => set({ project, activeSpreadId: project.spreads[0]?.id || null }),
   unloadProject: () => set({ project: null, activeSpreadId: null, selectedElementId: null }),

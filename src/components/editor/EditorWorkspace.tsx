@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useEditorStore } from '@/store/useEditorStore';
+import { RulerGuides } from './RulerGuides';
 
 const SpreadCanvas = dynamic(() => import('./SpreadCanvas'), {
   ssr: false,
@@ -13,6 +14,7 @@ export default function EditorWorkspace() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const project = useEditorStore((state) => state.project);
+  const measurementUnit = useEditorStore((state) => state.measurementUnit);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -66,6 +68,11 @@ export default function EditorWorkspace() {
              stageWidth={stageWidth} 
              stageHeight={stageHeight} 
              scale={scale} 
+           />
+           <RulerGuides 
+             scale={scale} 
+             project={project} 
+             unit={measurementUnit} 
            />
          </div>
        )}

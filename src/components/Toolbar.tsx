@@ -24,6 +24,8 @@ export default function Toolbar() {
   const sendBackward = useEditorStore((state) => state.sendBackward);
   const project = useEditorStore((state) => state.project);
   const unloadProject = useEditorStore((state) => state.unloadProject);
+  const measurementUnit = useEditorStore((state) => state.measurementUnit);
+  const toggleMeasurementUnit = useEditorStore((state) => state.toggleMeasurementUnit);
   
   const [isExporting, setIsExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -328,10 +330,19 @@ export default function Toolbar() {
             </>
           )}
         </div>
-
+        {/* Unit Toggle & Export Tools */}
         <div className="flex items-center gap-4">
-          {/* EXPORT DROP DOWN */}
-          <div className="relative" ref={menuRef}>
+            {/* Native Ruler Unit Toggle */}
+            <button 
+              onClick={toggleMeasurementUnit}
+              className="px-3 py-1.5 flex items-center gap-1.5 rounded-full bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-sm font-bold tracking-wide transition-colors text-neutral-600 dark:text-neutral-300"
+              title="Toggle Ruler Units (Inches / Centimeters)"
+            >
+              <span>{measurementUnit === 'in' ? '📏 INCHES' : '📏 CM'}</span>
+            </button>
+
+            {/* Print Export Button */}
+            <div className="relative" ref={menuRef}>
             <button 
                onClick={() => setIsMenuOpen(!isMenuOpen)}
                className="px-4 py-1.5 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium rounded hover:bg-black dark:hover:bg-neutral-200 transition flex items-center gap-1.5"
