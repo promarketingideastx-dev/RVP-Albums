@@ -15,6 +15,8 @@ export default function Sidebar() {
       id: uuidv4(),
       type: 'image',
       src: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=80',
+      previewUrl: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=80',
+      originalUrl: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=4000&q=100',
       x_mm: 20,
       y_mm: 20,
       w_mm: 100,

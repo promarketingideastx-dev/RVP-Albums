@@ -4,7 +4,9 @@ export type ElementType = 'image' | 'text' | 'shape';
 export interface EditorElement {
   id: string;
   type: ElementType;
-  src?: string; // e.g., image URL
+  src?: string; // Legacy / general purpose url
+  previewUrl?: string; // Phase 2: Low resolution (e.g. canvas blob) to prevent memory crash
+  originalUrl?: string; // Phase 2: High resolution original file for print export
   x_mm: number;
   y_mm: number;
   w_mm: number;

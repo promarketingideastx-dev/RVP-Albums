@@ -19,8 +19,8 @@ const EditorImage = ({ element, spreadId, isSelected, onSelect }: { element: Edi
   const trRef = useRef<any>(null);
   const updateElement = useEditorStore((state) => state.updateElement);
   
-  // Custom hook for loading image source
-  const [image] = useImage(element.src || 'https://via.placeholder.com/150');
+  // Custom hook prioritizing Phase 2 low-res previews over legacy src
+  const [image] = useImage(element.previewUrl || element.src || 'https://via.placeholder.com/150');
 
   useEffect(() => {
     if (isSelected && trRef.current && imageRef.current) {
