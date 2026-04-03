@@ -67,7 +67,9 @@ export const useEditorStore = create<EditorState>((set) => ({
     const spread = state.project.spreads.find(s => s.id === spreadId);
     const element = spread?.elements.find(e => e.id === elementId);
     // Offload garbage collection rules exclusively to the StorageDriver bounds
-    storage.cleanupElement(element).catch(console.error);
+    if (element) {
+      storage.cleanupElement(element).catch(console.error);
+    }
 
     const newSpreads = state.project.spreads.map((s) => {
       if (s.id !== spreadId) return s;
