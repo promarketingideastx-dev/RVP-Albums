@@ -2,6 +2,9 @@
   "Editor": {
     "title": "Diseñador de Álbumes Pro",
     "add_image": "Añadir Imagen Mock",
+    "upload_image": "Subir Fotografía",
+    "error_type": "Formato inválido (Solo JPEG/PNG/WEBP)",
+    "error_size": "Imagen muy pesada (Máximo 10MB)",
     "bring_forward": "Traer al Frente",
     "send_backward": "Enviar Atrás",
     "theme_light": "Modo Día",
