@@ -32,13 +32,13 @@ export default function Toolbar() {
               onClick={() => bringForward(activeSpreadId, selectedElementId)}
               className="px-3 py-1 text-sm bg-neutral-100 dark:bg-neutral-800 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition"
             >
-               Order: +
+               {t('order_up')}
             </button>
             <button 
               onClick={() => sendBackward(activeSpreadId, selectedElementId)}
               className="px-3 py-1 text-sm bg-neutral-100 dark:bg-neutral-800 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition"
             >
-               Order: -
+               {t('order_down')}
             </button>
           </>
         )}

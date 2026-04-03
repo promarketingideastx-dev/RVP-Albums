@@ -6,6 +6,12 @@
     "send_backward": "Enviar Atrás",
     "theme_light": "Modo Día",
     "theme_dark": "Modo Noche",
-    "language": "En / English"
+    "language": "En / English",
+    "asset_placeholder": "Placeholder de Assets",
+    "initializing": "Inicializando Motor...",
+    "saving": "Guardando...",
+    "save_success": "Cambios guardados en DB (mock)",
+    "order_up": "Capa: +",
+    "order_down": "Capa: -"
   }
 }

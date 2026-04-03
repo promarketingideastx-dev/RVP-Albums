@@ -48,6 +48,7 @@ export const useEditorStore = create<EditorState>((set) => ({
     if (!state.project) return state;
     const newSpreads = state.project.spreads.map((spread) => {
       if (spread.id !== spreadId) return spread;
+      element.zIndex = spread.elements.length;
       return { ...spread, elements: [...spread.elements, element] };
     });
     return { project: { ...state.project, spreads: newSpreads } };
@@ -66,13 +67,15 @@ export const useEditorStore = create<EditorState>((set) => ({
     if (!state.project) return state;
     const newSpreads = state.project.spreads.map((spread) => {
       if (spread.id !== spreadId) return spread;
-      const elements = [...spread.elements];
+      const elements = [...spread.elements].sort((a, b) => a.zIndex - b.zIndex);
       const idx = elements.findIndex(e => e.id === elementId);
-      if (idx === -1) return spread;
+      if (idx === -1 || idx === elements.length - 1) return spread;
 
-      // Adjust zIndex purely algebraically
-      const targetZ = elements[idx].zIndex + 1;
-      elements[idx].zIndex = targetZ;
+      const temp = elements[idx];
+      elements[idx] = elements[idx + 1];
+      elements[idx + 1] = temp;
+
+      elements.forEach((el, index) => { el.zIndex = index; });
       return { ...spread, elements };
     });
     return { project: { ...state.project, spreads: newSpreads } };
@@ -82,12 +85,15 @@ export const useEditorStore = create<EditorState>((set) => ({
     if (!state.project) return state;
     const newSpreads = state.project.spreads.map((spread) => {
       if (spread.id !== spreadId) return spread;
-      const elements = [...spread.elements];
+      const elements = [...spread.elements].sort((a, b) => a.zIndex - b.zIndex);
       const idx = elements.findIndex(e => e.id === elementId);
-      if (idx === -1) return spread;
+      if (idx <= 0) return spread;
 
-      const targetZ = Math.max(0, elements[idx].zIndex - 1);
-      elements[idx].zIndex = targetZ;
+      const temp = elements[idx];
+      elements[idx] = elements[idx - 1];
+      elements[idx - 1] = temp;
+
+      elements.forEach((el, index) => { el.zIndex = index; });
       return { ...spread, elements };
     });
     return { project: { ...state.project, spreads: newSpreads } };

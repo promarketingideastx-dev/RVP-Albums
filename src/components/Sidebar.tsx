@@ -26,7 +26,7 @@ export default function Sidebar() {
 
   return (
     <aside className="w-64 border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 p-4 flex flex-col gap-4">
-      <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">Assets Library</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">{t('asset_placeholder')}</h2>
       <button 
         onClick={handleAddMockImage}
         className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors"
@@ -36,7 +36,7 @@ export default function Sidebar() {
       
       {/* Mocking generic placeholder assets area */}
       <div className="flex-1 border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded flex items-center justify-center text-xs text-neutral-400">
-        Asset Grid Placeholder
+        {t('asset_placeholder')}
       </div>
     </aside>
   );

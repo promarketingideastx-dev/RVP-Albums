@@ -6,6 +6,12 @@
     "send_backward": "Send Backward",
     "theme_light": "Light Mode",
     "theme_dark": "Dark Mode",
-    "language": "Es / Español"
+    "language": "Es / Español",
+    "asset_placeholder": "Asset Grid Placeholder",
+    "initializing": "Initializing Engine...",
+    "saving": "Saving...",
+    "save_success": "All changes saved to DB (mock)",
+    "order_up": "Order: +",
+    "order_down": "Order: -"
   }
 }

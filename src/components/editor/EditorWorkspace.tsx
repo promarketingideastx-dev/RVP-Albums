@@ -15,18 +15,27 @@ export default function EditorWorkspace() {
   const project = useEditorStore((state) => state.project);
 
   useEffect(() => {
-    // Basic resize observer to keep Canvas responsive
-    const checkSize = () => {
-      if (containerRef.current) {
+    if (!containerRef.current) return;
+    
+    // Real ResizeObserver bound to the component container, not the window
+    const observer = new ResizeObserver((entries) => {
+      if (entries[0]) {
         setDimensions({
-          width: containerRef.current.clientWidth,
-          height: containerRef.current.clientHeight
+          width: entries[0].contentRect.width,
+          height: entries[0].contentRect.height
         });
       }
-    };
-    checkSize();
-    window.addEventListener('resize', checkSize);
-    return () => window.removeEventListener('resize', checkSize);
+    });
+    
+    observer.observe(containerRef.current);
+    
+    // Set initial size
+    setDimensions({
+      width: containerRef.current.clientWidth,
+      height: containerRef.current.clientHeight
+    });
+
+    return () => observer.disconnect();
   }, []);
 
   if (!project) return <div className="flex items-center justify-center h-full text-neutral-400">No project loaded</div>;

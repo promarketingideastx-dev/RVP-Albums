@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import { useEditorStore } from '@/store/useEditorStore';
 import { useDebouncedCallback } from 'use-debounce';
 import Sidebar from '@/components/Sidebar';
@@ -8,6 +9,7 @@ import Toolbar from '@/components/Toolbar';
 import EditorWorkspace from '@/components/editor/EditorWorkspace';
 
 export default function AppPage() {
+  const t = useTranslations('Editor');
   const loadProject = useEditorStore((state) => state.loadProject);
   const project = useEditorStore((state) => state.project);
   const [init, setInit] = useState(false);
@@ -33,24 +35,28 @@ export default function AppPage() {
     setInit(true);
   }, [loadProject]);
 
-  // MOCK AUTOSAVE DEBOUNCE
-  // Every time project mutates, we log a mock "AutoSaving..."
+  // MOCK AUTOSAVE DEBOUNCE (Hardened with deep string comparison)
   const [saveStatus, setSaveStatus] = useState<string>('');
+  const lastSavedStr = useRef<string>('');
   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const debouncedSave = useDebouncedCallback((p: any) => {
-    console.log("Saving project AST to DB...", JSON.stringify(p, null, 2));
-    setSaveStatus('All changes saved to DB (mock)');
+    const pStr = JSON.stringify(p);
+    if (pStr === lastSavedStr.current) return; // Prevent unnecessary DB calls
+    lastSavedStr.current = pStr;
+    
+    console.log("Saving project AST to DB...");
+    setSaveStatus(t('save_success'));
     setTimeout(() => setSaveStatus(''), 2000);
   }, 1000);
 
   useEffect(() => {
     if (!init || !project) return;
-    setSaveStatus('Saving...');
+    setSaveStatus(t('saving'));
     debouncedSave(project);
   }, [project, init, debouncedSave]);
 
-  if (!init) return <div className="h-screen w-screen flex items-center justify-center">Initializing Engine...</div>;
+  if (!init) return <div className="h-screen w-screen flex items-center justify-center">{t('initializing')}</div>;
 
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden text-neutral-900 dark:text-neutral-100">
