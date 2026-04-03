@@ -21,16 +21,22 @@ export default function Inspector() {
   const [localH, setLocalH] = useState('');
   const [localRot, setLocalRot] = useState('');
 
+  const x_mm = element?.x_mm;
+  const y_mm = element?.y_mm;
+  const w_mm = element?.w_mm;
+  const h_mm = element?.h_mm;
+  const rotation_deg = element?.rotation_deg;
+
   // Sink memory values downward if they are legitimately updated by the canvas/store
   useEffect(() => {
-    if (element) {
-      setLocalX(element.x_mm.toFixed(2));
-      setLocalY(element.y_mm.toFixed(2));
-      setLocalW(element.w_mm.toFixed(2));
-      setLocalH(element.h_mm.toFixed(2));
-      setLocalRot(element.rotation_deg.toFixed(2));
+    if (x_mm !== undefined && y_mm !== undefined && w_mm !== undefined && h_mm !== undefined && rotation_deg !== undefined) {
+      setLocalX(x_mm.toFixed(2));
+      setLocalY(y_mm.toFixed(2));
+      setLocalW(w_mm.toFixed(2));
+      setLocalH(h_mm.toFixed(2));
+      setLocalRot(rotation_deg.toFixed(2));
     }
-  }, [element?.x_mm, element?.y_mm, element?.w_mm, element?.h_mm, element?.rotation_deg, selectedElementId]);
+  }, [x_mm, y_mm, w_mm, h_mm, rotation_deg, selectedElementId]);
 
   if (!element || !activeSpreadId) {
     return (
