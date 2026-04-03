@@ -101,6 +101,17 @@ export const useEditorStore = create<EditorState>((set) => ({
     return { project: { ...state.project, assets: assets.filter(a => a.id !== assetId) } };
   }),
 
+  updateAsset: (assetId, updates) => set((state) => {
+    if (!state.project) return state;
+    const assets = state.project.assets || [];
+    return {
+      project: {
+        ...state.project,
+        assets: assets.map(a => a.id === assetId ? { ...a, ...updates } : a)
+      }
+    };
+  }),
+
   bringForward: (spreadId, elementId) => set((state) => {
     if (!state.project) return state;
     const newSpreads = state.project.spreads.map((spread) => {
