@@ -265,13 +265,20 @@ export default function Toolbar() {
                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
              </svg>
           </button>
-          <div 
+          <div className="flex-1 flex justify-center items-center group">
+           <button
               onClick={handleRename}
-              className="font-bold text-lg hidden sm:block cursor-text hover:text-blue-500 transition-colors px-2 py-1 rounded"
-              title="Click to Rename Project"
+              className="flex items-center gap-2 px-3 py-1.5 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+              title="Rename Project"
            >
-              {project?.title || t('title')}
-           </div>
+              <span className="font-bold text-lg text-neutral-900 dark:text-neutral-100">
+                {project?.title || t('title')}
+              </span>
+              <svg className="w-4 h-4 text-neutral-400 group-hover:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+           </button>
+        </div>
         </div>
         
         <div className="flex items-center gap-2">

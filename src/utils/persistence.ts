@@ -21,6 +21,11 @@ export async function deleteProjectFromDB(id: string): Promise<void> {
   const newRegistry = registry.filter(p => p.id !== id);
   await idbSet('rvp_project_registry', newRegistry);
   await idbDel(`rvp_project_${id}`);
+  
+  // Nuke the legacy genesis fallback block ensuring it doesn't resurrect as a zombie
+  if (id === 'proj_genesis') {
+     await idbDel('rvp_editor_project');
+  }
 }
 
 export async function saveProjectToDB(project: EditorProject): Promise<void> {

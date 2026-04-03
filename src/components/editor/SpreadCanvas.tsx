@@ -261,15 +261,15 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
         {elements.length === 0 && (
            <Text
              text="Drag images here to begin designing"
-             x={project.size.w_mm / 2}
-             y={project.size.h_mm / 2}
+             x={0}
+             y={project.size.h_mm / 2 - 10}
+             width={project.size.w_mm}
              fontSize={12}
              fill="#aaaaaa"
+             fontStyle="italic"
              align="center"
              verticalAlign="middle"
              listening={false}
-             offsetX={80}
-             offsetY={6}
            />
         )}
 
