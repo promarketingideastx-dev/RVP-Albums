@@ -1,5 +1,5 @@
 import { StorageDriver, ProjectMetadata } from './StorageDriver';
-import { EditorProject, ProjectAsset } from '@/types/editor';
+import { EditorProject, ProjectAsset, EditorElement } from '@/types/editor';
 
 export class IDBDriver implements StorageDriver {
   private async getIDB() {
@@ -132,7 +132,7 @@ export class IDBDriver implements StorageDriver {
     if (asset.originalBlobId) await del(asset.originalBlobId);
   }
 
-  async cleanupElement(element: any): Promise<void> {
+  async cleanupElement(element: EditorElement): Promise<void> {
     // For pure element cleanup, memory URL strings must be revoked to stop RAM leakage.
     // However, the actual persistent IDB blob is SHARED with the AssetTray asset. 
     // We MUST NOT delete the underlying Blob from IDB when an element is removed from a spread, 

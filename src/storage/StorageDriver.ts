@@ -1,4 +1,4 @@
-import { EditorProject, ProjectAsset } from '@/types/editor';
+import { EditorProject, ProjectAsset, EditorElement } from '@/types/editor';
 
 export interface ProjectMetadata {
   id: string;
@@ -30,5 +30,5 @@ export interface StorageDriver {
   // For IDB, addAsset might just mean generating ObjectURLs.
   addAsset(file: File): Promise<ProjectAsset>;
   removeAsset(asset: ProjectAsset): Promise<void>;
-  cleanupElement(element: any): Promise<void>;
+  cleanupElement(element: EditorElement): Promise<void>;
 }
