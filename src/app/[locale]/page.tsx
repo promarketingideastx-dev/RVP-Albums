@@ -48,6 +48,7 @@ export default function AppPage() {
         projectToLoad.size = projectToLoad.size || { w_mm: 514, h_mm: 260 };
         if (typeof projectToLoad.bleed_mm === 'undefined') projectToLoad.bleed_mm = 3;
         if (typeof projectToLoad.safe_zone_mm === 'undefined') projectToLoad.safe_zone_mm = 5;
+        if (!projectToLoad.title) projectToLoad.title = 'Untitled Album';
 
         // GUARD: Healing missing elements arrays within active spreads
         projectToLoad.spreads = projectToLoad.spreads.map(s => ({
@@ -61,6 +62,7 @@ export default function AppPage() {
         // Genesis default project setup if DB misses
         loadProject({
           id: "proj_genesis",
+          title: "Untitled Album",
           size: { w_mm: 514, h_mm: 260 },
           bleed_mm: 3, 
           safe_zone_mm: 5,
