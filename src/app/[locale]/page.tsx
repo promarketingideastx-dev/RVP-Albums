@@ -8,6 +8,7 @@ import Sidebar from '@/components/Sidebar';
 import Toolbar from '@/components/Toolbar';
 import Inspector from '@/components/Inspector';
 import EditorWorkspace from '@/components/editor/EditorWorkspace';
+import { saveProjectToDB, loadProjectFromDB } from '@/utils/persistence';
 
 export default function AppPage() {
   const t = useTranslations('Editor');
@@ -18,26 +19,37 @@ export default function AppPage() {
   const removeElement = useEditorStore((state) => state.removeElement);
   const [init, setInit] = useState(false);
 
-  // MOCK MOCK LOADING
+  // BLOB HYDRATION / LOAD CYCLE -> IndexedDB
   useEffect(() => {
-    // Generate a default project
-    loadProject({
-      id: "proj_123",
-      // Typical lay-flat 10x10 album Spread is usually 20x10 inches => ~508mm x 254mm. 
-      // adding 3mm bleed margin arbitrarily for math
-      size: { w_mm: 514, h_mm: 260 },
-      bleed_mm: 3, 
-      safe_zone_mm: 5,
-      spreads: [
-        {
-          id: "spread_1",
-          bg_color: "#ffffff",
-          elements: []
-        }
-      ]
+    if (init) return;
+
+    loadProjectFromDB().then((savedProject) => {
+      if (savedProject) {
+        // Hydrate Zustand with the persistent copy
+        loadProject(savedProject);
+        setInit(true);
+      } else {
+        // Genesis default project setup if DB misses
+        loadProject({
+          id: "proj_genesis",
+          size: { w_mm: 514, h_mm: 260 },
+          bleed_mm: 3, 
+          safe_zone_mm: 5,
+          spreads: [
+            {
+              id: "spread_1",
+              bg_color: "#ffffff",
+              elements: []
+            }
+          ]
+        });
+        setInit(true);
+      }
+    }).catch((e) => {
+      console.error("Hydration Corrupted:", e);
+      setInit(true);
     });
-    setInit(true);
-  }, [loadProject]);
+  }, [loadProject, init]);
 
   // MOCK AUTOSAVE DEBOUNCE (Hardened with deep string comparison)
   const [saveStatus, setSaveStatus] = useState<string>('');
@@ -49,7 +61,9 @@ export default function AppPage() {
     if (pStr === lastSavedStr.current) return; // Prevent unnecessary DB calls
     lastSavedStr.current = pStr;
     
-    console.log("Saving project AST to DB...");
+    // Real IDB Save (Asynchronous local save)
+    saveProjectToDB(p).catch(console.error);
+
     setSaveStatus(t('save_success'));
     setTimeout(() => setSaveStatus(''), 2000);
   }, 1000);

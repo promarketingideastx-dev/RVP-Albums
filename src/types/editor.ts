@@ -9,6 +9,8 @@ export interface EditorElement {
   src?: string; // e.g., image URL
   previewUrl?: string; // Phase 2: Low resolution (e.g. canvas blob) to prevent memory crash
   originalUrl?: string; // Phase 2: High resolution original file for print export
+  previewBlobId?: string; // Phase 3 Block 1: IndexedDB blob reference
+  originalBlobId?: string; // Phase 3 Block 1: IndexedDB blob reference
   x_mm: number;
   y_mm: number;
   w_mm: number;
