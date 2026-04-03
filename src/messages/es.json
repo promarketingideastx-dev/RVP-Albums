@@ -28,6 +28,9 @@
     "saving": "Guardando...",
     "save_success": "Cambios guardados en DB (mock)",
     "order_up": "Capa: +",
-    "order_down": "Capa: -"
+    "order_down": "Capa: -",
+    "export_loading": "Exportando tu diseño...",
+    "export_success": "Descarga lista",
+    "export_error": "Error al exportar. Inténtalo de nuevo."
   }
 }

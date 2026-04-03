@@ -28,6 +28,9 @@
     "saving": "Saving...",
     "save_success": "All changes saved to DB (mock)",
     "order_up": "Order: +",
-    "order_down": "Order: -"
+    "order_down": "Order: -",
+    "export_loading": "Exporting your design...",
+    "export_success": "Download ready",
+    "export_error": "Export failed. Please try again."
   }
 }
