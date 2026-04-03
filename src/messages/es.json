@@ -18,8 +18,6 @@
     "width": "Ancho (mm)",
     "height": "Alto (mm)",
     "rotation": "Rotación (°)",
-    "bring_forward": "Traer al Frente",
-    "send_backward": "Enviar Atrás",
     "theme_light": "Modo Día",
     "theme_dark": "Modo Noche",
     "language": "En / English",

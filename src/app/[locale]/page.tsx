@@ -13,6 +13,9 @@ export default function AppPage() {
   const t = useTranslations('Editor');
   const loadProject = useEditorStore((state) => state.loadProject);
   const project = useEditorStore((state) => state.project);
+  const activeSpreadId = useEditorStore((state) => state.activeSpreadId);
+  const selectedElementId = useEditorStore((state) => state.selectedElementId);
+  const removeElement = useEditorStore((state) => state.removeElement);
   const [init, setInit] = useState(false);
 
   // MOCK MOCK LOADING
@@ -50,6 +53,26 @@ export default function AppPage() {
     setSaveStatus(t('save_success'));
     setTimeout(() => setSaveStatus(''), 2000);
   }, 1000);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        ['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName) ||
+        (e.target as HTMLElement).isContentEditable
+      ) {
+        return;
+      }
+      
+      if (e.key === 'Backspace' || e.key === 'Delete') {
+        if (activeSpreadId && selectedElementId) {
+          removeElement(activeSpreadId, selectedElementId);
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeSpreadId, selectedElementId, removeElement]);
 
   useEffect(() => {
     if (!init || !project) return;

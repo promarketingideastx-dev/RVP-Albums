@@ -12,6 +12,13 @@ export default function Sidebar() {
   const t = useTranslations('Editor');
   const addElement = useEditorStore((state) => state.addElement);
   const activeSpreadId = useEditorStore((state) => state.activeSpreadId);
+  const project = useEditorStore((state) => state.project);
+  
+  const currentSpread = project?.spreads.find(s => s.id === activeSpreadId);
+  const currentElementsCount = currentSpread?.elements.length || 0;
+  
+  // Calculate a visual cascade offset (resetting every 10 elements so it doesn't leave the screen)
+  const getCascadeOffset = () => 20 + (currentElementsCount % 10) * 5;
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -29,13 +36,14 @@ export default function Sidebar() {
     setErrorMsg('');
     try {
       const { originalUrl, previewUrl, w_mm, h_mm } = await processLocalImage(file);
+      const offset = getCascadeOffset();
       addElement(activeSpreadId, {
         id: uuidv4(),
         type: 'image',
         previewUrl,
         originalUrl,
-        x_mm: 20,
-        y_mm: 20,
+        x_mm: offset,
+        y_mm: offset,
         w_mm,
         h_mm,
         rotation_deg: 0,
@@ -50,14 +58,15 @@ export default function Sidebar() {
 
   const handleAddMockImage = () => {
     if (!activeSpreadId) return;
+    const offset = getCascadeOffset();
     addElement(activeSpreadId, {
       id: uuidv4(),
       type: 'image',
       src: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=80',
       previewUrl: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=80',
       originalUrl: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=4000&q=100',
-      x_mm: 20,
-      y_mm: 20,
+      x_mm: offset,
+      y_mm: offset,
       w_mm: 100,
       h_mm: 66,
       rotation_deg: 0,
@@ -67,13 +76,14 @@ export default function Sidebar() {
 
   const handleAddShape = (shapeType: 'rect' | 'ellipse') => {
     if (!activeSpreadId) return;
+    const offset = getCascadeOffset();
     addElement(activeSpreadId, {
       id: uuidv4(),
       type: 'shape',
       shapeType,
       fillColor: '#888888',
-      x_mm: 50,
-      y_mm: 50,
+      x_mm: offset,
+      y_mm: offset,
       w_mm: 50,
       h_mm: 50,
       rotation_deg: 0,

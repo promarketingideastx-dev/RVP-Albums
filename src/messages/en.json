@@ -18,8 +18,6 @@
     "width": "Width (mm)",
     "height": "Height (mm)",
     "rotation": "Rotation (°)",
-    "bring_forward": "Bring Forward",
-    "send_backward": "Send Backward",
     "theme_light": "Light Mode",
     "theme_dark": "Dark Mode",
     "language": "Es / Español",

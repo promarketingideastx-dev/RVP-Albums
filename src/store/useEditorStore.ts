@@ -56,11 +56,25 @@ export const useEditorStore = create<EditorState>((set) => ({
 
   removeElement: (spreadId, elementId) => set((state) => {
     if (!state.project) return state;
-    const newSpreads = state.project.spreads.map((spread) => {
-      if (spread.id !== spreadId) return spread;
-      return { ...spread, elements: spread.elements.filter(e => e.id !== elementId) };
+    
+    // Garbage collection for blobs
+    const spread = state.project.spreads.find(s => s.id === spreadId);
+    const element = spread?.elements.find(e => e.id === elementId);
+    if (element?.previewUrl && element.previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(element.previewUrl);
+    }
+    if (element?.originalUrl && element.originalUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(element.originalUrl);
+    }
+
+    const newSpreads = state.project.spreads.map((s) => {
+      if (s.id !== spreadId) return s;
+      return { ...s, elements: s.elements.filter(e => e.id !== elementId) };
     });
-    return { project: { ...state.project, spreads: newSpreads } };
+    
+    // Reset selection if deleting the selected item
+    const newSelectedId = state.selectedElementId === elementId ? null : state.selectedElementId;
+    return { project: { ...state.project, spreads: newSpreads }, selectedElementId: newSelectedId };
   }),
 
   bringForward: (spreadId, elementId) => set((state) => {

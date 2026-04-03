@@ -10,6 +10,9 @@ export default function Inspector() {
   const activeSpreadId = useEditorStore((state) => state.activeSpreadId);
   const selectedElementId = useEditorStore((state) => state.selectedElementId);
   const updateElement = useEditorStore((state) => state.updateElement);
+  const bringForward = useEditorStore((state) => state.bringForward);
+  const sendBackward = useEditorStore((state) => state.sendBackward);
+  const removeElement = useEditorStore((state) => state.removeElement);
 
   const activeSpread = project?.spreads.find(s => s.id === activeSpreadId);
   const element = activeSpread?.elements.find(e => e.id === selectedElementId);
@@ -98,6 +101,30 @@ export default function Inspector() {
           />
         </div>
       )}
+
+      <div className="pt-4 mt-6 border-t border-neutral-200 dark:border-neutral-800 flex justify-between gap-2">
+        <button 
+          onClick={() => sendBackward(activeSpreadId, element.id)} 
+          className="flex-1 py-1.5 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-xs font-semibold uppercase rounded text-neutral-600 dark:text-neutral-400 transition-colors"
+          title={t('send_backward')}
+        >
+          ↓
+        </button>
+        <button 
+          onClick={() => bringForward(activeSpreadId, element.id)} 
+          className="flex-1 py-1.5 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-xs font-semibold uppercase rounded text-neutral-600 dark:text-neutral-400 transition-colors"
+          title={t('bring_forward')}
+        >
+          ↑
+        </button>
+        <button 
+          onClick={() => removeElement(activeSpreadId, element.id)} 
+          className="flex-1 py-1.5 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-xs font-semibold uppercase rounded text-red-600 dark:text-red-400 transition-colors"
+          title={t('delete')}
+        >
+          ✕
+        </button>
+      </div>
     </aside>
   );
 }
