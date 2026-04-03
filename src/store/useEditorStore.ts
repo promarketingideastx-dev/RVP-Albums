@@ -7,6 +7,7 @@ interface EditorState {
   selectedElementId: string | null;
 
   loadProject: (project: EditorProject) => void;
+  unloadProject: () => void;
   setActiveSpread: (spreadId: string) => void;
   setSelectedElement: (elementId: string | null) => void;
 
@@ -24,6 +25,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   selectedElementId: null,
 
   loadProject: (project) => set({ project, activeSpreadId: project.spreads[0]?.id || null }),
+  unloadProject: () => set({ project: null, activeSpreadId: null, selectedElementId: null }),
   setActiveSpread: (id) => set({ activeSpreadId: id }),
   setSelectedElement: (id) => set({ selectedElementId: id }),
 

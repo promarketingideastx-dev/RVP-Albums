@@ -33,6 +33,13 @@ export interface Size {
 export interface EditorProject {
   id: string;
   title: string;
+  type: string;
+  labPresetId: string;
+  labPresetName: string;
+  storageMode: 'local';
+  createdAt: string;
+  updatedAt: string;
+  projectVersion: number;
   size: Size; // Total size (e.g. 500x250)
   bleed_mm: number;
   safe_zone_mm: number;

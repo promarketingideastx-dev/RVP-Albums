@@ -8,7 +8,10 @@ import Sidebar from '@/components/Sidebar';
 import Toolbar from '@/components/Toolbar';
 import Inspector from '@/components/Inspector';
 import EditorWorkspace from '@/components/editor/EditorWorkspace';
-import { saveProjectToDB, loadProjectFromDB } from '@/utils/persistence';
+import ProjectPicker from '@/components/project/ProjectPicker';
+import SetupModal from '@/components/project/SetupModal';
+import { saveProjectToDB, loadProjectFromDB, listProjectsFromDB } from '@/utils/persistence';
+import { EditorProject } from '@/types/editor';
 
 export default function AppPage() {
   const t = useTranslations('Editor');
@@ -18,6 +21,8 @@ export default function AppPage() {
   const selectedElementId = useEditorStore((state) => state.selectedElementId);
   const removeElement = useEditorStore((state) => state.removeElement);
   
+  const [viewMode, setViewMode] = useState<'initializing' | 'picker' | 'editor'>('initializing');
+  const [showSetup, setShowSetup] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [init, setInit] = useState(false);
 
@@ -25,24 +30,35 @@ export default function AppPage() {
     setMounted(true);
   }, []);
 
-  // BLOB HYDRATION / LOAD CYCLE -> IndexedDB
+  // INITIAL BOOT SEQUENCE
   useEffect(() => {
     if (!mounted || init) return;
 
-    loadProjectFromDB().then((savedProject) => {
-      const projectToLoad = savedProject;
-
-      // GUARD: Healing corrupted or legacy IDB schemas (No spreads array)
-      if (projectToLoad && (!projectToLoad.spreads || projectToLoad.spreads.length === 0)) {
-        projectToLoad.spreads = [
-          {
-            id: "spread_1",
-            bg_color: "#ffffff",
-            elements: []
-          }
-        ];
+    listProjectsFromDB().then(async (list) => {
+      if (list.length > 0) {
+        setViewMode('picker');
+      } else {
+        // Fallback check for legacy untracked 'rvp_editor_project'
+        const legacyProj = await loadProjectFromDB('proj_genesis');
+        if (legacyProj) {
+          // If a legacy project exists, forcefully index it by saving it again securely
+          await saveProjectToDB(legacyProj);
+          setViewMode('picker');
+        } else {
+          // Absolute clean slate
+          setViewMode('picker');
+          setShowSetup(true);
+        }
       }
+      setInit(true);
+    }).catch(console.error);
+  }, [mounted, init]);
 
+  // LOAD PROJECT HANDLER
+  const handleOpenProject = async (id: string) => {
+    setViewMode('initializing');
+    try {
+      const projectToLoad = await loadProjectFromDB(id);
       if (projectToLoad) {
         // GUARD: Healing missing attributes
         projectToLoad.size = projectToLoad.size || { w_mm: 514, h_mm: 260 };
@@ -57,43 +73,45 @@ export default function AppPage() {
         }));
 
         loadProject(projectToLoad);
-        setInit(true);
+        setViewMode('editor');
       } else {
-        // Genesis default project setup if DB misses
-        loadProject({
-          id: "proj_genesis",
-          title: "Untitled Album",
-          size: { w_mm: 514, h_mm: 260 },
-          bleed_mm: 3, 
-          safe_zone_mm: 5,
-          spreads: [
-            {
-              id: "spread_1",
-              bg_color: "#ffffff",
-              elements: [
-                {
-                  id: "test_rect_1",
-                  type: "shape",
-                  shapeType: "rect",
-                  x_mm: 50,
-                  y_mm: 50,
-                  w_mm: 100,
-                  h_mm: 100,
-                  rotation_deg: 0,
-                  zIndex: 1,
-                  fillColor: "#14B8A6"
-                }
-              ]
-            }
-          ]
-        });
-        setInit(true);
+        setViewMode('picker');
       }
-    }).catch((e) => {
-      console.error("Hydration Corrupted:", e);
-      setInit(true);
-    });
-  }, [loadProject, init, mounted]);
+    } catch (e) {
+      console.error('Failed to load project:', e);
+      setViewMode('picker');
+    }
+  };
+
+  // CREATE PROJECT HANDLER
+  const handleCreateProject = async (name: string, type: string, labPresetId: string) => {
+    const newId = `proj_${Date.now()}`;
+    const newProject: EditorProject = {
+      id: newId,
+      title: name,
+      type: type,
+      labPresetId: labPresetId,
+      labPresetName: labPresetId === 'pic-pro-lab' ? 'Pic Pro Lab' : 'Custom Lab',
+      storageMode: 'local',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      projectVersion: 1,
+      size: { w_mm: 514, h_mm: 260 }, // Hardcoded for this phase per strictly constrained scope
+      bleed_mm: 3,
+      safe_zone_mm: 5,
+      spreads: [
+        {
+          id: `spread_${Date.now()}`,
+          bg_color: '#ffffff',
+          elements: []
+        }
+      ]
+    };
+
+    await saveProjectToDB(newProject);
+    setShowSetup(false);
+    handleOpenProject(newId);
+  };
 
   // MOCK AUTOSAVE DEBOUNCE (Hardened with deep string comparison)
   const [saveStatus, setSaveStatus] = useState<string>('');
@@ -133,13 +151,30 @@ export default function AppPage() {
   }, [activeSpreadId, selectedElementId, removeElement]);
 
   useEffect(() => {
-    if (!mounted || !init || !project) return;
+    if (!mounted || viewMode !== 'editor' || !project) return;
     setSaveStatus(t('saving'));
     debouncedSave(project);
-  }, [project, init, mounted, debouncedSave, t]);
+  }, [project, viewMode, mounted, debouncedSave, t]);
 
   if (!mounted) return <div className="h-screen w-screen bg-white dark:bg-neutral-950" />;
-  if (!init) return <div className="h-screen w-screen flex items-center justify-center bg-white dark:bg-neutral-950 text-black dark:text-white font-medium">{t('initializing')}</div>;
+  if (viewMode === 'initializing') return <div className="h-screen w-screen flex items-center justify-center bg-white dark:bg-neutral-950 text-black dark:text-white font-medium">{t('initializing')}</div>;
+
+  if (viewMode === 'picker') {
+    return (
+      <>
+        <ProjectPicker 
+          onOpenProject={handleOpenProject} 
+          onNewProject={() => setShowSetup(true)} 
+        />
+        {showSetup && (
+          <SetupModal 
+            onCancel={() => setShowSetup(false)} 
+            onCreate={handleCreateProject} 
+          />
+        )}
+      </>
+    );
+  }
 
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden text-neutral-900 dark:text-neutral-100">
