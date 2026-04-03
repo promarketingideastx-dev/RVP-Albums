@@ -55,7 +55,7 @@ export default function AppPage() {
       console.error("Hydration Corrupted:", e);
       setInit(true);
     });
-  }, [loadProject, init]);
+  }, [loadProject, init, mounted]);
 
   // MOCK AUTOSAVE DEBOUNCE (Hardened with deep string comparison)
   const [saveStatus, setSaveStatus] = useState<string>('');

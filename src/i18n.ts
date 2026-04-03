@@ -1,14 +1,18 @@
 import {getRequestConfig} from 'next-intl/server';
-import {notFound} from 'next/navigation';
+import enMessages from './messages/en.json';
+import esMessages from './messages/es.json';
 
 export const locales = ['en', 'es'];
 
 export default getRequestConfig(async ({locale}) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (!locales.includes(locale as any)) notFound();
+  // Graceful fallback for Vercel Edge Serverless
+  let activeLocale = locale || 'en';
+  if (!locales.includes(activeLocale as string)) activeLocale = 'en';
+
+  const messages = activeLocale === 'es' ? esMessages : enMessages;
 
   return {
-    locale: locale as string,
-    messages: (await import(`./messages/${locale}.json`)).default
+    locale: activeLocale as string,
+    messages
   };
 });
