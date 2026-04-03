@@ -1,5 +1,3 @@
-import Konva from 'konva';
-import { get as idbGet } from 'idb-keyval';
 import { Spread } from '@/types/editor';
 
 // Project Metadata structure subset
@@ -8,6 +6,9 @@ interface ExportMeta {
 }
 
 export async function exportSpreadToJPG(spread: Spread, meta: ExportMeta): Promise<string> {
+  const Konva = (await import('konva')).default;
+  const { get: idbGet } = await import('idb-keyval');
+  
   const container = document.createElement('div');
   
   // Mathematical resolution boundary for iOS safety

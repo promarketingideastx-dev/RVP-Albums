@@ -1,5 +1,4 @@
 import { v4 as uuidv4 } from 'uuid';
-import { set as idbSet } from 'idb-keyval';
 
 export async function processLocalImage(file: File): Promise<{ originalUrl: string, previewUrl: string, w_mm: number, h_mm: number, previewBlobId: string, originalBlobId: string }> {
   // Phase 3 Persistence References
@@ -8,6 +7,7 @@ export async function processLocalImage(file: File): Promise<{ originalUrl: stri
 
   // 1. Create absolute high resolution original blob URL for internal store
   const originalUrl = URL.createObjectURL(file);
+  const { set: idbSet } = await import('idb-keyval');
   await idbSet(originalBlobId, file); // Store natively in IDB
 
   // 2. Generate a downscaled preview using HTML5 Canvas to guard Konva memory limits

@@ -1,12 +1,12 @@
-import { get as idbGet, set as idbSet } from 'idb-keyval';
 import { EditorProject } from '@/types/editor';
 
 export async function saveProjectToDB(project: EditorProject): Promise<void> {
-  // Serialize the whole AST. String URLs (blob:http...) will be safely skipped or overwritten on next load.
+  const { set: idbSet } = await import('idb-keyval');
   await idbSet('rvp_editor_project', project);
 }
 
 export async function loadProjectFromDB(): Promise<EditorProject | null> {
+  const { get: idbGet } = await import('idb-keyval');
   const project = await idbGet<EditorProject>('rvp_editor_project');
   if (!project) return null;
 

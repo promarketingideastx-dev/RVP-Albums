@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { del as idbDel } from 'idb-keyval';
 import { EditorProject, EditorElement } from '@/types/editor';
 
 interface EditorState {
@@ -68,9 +67,15 @@ export const useEditorStore = create<EditorState>((set) => ({
       URL.revokeObjectURL(element.originalUrl);
     }
     
-    // Purge binary files from persistent IndexedDB Memory
-    if (element?.previewBlobId) idbDel(element.previewBlobId).catch(console.error);
-    if (element?.originalBlobId) idbDel(element.originalBlobId).catch(console.error);
+    // Purge binary files from persistent IndexedDB Memory async
+    const previewId = element?.previewBlobId;
+    if (previewId) {
+      import('idb-keyval').then(({ del }) => del(previewId)).catch(console.error);
+    }
+    const originalId = element?.originalBlobId;
+    if (originalId) {
+      import('idb-keyval').then(({ del }) => del(originalId)).catch(console.error);
+    }
 
     const newSpreads = state.project.spreads.map((s) => {
       if (s.id !== spreadId) return s;
