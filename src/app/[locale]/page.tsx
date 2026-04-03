@@ -63,6 +63,12 @@ export default function AppPage() {
       if (projectToLoad) {
         // GUARD: Healing missing attributes
         projectToLoad.size = projectToLoad.size || { w_mm: 514, h_mm: 260 };
+        // Handle explicit legacy JSON mismatch
+        if (typeof projectToLoad.size.w_mm === 'undefined') {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const oldSize = projectToLoad.size as any;
+          projectToLoad.size = { w_mm: oldSize.width || 514, h_mm: oldSize.height || 260 };
+        }
         if (typeof projectToLoad.bleed_mm === 'undefined') projectToLoad.bleed_mm = 3;
         if (typeof projectToLoad.safe_zone_mm === 'undefined') projectToLoad.safe_zone_mm = 5;
         if (!projectToLoad.title) projectToLoad.title = 'Untitled Album';

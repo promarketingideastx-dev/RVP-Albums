@@ -41,39 +41,34 @@ export default function EditorWorkspace() {
   if (!project) return <div className="flex items-center justify-center h-full text-neutral-400">No project loaded</div>;
 
   // Calculate scale so the canvas fits in the workspace
-  // Leave a 40px padding on all sides (80px total)
   const padding = 80;
-  const availableWidth = dimensions.width - padding;
-  const availableHeight = dimensions.height - padding;
+  const availableWidth = Math.max(10, dimensions.width - padding);
+  const availableHeight = Math.max(10, dimensions.height - padding);
   
   const scaleX = availableWidth / project.size.w_mm;
   const scaleY = availableHeight / project.size.h_mm;
-  
   const scale = Math.min(scaleX, scaleY);
   
-  if (scale <= 0 || !dimensions.width) {
-      return (
-        <div ref={containerRef} className="flex-1 h-full w-full flex flex-col items-center justify-center text-xs text-neutral-400">
-          Loading...
-        </div>
-      );
-  }
-
-  const stageWidth = project.size.w_mm * scale;
-  const stageHeight = project.size.h_mm * scale;
+  const isReady = scale > 0 && dimensions.width > 0;
+  const stageWidth = isReady ? project.size.w_mm * scale : 0;
+  const stageHeight = isReady ? project.size.h_mm * scale : 0;
 
   return (
-    <div ref={containerRef} className="flex-1 overflow-hidden bg-neutral-200 dark:bg-neutral-900 flex items-center justify-center relative">
-       <div 
-         className="absolute transition-all duration-200 overflow-hidden" 
-         style={{ width: stageWidth, height: stageHeight }}
-       >
-     <SpreadCanvas 
-            stageWidth={stageWidth} 
-            stageHeight={stageHeight} 
-            scale={scale} 
-         />
-       </div>
+    <div ref={containerRef} className="flex-1 overflow-hidden bg-neutral-200 dark:bg-neutral-900 flex items-center justify-center relative w-full h-full">
+       {!isReady ? (
+         <div className="text-xs text-neutral-400">Loading Canvas...</div>
+       ) : (
+         <div 
+           className="absolute transition-all duration-200 overflow-hidden" 
+           style={{ width: stageWidth, height: stageHeight }}
+         >
+           <SpreadCanvas 
+             stageWidth={stageWidth} 
+             stageHeight={stageHeight} 
+             scale={scale} 
+           />
+         </div>
+       )}
     </div>
   );
 }
