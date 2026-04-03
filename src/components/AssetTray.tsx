@@ -136,10 +136,6 @@ export default function AssetTray() {
     setSortMode('newest');
   };
 
-  const cycleFilterRating = () => {
-    setFilterRating(prev => (prev === 5 ? 0 : prev + 1));
-  };
-
   const cycleSortMode = () => {
     setSortMode(prev => (prev === 'newest' ? 'rating' : 'newest'));
   };
@@ -156,12 +152,28 @@ export default function AssetTray() {
           >
             <span className={sortMode === 'rating' ? 'rotate-90' : ''}>⇅</span> SORT {sortMode === 'rating' ? '(STARS)' : ''}
           </button>
-          <button 
-            onClick={cycleFilterRating}
-            className="px-6 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-full text-sm font-medium tracking-wide flex items-center gap-2 transition-colors border border-orange-500"
-          >
-            <span>★</span> FILTER {filterRating > 0 && `(${filterRating}+)`}
-          </button>
+          
+          {/* Interactive Star Filter Group */}
+          <div className="flex items-center bg-orange-600 rounded-full px-5 py-1 gap-1 border border-orange-500 shadow-sm">
+            <span className="text-white text-sm font-bold tracking-wide mr-2 hidden sm:inline">FILTER:</span>
+            <div className="flex gap-1.5 text-lg leading-none">
+              {[1, 2, 3, 4, 5].map(star => (
+                <span 
+                  key={star}
+                  onClick={() => setFilterRating(filterRating === star ? 0 : star)}
+                  className={`cursor-pointer ${star <= filterRating ? 'text-white' : 'text-orange-900'} hover:text-orange-200 transition-colors drop-shadow-sm`}
+                  title={`Filter ${star} stars or higher (Click to toggle)`}
+                >
+                  ★
+                </span>
+              ))}
+            </div>
+            {filterRating > 0 && (
+              <span className="text-orange-200 text-xs font-bold tracking-widest ml-2 drop-shadow-sm">
+                +PLUS
+              </span>
+            )}
+          </div>
           <span className="text-sm font-medium text-neutral-400 dark:text-neutral-500 ml-4 hidden md:inline">
             Showing {visibleAssets.length} of {assets.length} images
           </span>
