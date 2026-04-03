@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect } from 'react';
-import { Stage, Layer, Rect, Ellipse, Transformer, Image as KonvaImage, Text } from 'react-konva';
+import { Stage, Layer, Rect, Ellipse, Transformer, Image as KonvaImage, Text, Line } from 'react-konva';
 import { useEditorStore } from '@/store/useEditorStore';
 import { EditorElement } from '@/types/editor';
 import useImage from 'use-image';
@@ -284,25 +284,40 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
            />
         )}
 
-        {/* Print Guides (Bleed and Safe Zone) - overlay on top, no events */}
+        {/* Print Guides (Bleed, Safe Zone, and Center Fold) - overlay on top, no events */}
+        
+        {/* Bleed Guide: Red Dashed */}
         <Rect
            x={project.bleed_mm}
            y={project.bleed_mm}
            width={project.size.w_mm - (project.bleed_mm * 2)}
            height={project.size.h_mm - (project.bleed_mm * 2)}
-           stroke="red"
-           strokeWidth={0.5 / scale}
-           dash={[4 / scale, 4 / scale]}
+           stroke="#ff0000"
+           strokeWidth={1 / scale}
+           dash={[6 / scale, 4 / scale]}
+           opacity={0.6}
            listening={false}
         />
+        
+        {/* Safe Zone Guide: Blue Dashed */}
         <Rect
            x={project.bleed_mm + project.safe_zone_mm}
            y={project.bleed_mm + project.safe_zone_mm}
            width={project.size.w_mm - ((project.bleed_mm + project.safe_zone_mm) * 2)}
            height={project.size.h_mm - ((project.bleed_mm + project.safe_zone_mm) * 2)}
-           stroke="blue"
-           strokeWidth={0.5 / scale}
-           dash={[4 / scale, 4 / scale]}
+           stroke="#0000ff"
+           strokeWidth={1 / scale}
+           dash={[6 / scale, 4 / scale]}
+           opacity={0.6}
+           listening={false}
+        />
+
+        {/* Center Split Guide: Cyan Solid */}
+        <Line
+           points={[project.size.w_mm / 2, 0, project.size.w_mm / 2, project.size.h_mm]}
+           stroke="#00ffff"
+           strokeWidth={1.5 / scale}
+           opacity={0.8}
            listening={false}
         />
         </Layer>
