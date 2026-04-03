@@ -17,11 +17,17 @@ export default function AppPage() {
   const activeSpreadId = useEditorStore((state) => state.activeSpreadId);
   const selectedElementId = useEditorStore((state) => state.selectedElementId);
   const removeElement = useEditorStore((state) => state.removeElement);
+  
+  const [mounted, setMounted] = useState(false);
   const [init, setInit] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // BLOB HYDRATION / LOAD CYCLE -> IndexedDB
   useEffect(() => {
-    if (init) return;
+    if (!mounted || init) return;
 
     loadProjectFromDB().then((savedProject) => {
       if (savedProject) {
@@ -89,12 +95,13 @@ export default function AppPage() {
   }, [activeSpreadId, selectedElementId, removeElement]);
 
   useEffect(() => {
-    if (!init || !project) return;
+    if (!mounted || !init || !project) return;
     setSaveStatus(t('saving'));
     debouncedSave(project);
-  }, [project, init, debouncedSave]);
+  }, [project, init, mounted, debouncedSave, t]);
 
-  if (!init) return <div className="h-screen w-screen flex items-center justify-center">{t('initializing')}</div>;
+  if (!mounted) return <div className="h-screen w-screen bg-white dark:bg-neutral-950" />;
+  if (!init) return <div className="h-screen w-screen flex items-center justify-center bg-white dark:bg-neutral-950 text-black dark:text-white font-medium">{t('initializing')}</div>;
 
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden text-neutral-900 dark:text-neutral-100">
