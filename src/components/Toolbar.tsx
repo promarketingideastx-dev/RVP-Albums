@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 import { useEditorStore } from '@/store/useEditorStore';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { exportSpreadToJPG } from '@/utils/exportEngine';
 
@@ -11,7 +11,6 @@ export default function Toolbar() {
   const t = useTranslations('Editor');
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
-  const router = useRouter();
   
   const selectedElementId = useEditorStore((state) => state.selectedElementId);
   const activeSpreadId = useEditorStore((state) => state.activeSpreadId);
@@ -42,7 +41,7 @@ export default function Toolbar() {
 
   const swapLocale = () => {
     const nextLocale = pathname.startsWith('/es') ? '/en' : '/es';
-    router.replace(nextLocale);
+    window.location.href = nextLocale;
   };
 
   return (
