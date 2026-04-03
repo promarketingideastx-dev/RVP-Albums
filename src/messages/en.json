@@ -13,6 +13,8 @@
     "add_rect": "Add Rectangle",
     "add_ellipse": "Add Ellipse",
     "fill_color": "Fill Color",
+    "export": "Export JPG",
+    "exporting": "Rendering High Quality JPG... ⌛",
     "x_pos": "X (mm)",
     "y_pos": "Y (mm)",
     "width": "Width (mm)",

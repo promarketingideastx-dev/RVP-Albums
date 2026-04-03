@@ -13,6 +13,8 @@
     "add_rect": "Generar Rectángulo",
     "add_ellipse": "Generar Elipse",
     "fill_color": "Color de Fondo",
+    "export": "Exportar JPG",
+    "exporting": "Renderizando Alta Calidad... ⌛",
     "x_pos": "X (mm)",
     "y_pos": "Y (mm)",
     "width": "Ancho (mm)",
