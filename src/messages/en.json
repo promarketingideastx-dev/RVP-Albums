@@ -31,6 +31,26 @@
     "order_down": "Order: -",
     "export_loading": "Exporting your design...",
     "export_success": "Download ready",
-    "export_error": "Export failed. Please try again."
+    "export_error": "Export failed. Please try again.",
+    "export_dropdown_web": "Export for Web",
+    "export_dropdown_print": "Export for Print",
+    "export_dropdown_proof": "Create Design Proof",
+    "export_modal_title_web": "Export for Web",
+    "export_modal_title_print": "Export for Print",
+    "export_modal_title_proof": "Create Design Proof",
+    "export_modal_pages": "Pages",
+    "export_modal_pages_active": "Active Spread",
+    "export_modal_pages_all": "All Spreads (Coming later)",
+    "export_modal_pages_range": "Custom Range (Coming later)",
+    "export_modal_format": "Format",
+    "export_modal_format_pdf": "PDF (Coming later)",
+    "export_modal_quality": "Quality / Intent",
+    "export_modal_quality_web": "Web (Lighter)",
+    "export_modal_quality_high": "High Quality",
+    "export_modal_quality_print": "Print Ready (Maximum)",
+    "export_modal_preview": "File Name Preview:",
+    "export_modal_helper": "Your browser will handle the download location.",
+    "export_modal_cancel": "Cancel",
+    "export_modal_confirm": "Export JPG"
   }
 }

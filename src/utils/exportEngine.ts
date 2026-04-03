@@ -3,6 +3,8 @@ import { Spread } from '@/types/editor';
 // Project Metadata structure subset
 interface ExportMeta {
   size: { w_mm: number; h_mm: number };
+  pixelMultiplier?: number;
+  quality?: number;
 }
 
 export async function exportSpreadToJPG(spread: Spread, meta: ExportMeta): Promise<string> {
@@ -15,9 +17,10 @@ export async function exportSpreadToJPG(spread: Spread, meta: ExportMeta): Promi
   const physicalW = meta.size.w_mm;
   const physicalH = meta.size.h_mm;
   
-  // Base arbitrary logical scaler (10x translates approx. 300 dpi on standard prints)
-  let pxW = physicalW * 10;
-  let pxH = physicalH * 10;
+  // Base arbitrary logical scaler (default 10x translates approx. 300 dpi on standard prints)
+  const multiplier = meta.pixelMultiplier || 10;
+  let pxW = physicalW * multiplier;
+  let pxH = physicalH * multiplier;
   const maxDim = 4000; // Safari Canvas strict limit ~ 16MP. Stay safe.
   
   if (pxW > maxDim || pxH > maxDim) {
@@ -108,7 +111,7 @@ export async function exportSpreadToJPG(spread: Spread, meta: ExportMeta): Promi
   stage.add(layer);
   layer.draw();
 
-  const dataURL = stage.toDataURL({ mimeType: 'image/jpeg', quality: 0.95 });
+  const dataURL = stage.toDataURL({ mimeType: 'image/jpeg', quality: meta.quality || 0.95 });
 
   // Native Garbage Collection Cleanup
   stage.destroy();

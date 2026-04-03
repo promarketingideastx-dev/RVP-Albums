@@ -31,6 +31,26 @@
     "order_down": "Capa: -",
     "export_loading": "Exportando tu diseño...",
     "export_success": "Descarga lista",
-    "export_error": "Error al exportar. Inténtalo de nuevo."
+    "export_error": "Error al exportar. Inténtalo de nuevo.",
+    "export_dropdown_web": "Exportar para Web",
+    "export_dropdown_print": "Exportar para Impresión",
+    "export_dropdown_proof": "Crear Prueba de Diseño",
+    "export_modal_title_web": "Exportar para Web",
+    "export_modal_title_print": "Exportar para Impresión",
+    "export_modal_title_proof": "Crear Prueba de Diseño",
+    "export_modal_pages": "Páginas",
+    "export_modal_pages_active": "Pliego Actual",
+    "export_modal_pages_all": "Todos los pliegos (Próximamente)",
+    "export_modal_pages_range": "Rango Personalizado (Próximamente)",
+    "export_modal_format": "Formato",
+    "export_modal_format_pdf": "PDF (Próximamente)",
+    "export_modal_quality": "Calidad / Intención",
+    "export_modal_quality_web": "Web (Ligero)",
+    "export_modal_quality_high": "Alta Calidad",
+    "export_modal_quality_print": "Lista para Imprimir (Máxima)",
+    "export_modal_preview": "Vista previa del nombre:",
+    "export_modal_helper": "Tu navegador gestionará la ubicación de descarga.",
+    "export_modal_cancel": "Cancelar",
+    "export_modal_confirm": "Exportar JPG"
   }
 }
