@@ -11,7 +11,7 @@ import EditorWorkspace from '@/components/editor/EditorWorkspace';
 import AssetTray from '@/components/AssetTray';
 import ProjectPicker from '@/components/project/ProjectPicker';
 import SetupModal from '@/components/project/SetupModal';
-import { saveProjectToDB, loadProjectFromDB, listProjectsFromDB } from '@/utils/persistence';
+import { storage } from '@/storage';
 import { EditorProject } from '@/types/editor';
 
 export default function AppPage() {
@@ -35,15 +35,15 @@ export default function AppPage() {
   useEffect(() => {
     if (!mounted || init) return;
 
-    listProjectsFromDB().then(async (list) => {
+    storage.listProjects().then(async (list) => {
       if (list.length > 0) {
         setViewMode('picker');
       } else {
         // Fallback check for legacy untracked 'rvp_editor_project'
-        const legacyProj = await loadProjectFromDB('proj_genesis');
+        const legacyProj = await storage.openProject('proj_genesis');
         if (legacyProj) {
           // If a legacy project exists, forcefully index it by saving it again securely
-          await saveProjectToDB(legacyProj);
+          await storage.saveProject(legacyProj);
           setViewMode('picker');
         } else {
           // Absolute clean slate
@@ -59,7 +59,7 @@ export default function AppPage() {
   const handleOpenProject = async (id: string) => {
     setViewMode('initializing');
     try {
-      const projectToLoad = await loadProjectFromDB(id);
+      const projectToLoad = await storage.openProject(id);
       if (projectToLoad) {
         // GUARD: Healing missing attributes
         projectToLoad.size = projectToLoad.size || { w_mm: 514, h_mm: 260 };
@@ -109,7 +109,7 @@ export default function AppPage() {
       ]
     };
 
-    await saveProjectToDB(newProject);
+    await storage.saveProject(newProject);
     setShowSetup(false);
     handleOpenProject(newId);
   };
@@ -125,7 +125,7 @@ export default function AppPage() {
     lastSavedStr.current = pStr;
     
     // Real IDB Save (Asynchronous local save)
-    saveProjectToDB(p).catch(console.error);
+    storage.saveProject(p).catch(console.error);
 
     setSaveStatus(t('save_success'));
     setTimeout(() => setSaveStatus(''), 2000);

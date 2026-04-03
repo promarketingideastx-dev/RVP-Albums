@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useEditorStore } from '@/store/useEditorStore';
 import { ProjectAsset } from '@/types/editor';
-import { processLocalImage } from '@/utils/imageIngestion';
+import { storage } from '@/storage';
 import { v4 as uuidv4 } from 'uuid';
 
 export default function AssetTray() {
@@ -30,15 +30,8 @@ export default function AssetTray() {
       if (file.size > 30 * 1024 * 1024) continue; // 30MB limit
       
       try {
-        const { originalUrl, previewUrl, originalBlobId, previewBlobId } = await processLocalImage(file);
-        addAsset({
-          id: uuidv4(),
-          name: file.name,
-          previewUrl,
-          originalUrl,
-          previewBlobId,
-          originalBlobId
-        });
+        const newAsset = await storage.addAsset(file);
+        addAsset(newAsset);
       } catch (err) {
         console.error('Failed to ingest asset:', err);
       }

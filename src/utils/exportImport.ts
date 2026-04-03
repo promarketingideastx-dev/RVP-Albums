@@ -1,4 +1,5 @@
 import { EditorProject } from '@/types/editor';
+import { storage } from '@/storage';
 
 /**
  * Serializes the current project state into a downloadable JSON file.
@@ -51,15 +52,14 @@ export function exportProjectToFile(project: EditorProject) {
 export function importProjectFromFile(file: File): Promise<EditorProject | null> {
   return new Promise((resolve) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const content = e.target?.result as string;
         const project = JSON.parse(content) as EditorProject;
         
         // Basic validation
         if (project && project.id && Array.isArray(project.spreads)) {
-          // If we want this to be treated as a NEW project in the hub, we could regenerate the ID.
-          // For now, restoring state implies preserving the ID so saveProjectToDB overwrites/updates safely.
+          await storage.saveProject(project);
           resolve(project);
         } else {
           console.error('Invalid .rvp project descriptor.');

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { listProjectsFromDB, deleteProjectFromDB, ProjectMetadata, saveProjectToDB, loadProjectFromDB } from '@/utils/persistence';
+import { ProjectMetadata } from '@/storage/StorageDriver';
+import { storage } from '@/storage';
 import { importProjectFromFile } from '@/utils/exportImport';
 import { useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
@@ -18,7 +19,7 @@ export default function ProjectPicker({ onOpenProject, onNewProject }: ProjectPi
 
   const fetchProjects = async () => {
     try {
-      const list = await listProjectsFromDB();
+      const list = await storage.listProjects();
       // Sort by updatedAt descending
       setProjects(list.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()));
     } catch (e) {
@@ -34,7 +35,7 @@ export default function ProjectPicker({ onOpenProject, onNewProject }: ProjectPi
 
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this project?')) {
-      await deleteProjectFromDB(id);
+      await storage.deleteProject(id);
       fetchProjects();
     }
   };
@@ -48,7 +49,9 @@ export default function ProjectPicker({ onOpenProject, onNewProject }: ProjectPi
       if (importedProject) {
         // Regenerate an ID to avoid conflicts if they import the same project multiple times? 
         // For now safely save and open. The ID within .rvp stays the same so it acts as an overwrite/restore.
-        await saveProjectToDB(importedProject);
+        // (The importProjectFromFile already calls storage.saveProject internally, but we can call it here too if needed, though redundant).
+        // Let's rely directly on the resolved importedProject.
+        await storage.saveProject(importedProject);
         fetchProjects();
         onOpenProject(importedProject.id);
       } else {
@@ -65,7 +68,7 @@ export default function ProjectPicker({ onOpenProject, onNewProject }: ProjectPi
   const handleDuplicate = async (id: string, title: string) => {
     try {
       setLoading(true);
-      const fullProjectToClone = await loadProjectFromDB(id);
+      const fullProjectToClone = await storage.openProject(id);
       if (!fullProjectToClone) {
         alert("Could not load the project to duplicate it.");
         return;
@@ -74,7 +77,7 @@ export default function ProjectPicker({ onOpenProject, onNewProject }: ProjectPi
       clonedProject.id = uuidv4();
       clonedProject.title = `${title} (Copy)`;
       clonedProject.updatedAt = new Date().toISOString();
-      await saveProjectToDB(clonedProject);
+      await storage.saveProject(clonedProject);
       fetchProjects();
     } catch (e) {
       console.error(e);

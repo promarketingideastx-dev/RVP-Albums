@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import { exportSpreadToJPG } from '@/utils/exportEngine';
 import { exportProjectToFile } from '@/utils/exportImport';
-import { saveProjectToDB } from '@/utils/persistence';
+import { storage } from '@/storage';
 import { v4 as uuidv4 } from 'uuid';
 
 type ExportIntent = 'web' | 'print' | 'proof';
@@ -133,7 +133,7 @@ export default function Toolbar() {
        // Deep copy needed to ensure state isn't mutated directly
        const updatedProject = { ...project, title: newName.trim(), updatedAt: new Date().toISOString() };
        useEditorStore.setState({ project: updatedProject });
-       await saveProjectToDB(updatedProject);
+       await storage.saveProject(updatedProject);
     }
   };
 
@@ -145,7 +145,7 @@ export default function Toolbar() {
       clonedProject.id = uuidv4();
       clonedProject.title = `${project.title} (Copy)`;
       clonedProject.updatedAt = new Date().toISOString();
-      await saveProjectToDB(clonedProject);
+      await storage.saveProject(clonedProject);
       alert('Project Duplicated successfully! Return to Projects menu to open it.');
     } catch (err) {
       console.error(err);
