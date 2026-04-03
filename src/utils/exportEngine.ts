@@ -18,10 +18,12 @@ export async function exportSpreadToJPG(spread: Spread, meta: ExportMeta): Promi
   const physicalH = meta.size.h_mm;
   
   // Base arbitrary logical scaler (default 10x translates approx. 300 dpi on standard prints)
-  const multiplier = meta.pixelMultiplier || 10;
+  const multiplier = meta.pixelMultiplier || 12; // 12x means ~514 * 12 = 6168px
   let pxW = physicalW * multiplier;
   let pxH = physicalH * multiplier;
-  const maxDim = 4000; // Safari Canvas strict limit ~ 16MP. Stay safe.
+  
+  // Desktop canvas limits are generally 16384x16384, but Safari caps area. 8192 is safe for Desktop Print.
+  const maxDim = 8192; 
   
   if (pxW > maxDim || pxH > maxDim) {
     const scale = Math.min(maxDim / pxW, maxDim / pxH);
