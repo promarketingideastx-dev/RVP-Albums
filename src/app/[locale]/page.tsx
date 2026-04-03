@@ -6,6 +6,7 @@ import { useEditorStore } from '@/store/useEditorStore';
 import { useDebouncedCallback } from 'use-debounce';
 import Sidebar from '@/components/Sidebar';
 import Toolbar from '@/components/Toolbar';
+import Inspector from '@/components/Inspector';
 import EditorWorkspace from '@/components/editor/EditorWorkspace';
 
 export default function AppPage() {
@@ -74,6 +75,7 @@ export default function AppPage() {
             </div>
           )}
         </main>
+        <Inspector />
       </div>
     </div>
   );
