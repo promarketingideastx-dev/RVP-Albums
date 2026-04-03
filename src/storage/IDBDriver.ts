@@ -119,4 +119,33 @@ export class IDBDriver implements StorageDriver {
       previewUrl: URL.createObjectURL(file)
     };
   }
+
+  async removeAsset(asset: ProjectAsset): Promise<void> {
+    const { del } = await this.getIDB();
+    
+    // Memory Garbage Collection
+    if (asset.previewUrl && asset.previewUrl.startsWith('blob:')) URL.revokeObjectURL(asset.previewUrl);
+    if (asset.originalUrl && asset.originalUrl.startsWith('blob:')) URL.revokeObjectURL(asset.originalUrl);
+    
+    // Persistent Storage Purge
+    if (asset.previewBlobId) await del(asset.previewBlobId);
+    if (asset.originalBlobId) await del(asset.originalBlobId);
+  }
+
+  async cleanupElement(element: any): Promise<void> {
+    // For pure element cleanup, memory URL strings must be revoked to stop RAM leakage.
+    // However, the actual persistent IDB blob is SHARED with the AssetTray asset. 
+    // We MUST NOT delete the underlying Blob from IDB when an element is removed from a spread, 
+    // otherwise the Asset in the tray breaks instantly!
+    // The IDB Blob will only be deleted when removeAsset() is explicitly called via the Tray.
+    
+    if (element?.originalUrl && element.originalUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(element.originalUrl);
+    }
+    
+    // Note: previewUrl isn't strictly tracked inside the element structure, but if it exists:
+    if (element?.previewUrl && element.previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(element.previewUrl);
+    }
+  }
 }

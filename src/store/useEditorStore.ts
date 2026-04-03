@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { EditorProject, EditorElement, ProjectAsset } from '@/types/editor';
+import { storage } from '@/storage';
 
 interface EditorState {
   project: EditorProject | null;
@@ -65,22 +66,8 @@ export const useEditorStore = create<EditorState>((set) => ({
     // Garbage collection for blobs
     const spread = state.project.spreads.find(s => s.id === spreadId);
     const element = spread?.elements.find(e => e.id === elementId);
-    if (element?.previewUrl && element.previewUrl.startsWith('blob:')) {
-      URL.revokeObjectURL(element.previewUrl);
-    }
-    if (element?.originalUrl && element.originalUrl.startsWith('blob:')) {
-      URL.revokeObjectURL(element.originalUrl);
-    }
-    
-    // Purge binary files from persistent IndexedDB Memory async
-    const previewId = element?.previewBlobId;
-    if (previewId) {
-      import('idb-keyval').then(({ del }) => del(previewId)).catch(console.error);
-    }
-    const originalId = element?.originalBlobId;
-    if (originalId) {
-      import('idb-keyval').then(({ del }) => del(originalId)).catch(console.error);
-    }
+    // Offload garbage collection rules exclusively to the StorageDriver bounds
+    storage.cleanupElement(element).catch(console.error);
 
     const newSpreads = state.project.spreads.map((s) => {
       if (s.id !== spreadId) return s;
@@ -103,15 +90,9 @@ export const useEditorStore = create<EditorState>((set) => ({
     const assets = state.project.assets || [];
     const asset = assets.find(a => a.id === assetId);
     
-    // Garbage collection
-    if (asset?.previewUrl && asset.previewUrl.startsWith('blob:')) URL.revokeObjectURL(asset.previewUrl);
-    if (asset?.originalUrl && asset.originalUrl.startsWith('blob:')) URL.revokeObjectURL(asset.originalUrl);
-    
-    if (asset?.previewBlobId) {
-      import('idb-keyval').then(({ del }) => del(asset.previewBlobId as string)).catch(console.error);
-    }
-    if (asset?.originalBlobId) {
-      import('idb-keyval').then(({ del }) => del(asset.originalBlobId as string)).catch(console.error);
+    // Fire explicit garbage collection strictly routed across the IDBDriver
+    if (asset) {
+      storage.removeAsset(asset).catch(console.error);
     }
 
     return { project: { ...state.project, assets: assets.filter(a => a.id !== assetId) } };

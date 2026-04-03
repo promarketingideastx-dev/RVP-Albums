@@ -29,4 +29,6 @@ export interface StorageDriver {
   // addAssets, removeAsset, loadAssets, generatePreview (optional based on future Tauri needs)
   // For IDB, addAsset might just mean generating ObjectURLs.
   addAsset(file: File): Promise<ProjectAsset>;
+  removeAsset(asset: ProjectAsset): Promise<void>;
+  cleanupElement(element: any): Promise<void>;
 }
