@@ -44,7 +44,7 @@
     "save_success": "Cambios guardados en DB (mock)",
     "order_up": "Capa: +",
     "order_down": "Capa: -",
-    "opacity": "Opacidad (%)",
+    "opacity": "Intensidad / Opacidad (%)",
     "scale": "Multiplicador Escala",
     "color": "Superposición Color",
     "bring_to_front": "Traer al Frente",

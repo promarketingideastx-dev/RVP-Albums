@@ -396,10 +396,11 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
                   sourceType: payload.sourceType || 'default',
                   blendMode: payload.libraryCategory === 'cinematic' ? 'multiply' : payload.libraryCategory === 'overlays' ? 'screen' : 'source-over',
                   sourceId: payload.sourceId,
-                  x_mm: 20,
-                  y_mm: 20,
-                  w_mm: w,
-                  h_mm: h,
+                  x_mm: payload.libraryCategory === 'cinematic' ? 0 : 20,
+                  y_mm: payload.libraryCategory === 'cinematic' ? 0 : 20,
+                  w_mm: payload.libraryCategory === 'cinematic' ? 900 : w,
+                  h_mm: payload.libraryCategory === 'cinematic' ? 900 : h,
+                  opacity: payload.libraryCategory === 'cinematic' ? 0.35 : 1,
                   rotation_deg: 0,
                   zIndex: 0
                 });
