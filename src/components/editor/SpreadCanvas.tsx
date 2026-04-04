@@ -211,6 +211,8 @@ const EditorImage = ({
         globalCompositeOperation={(element.blendMode as any) || 'source-over'}
         onContextMenu={(e) => {
           e.evt.preventDefault();
+          e.cancelBubble = true;
+          e.evt.stopPropagation();
           onContextMenu(e.evt.clientX, e.evt.clientY, element.id);
         }}
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -324,6 +326,8 @@ const EditorShape = ({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onContextMenu: (e: any) => {
       e.evt.preventDefault();
+      e.cancelBubble = true;
+      e.evt.stopPropagation();
       onContextMenu(e.evt.clientX, e.evt.clientY, element.id);
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -466,6 +470,8 @@ const EditorText = ({ element, spreadId, isSelected, onSelect, onContextMenu }: 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onContextMenu={(e: any) => {
           e.evt.preventDefault();
+          e.cancelBubble = true;
+          e.evt.stopPropagation();
           onContextMenu(e.evt.clientX, e.evt.clientY, element.id);
         }}
       />
