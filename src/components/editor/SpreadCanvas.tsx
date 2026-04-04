@@ -820,6 +820,56 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
         
         {/* Center Fold Line Component replaced by individual Spread Canvases - No Center Fold needed here */}
       </Layer>
+      
+      {/* Dynamic Native Ruler Guides Overlay */}
+      <Layer id="guides-layer" scaleX={scale} scaleY={scale}>
+        {spread.guides?.map(guide => (
+          <Line
+            key={guide.id}
+            points={
+              guide.orientation === 'vertical' 
+                ? [guide.position_mm, -500, guide.position_mm, project.size.h_mm + 500] 
+                : [-500, guide.position_mm, project.size.w_mm + 500, guide.position_mm]
+            }
+            stroke={guide.color || '#00ffff'}
+            strokeWidth={Math.max(1, 1.5 / scale)}
+            hitStrokeWidth={12 / scale}
+            draggable={!guide.locked}
+            dragBoundFunc={(pos) => ({
+              x: guide.orientation === 'vertical' ? pos.x : 0,
+              y: guide.orientation === 'horizontal' ? pos.y : 0
+            })}
+            onDragEnd={(e) => {
+              const node = e.target;
+              const delta = guide.orientation === 'vertical' ? node.x() : node.y();
+              const newPos = guide.position_mm + delta;
+              
+              if (newPos < -10 || (guide.orientation === 'vertical' && newPos > project.size.w_mm + 10) || (guide.orientation === 'horizontal' && newPos > project.size.h_mm + 10)) {
+                 useEditorStore.getState().removeGuide(spread.id, guide.id);
+              } else {
+                 useEditorStore.getState().updateGuide(spread.id, guide.id, { position_mm: newPos });
+              }
+              node.position({ x: 0, y: 0 }); 
+            }}
+            onMouseEnter={(e) => {
+              if (!guide.locked) {
+                const stage = e.target.getStage();
+                if (stage) stage.container().style.cursor = guide.orientation === 'vertical' ? 'col-resize' : 'row-resize';
+              }
+            }}
+            onMouseLeave={(e) => {
+              const stage = e.target.getStage();
+              if (stage) stage.container().style.cursor = 'default';
+            }}
+            onContextMenu={(e) => {
+              e.evt.preventDefault();
+              e.cancelBubble = true;
+              e.evt.stopPropagation();
+              setContextMenu({ x: e.evt.clientX, y: e.evt.clientY, elementId: `guide:${guide.id}` });
+            }}
+          />
+        ))}
+      </Layer>
       </Stage>
 
       {contextMenu && (
@@ -828,7 +878,46 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
           style={{ top: contextMenu.y, left: contextMenu.x }}
           onClick={(e) => e.stopPropagation()}
         >
-          <button
+          {contextMenu.elementId.startsWith('guide:') ? (
+             <>
+               <button
+                 className="w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 transition-colors"
+                 onClick={() => {
+                    const guideId = contextMenu.elementId.replace('guide:', '');
+                    const guide = spread.guides?.find(g => g.id === guideId);
+                    if (guide) useEditorStore.getState().updateGuide(spread.id, guideId, { locked: !guide.locked });
+                    setContextMenu(null);
+                 }}
+               >
+                 {spread.guides?.find(g => g.id === contextMenu.elementId.replace('guide:', ''))?.locked ? 'Unlock Guide' : 'Lock Guide'}
+               </button>
+               <button
+                 className="w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 transition-colors flex items-center justify-between"
+                 onClick={() => {
+                    const guideId = contextMenu.elementId.replace('guide:', '');
+                    const guide = spread.guides?.find(g => g.id === guideId);
+                    const isRed = guide?.color === '#ff0000';
+                    useEditorStore.getState().updateGuide(spread.id, guideId, { color: isRed ? '#00ffff' : '#ff0000' });
+                    setContextMenu(null);
+                 }}
+               >
+                 Change Color
+                 <span className="w-3 h-3 rounded-full border border-neutral-300 dark:border-neutral-600" style={{ backgroundColor: spread.guides?.find(g => g.id === contextMenu.elementId.replace('guide:', ''))?.color === '#ff0000' ? '#00ffff' : '#ff0000' }}></span>
+               </button>
+               <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1"></div>
+               <button
+                 className="w-full text-left px-4 py-2 hover:bg-red-500 hover:text-white text-red-500 transition-colors"
+                 onClick={() => { 
+                    useEditorStore.getState().removeGuide(spread.id, contextMenu.elementId.replace('guide:', '')); 
+                    setContextMenu(null); 
+                 }}
+               >
+                 Delete Guide
+               </button>
+             </>
+          ) : (
+             <>
+               <button
             className="w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 transition-colors"
             onClick={() => { bringToFront(activeSpreadId, contextMenu.elementId); setContextMenu(null); }}
           >
@@ -853,6 +942,8 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
           >
             {t('send_to_back')}
           </button>
+         </>
+       )}
         </div>
       )}
     </div>

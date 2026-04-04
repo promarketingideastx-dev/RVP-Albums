@@ -65,11 +65,20 @@ export interface SpreadBackgroundConfig {
   radialCenterY?: number; 
 }
 
+export interface SpreadGuide {
+  id: string;
+  orientation: 'horizontal' | 'vertical';
+  position_mm: number;
+  color?: string; // Default visual rendering
+  locked?: boolean;
+}
+
 export interface Spread {
   id: string;
   elements: EditorElement[];
   bg_color: string;
   bg_config?: SpreadBackgroundConfig; // Phase 7.G.9: Advanced Gradient spread backgrounds
+  guides?: SpreadGuide[]; // Phase 7.G.12: Native alignment geometry boundaries
 }
 
 export interface Size {

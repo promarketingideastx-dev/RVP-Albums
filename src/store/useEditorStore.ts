@@ -42,6 +42,11 @@ interface EditorState {
   resetGlobalImageStyles: () => void;
   resetSpreadBackground: (spreadId: string) => void;
   resetAllGlobalStyles: () => void;
+
+  addGuide: (spreadId: string, guide: import('@/types/editor').SpreadGuide) => void;
+  updateGuide: (spreadId: string, guideId: string, changes: Partial<import('@/types/editor').SpreadGuide>) => void;
+  removeGuide: (spreadId: string, guideId: string) => void;
+  clearGuides: (spreadId: string) => void;
 }
 
 export const useEditorStore = create<EditorState>()(
@@ -167,6 +172,43 @@ export const useEditorStore = create<EditorState>()(
         spreads: newSpreads 
       }
     };
+  }),
+
+  addGuide: (spreadId, guide) => set((state) => {
+    if (!state.project) return state;
+    const newSpreads = state.project.spreads.map((s) => {
+      if (s.id !== spreadId) return s;
+      return { ...s, guides: [...(s.guides || []), guide] };
+    });
+    return { project: { ...state.project, spreads: newSpreads } };
+  }),
+
+  updateGuide: (spreadId, guideId, changes) => set((state) => {
+    if (!state.project) return state;
+    const newSpreads = state.project.spreads.map((s) => {
+      if (s.id !== spreadId) return s;
+      const newGuides = (s.guides || []).map(g => g.id === guideId ? { ...g, ...changes } : g);
+      return { ...s, guides: newGuides };
+    });
+    return { project: { ...state.project, spreads: newSpreads } };
+  }),
+
+  removeGuide: (spreadId, guideId) => set((state) => {
+    if (!state.project) return state;
+    const newSpreads = state.project.spreads.map((s) => {
+      if (s.id !== spreadId) return s;
+      return { ...s, guides: (s.guides || []).filter(g => g.id !== guideId) };
+    });
+    return { project: { ...state.project, spreads: newSpreads } };
+  }),
+
+  clearGuides: (spreadId) => set((state) => {
+    if (!state.project) return state;
+    const newSpreads = state.project.spreads.map((s) => {
+      if (s.id !== spreadId) return s;
+      return { ...s, guides: [] };
+    });
+    return { project: { ...state.project, spreads: newSpreads } };
   }),
 
   addElement: (spreadId, element) => set((state) => {
