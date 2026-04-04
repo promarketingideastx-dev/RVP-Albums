@@ -53,6 +53,8 @@ const EditorImage = ({
         height={element.h_mm}
         rotation={element.rotation_deg}
         opacity={element.opacity !== undefined ? element.opacity : 1}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        globalCompositeOperation={(element.blendMode as any) || 'source-over'}
         shadowColor={element.shadowColor || 'transparent'}
         shadowBlur={element.shadowBlur || 0}
         shadowOffsetX={element.shadowOffsetX || 0}
@@ -135,6 +137,8 @@ const EditorShape = ({
     fill: element.fillColor || '#aaaaaa',
     rotation: element.rotation_deg,
     opacity: element.opacity !== undefined ? element.opacity : 1,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    globalCompositeOperation: (element.blendMode as any) || 'source-over',
     shadowColor: element.shadowColor || 'transparent',
     shadowBlur: element.shadowBlur || 0,
     shadowOffsetX: element.shadowOffsetX || 0,
@@ -390,6 +394,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
                   src: payload.src,
                   libraryCategory: payload.libraryCategory,
                   sourceType: payload.sourceType || 'default',
+                  blendMode: payload.libraryCategory === 'cinematic' ? 'multiply' : payload.libraryCategory === 'overlays' ? 'screen' : 'source-over',
                   sourceId: payload.sourceId,
                   x_mm: 20,
                   y_mm: 20,

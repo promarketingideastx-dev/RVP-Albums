@@ -23,6 +23,7 @@ export interface EditorElement {
   shadowBlur?: number;
   shadowColor?: string;
   shadowOpacity?: number;
+  blendMode?: string;
   text?: string;
   textColor?: string;
   fontSize?: number;

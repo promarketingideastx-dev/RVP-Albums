@@ -118,6 +118,30 @@ export default function Inspector() {
             />
           </div>
 
+          <div className="flex flex-col gap-1 mb-3 pt-3 border-t border-neutral-200 dark:border-neutral-800">
+            <label className="text-xs font-semibold text-neutral-500 uppercase">Modo de Mezcla (Blend)</label>
+            <select
+              className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow"
+              value={element.blendMode || 'source-over'}
+              onChange={(e) => updateElement(activeSpreadId, element.id, { blendMode: e.target.value })}
+            >
+              <option value="source-over">Normal</option>
+              <option value="multiply">Multiplicar</option>
+              <option value="screen">Trama (Screen)</option>
+              <option value="overlay">Superponer</option>
+              <option value="darken">Oscurecer</option>
+              <option value="lighten">Aclarar</option>
+              <option value="color-dodge">Sobreexponer Color</option>
+              <option value="color-burn">Subexponer Color</option>
+              <option value="hard-light">Luz Fuerte</option>
+              <option value="soft-light">Luz Suave</option>
+              <option value="difference">Diferencia</option>
+              <option value="exclusion">Exclusión</option>
+              <option value="color">Color</option>
+              <option value="luminosity">Luminosidad</option>
+            </select>
+          </div>
+
           {/* Shadow Controls Segment */}
           <div className="pt-3 mt-3 border-t border-neutral-200 dark:border-neutral-800">
              <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-800 dark:text-neutral-200 mb-2">Shadow Effects</h3>
