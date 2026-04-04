@@ -74,34 +74,50 @@ export default function Inspector() {
     });
   };
 
-  const InputField = ({ label, value, setter }: { label: string, value: string, setter: (val: string) => void }) => (
+  const InputField = ({ label, value, setter, min, max, step }: { label: string, value: string, setter: (val: string) => void, min?: number, max?: number, step?: string }) => (
     <div className="flex flex-col gap-1 mb-3">
-      <label className="text-xs font-semibold text-neutral-500 uppercase">{label}</label>
-      <input
-        type="number"
-        className="w-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow"
-        value={value}
-        onChange={(e) => setter(e.target.value)}
-        onBlur={handleBlurOrEnter}
-        onKeyDown={handleBlurOrEnter}
-        step="0.1"
-      />
+      <div className="flex justify-between items-center px-1 mb-0.5">
+        <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">{label}</label>
+        <span className="text-[10px] font-mono text-blue-500 font-medium bg-blue-500/10 px-1.5 py-0.5 rounded">{value}</span>
+      </div>
+      {(min !== undefined && max !== undefined) ? (
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step || "1"}
+          className="w-full h-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+          value={value}
+          onChange={(e) => setter(e.target.value)}
+          onBlur={handleBlurOrEnter}
+        />
+      ) : (
+        <input
+          type="number"
+          className="w-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          value={value}
+          onChange={(e) => setter(e.target.value)}
+          onBlur={handleBlurOrEnter}
+          onKeyDown={handleBlurOrEnter}
+          step={step || "0.1"}
+        />
+      )}
     </div>
   );
 
   return (
     <aside className="w-64 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 p-4 flex flex-col overflow-y-auto">
       <h2 className="text-sm font-semibold tracking-wider text-neutral-800 dark:text-neutral-200 mb-6 uppercase">{t('properties')}</h2>
-      <InputField label={t('x_pos')} value={localX} setter={setLocalX} />
-      <InputField label={t('y_pos')} value={localY} setter={setLocalY} />
-      <InputField label={t('width')} value={localW} setter={setLocalW} />
-      <InputField label={t('height')} value={localH} setter={setLocalH} />
-      <InputField label={t('rotation')} value={localRot} setter={setLocalRot} />
+      <InputField label={t('x_pos')} value={localX} setter={setLocalX} min={-500} max={1500} step="1" />
+      <InputField label={t('y_pos')} value={localY} setter={setLocalY} min={-500} max={1500} step="1" />
+      <InputField label={t('width')} value={localW} setter={setLocalW} min={1} max={1500} step="1" />
+      <InputField label={t('height')} value={localH} setter={setLocalH} min={1} max={1500} step="1" />
+      <InputField label={t('rotation')} value={localRot} setter={setLocalRot} min={0} max={360} step="1" />
       
       {element.type === 'decoration' && element.sourceType === 'default' && (
         <>
-          <InputField label={t('opacity')} value={localOpacity} setter={setLocalOpacity} />
-          <InputField label={t('scale')} value={localScale} setter={setLocalScale} />
+          <InputField label={t('opacity')} value={localOpacity} setter={setLocalOpacity} min={0} max={100} step="1" />
+          <InputField label={t('scale')} value={localScale} setter={setLocalScale} min={0.1} max={5} step="0.05" />
           <div className="flex flex-col gap-1 mb-3">
             <label className="text-xs font-semibold text-neutral-500 uppercase">{t('color')}</label>
             <input
@@ -149,17 +165,20 @@ export default function Inspector() {
                label={"Shadow Blur"} 
                value={element.shadowBlur !== undefined ? element.shadowBlur.toString() : "0"} 
                setter={(val) => updateElement(activeSpreadId, element.id, { shadowBlur: parseFloat(val) })} 
+               min={0} max={100} step="1"
              />
              <div className="flex gap-2">
                <InputField 
                  label={"Offset X"} 
                  value={element.shadowOffsetX !== undefined ? element.shadowOffsetX.toString() : "0"} 
                  setter={(val) => updateElement(activeSpreadId, element.id, { shadowOffsetX: parseFloat(val) })} 
+                 min={-100} max={100} step="1"
                />
                <InputField 
                  label={"Offset Y"} 
                  value={element.shadowOffsetY !== undefined ? element.shadowOffsetY.toString() : "0"} 
                  setter={(val) => updateElement(activeSpreadId, element.id, { shadowOffsetY: parseFloat(val) })} 
+                 min={-100} max={100} step="1"
                />
              </div>
              <div className="flex flex-col gap-1 mb-2 mt-1">
@@ -175,6 +194,7 @@ export default function Inspector() {
                label={"Shadow Opacity"} 
                value={element.shadowOpacity !== undefined ? element.shadowOpacity.toString() : "0.5"} 
                setter={(val) => updateElement(activeSpreadId, element.id, { shadowOpacity: parseFloat(val) })} 
+               min={0} max={1} step="0.01"
              />
           </div>
         </>
@@ -203,6 +223,8 @@ export default function Inspector() {
                 label="Intensidad del Filtro" 
                 value={element.filterIntensity !== undefined ? element.filterIntensity.toString() : (element.photoFilter === 'posterize' ? '4' : '0')} 
                 setter={(val) => updateElement(activeSpreadId, element.id, { filterIntensity: parseFloat(val) })} 
+                min={0} max={element.photoFilter === 'posterize' ? 10 : (element.photoFilter === 'blur' ? 20 : (element.photoFilter === 'contrast' ? 100 : 1))}
+                step={element.photoFilter === 'posterize' ? '1' : '0.1'}
               />
            )}
         </div>
@@ -242,6 +264,7 @@ export default function Inspector() {
             label={"Font Size"} 
             value={element.fontSize !== undefined ? element.fontSize.toString() : "32"} 
             setter={(val) => updateElement(activeSpreadId, element.id, { fontSize: parseFloat(val) })} 
+            min={8} max={250} step="1"
           />
           <div className="flex flex-col gap-1 mb-3">
             <label className="text-xs font-semibold text-neutral-500 uppercase">Text Fill Color</label>
@@ -283,11 +306,13 @@ export default function Inspector() {
                  label={"Offset X"} 
                  value={element.shadowOffsetX !== undefined ? element.shadowOffsetX.toString() : "0"} 
                  setter={(val) => updateElement(activeSpreadId, element.id, { shadowOffsetX: parseFloat(val) })} 
+                 min={-100} max={100} step="1"
                />
                <InputField 
                  label={"Offset Y"} 
                  value={element.shadowOffsetY !== undefined ? element.shadowOffsetY.toString() : "0"} 
                  setter={(val) => updateElement(activeSpreadId, element.id, { shadowOffsetY: parseFloat(val) })} 
+                 min={-100} max={100} step="1"
                />
              </div>
              <div className="flex flex-col gap-1 mb-2 mt-1">
