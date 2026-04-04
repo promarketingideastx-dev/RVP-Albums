@@ -52,7 +52,7 @@ export default function Inspector() {
 
   if (!activeSpreadId) {
     return (
-      <aside className="w-64 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 p-4 flex flex-col h-full items-center justify-center text-sm text-neutral-400">
+      <aside className="w-64 shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 p-4 flex flex-col h-full items-center justify-center text-sm text-neutral-400">
         Waiting for spread...
       </aside>
     );
@@ -60,7 +60,7 @@ export default function Inspector() {
 
   if (activeTab === 'layers') {
     return (
-      <aside className="w-64 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full overflow-hidden">
+      <aside className="w-64 shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full overflow-hidden">
         <div className="flex border-b border-neutral-200 dark:border-neutral-800 shrink-0">
           <button onClick={() => setActiveTab('properties')} className="flex-1 py-3 text-[11px] font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300">
             <SlidersHorizontal className="w-3.5 h-3.5" /> Propiedades
@@ -76,7 +76,7 @@ export default function Inspector() {
 
   if (!element) {
     return (
-      <aside className="w-64 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full overflow-hidden">
+      <aside className="w-64 shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full overflow-hidden">
         <div className="flex border-b border-neutral-200 dark:border-neutral-800 shrink-0">
           <button onClick={() => setActiveTab('properties')} className="flex-1 py-3 text-[11px] font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors text-blue-500 border-b-2 border-blue-500">
             <SlidersHorizontal className="w-3.5 h-3.5" /> Propiedades
@@ -152,7 +152,7 @@ export default function Inspector() {
   );
 
   return (
-    <aside className="w-64 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full overflow-hidden">
+    <aside className="w-64 shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full overflow-hidden">
       <div className="flex border-b border-neutral-200 dark:border-neutral-800 shrink-0">
         <button onClick={() => setActiveTab('properties')} className="flex-1 py-3 text-[11px] font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors text-blue-500 border-b-2 border-blue-500">
           <SlidersHorizontal className="w-3.5 h-3.5" /> Propiedades

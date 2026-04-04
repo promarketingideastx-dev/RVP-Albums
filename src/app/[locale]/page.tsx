@@ -236,10 +236,10 @@ export default function AppPage() {
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden text-neutral-900 dark:text-neutral-100">
       <Toolbar />
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden w-full">
         <Sidebar />
-        <main className="flex-1 relative flex flex-col h-full w-full">
-          <div className="flex-1 relative overflow-hidden">
+        <main className="flex-1 relative flex flex-col h-full min-w-0">
+          <div className="flex-1 relative overflow-hidden min-h-0 min-w-0">
             <EditorWorkspace />
           </div>
           <AssetTray />

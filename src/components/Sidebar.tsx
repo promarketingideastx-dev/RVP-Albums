@@ -40,7 +40,7 @@ export default function Sidebar() {
 
 
   return (
-    <aside className="w-64 border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col">
+    <aside className="w-64 shrink-0 border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full">
       <div className="flex border-b border-neutral-200 dark:border-neutral-800">
         <button 
           onClick={() => setActiveTab('photos')}
