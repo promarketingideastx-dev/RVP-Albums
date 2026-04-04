@@ -66,12 +66,11 @@ const SmartGuidesRenderer = () => {
        {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
          <Line 
            key={i} 
-           points={[]} 
+           points={[-8000, -8000, -8000, -8000]} 
            stroke="#00ffff" 
            strokeWidth={1.5} 
            dash={[6, 4]} 
            visible={false}
-           transformsEnabled="position" 
          />
        ))}
     </Group>
@@ -359,10 +358,10 @@ const EditorImage = ({
     <React.Fragment>
       <Group
         ref={groupRef}
-        x={element.x_mm * mmToPx}
-        y={element.y_mm * mmToPx}
-        width={element.w_mm * mmToPx}
-        height={element.h_mm * mmToPx}
+        x={element.x_mm}
+        y={element.y_mm}
+        width={element.w_mm}
+        height={element.h_mm}
         rotation={element.rotation_deg || 0}
         scaleX={element.scale || 1}
         scaleY={element.scale || 1}
@@ -381,8 +380,8 @@ const EditorImage = ({
         onDragEnd={(e) => {
           smartGuidesEmitter.setGuides([]);
           updateElement(spreadId, element.id, {
-            x_mm: e.target.x() / mmToPx,
-            y_mm: e.target.y() / mmToPx,
+            x_mm: e.target.x(),
+            y_mm: e.target.y(),
           });
         }}
         dragBoundFunc={buildSmartSnapBoundFunc(element, elements)}
@@ -396,10 +395,10 @@ const EditorImage = ({
           node.scaleY(1);
 
           updateElement(spreadId, element.id, {
-            x_mm: node.x() / mmToPx,
-            y_mm: node.y() / mmToPx,
-            w_mm: Math.max(5, (element.w_mm * mmToPx * scaleX) / mmToPx),
-            h_mm: Math.max(5, (element.h_mm * mmToPx * scaleY) / mmToPx),
+            x_mm: node.x(),
+            y_mm: node.y(),
+            w_mm: Math.max(5, element.w_mm * scaleX),
+            h_mm: Math.max(5, element.h_mm * scaleY),
             rotation_deg: node.rotation()
           });
         }}
@@ -407,11 +406,11 @@ const EditorImage = ({
         <KonvaImage 
           image={image} 
           x={0} y={0}
-          width={element.w_mm * mmToPx} 
-          height={element.h_mm * mmToPx} 
-          cornerRadius={appliedBorderRadius * mmToPx}
+          width={element.w_mm} 
+          height={element.h_mm} 
+          cornerRadius={appliedBorderRadius}
           stroke={appliedStrokeWidth > 0 ? appliedStrokeColor : undefined}
-          strokeWidth={appliedStrokeWidth * mmToPx}
+          strokeWidth={appliedStrokeWidth}
           shadowColor={finalShadowColor}
           shadowBlur={appliedShadowBlur}
           shadowOffsetX={appliedShadowOffsetX}
@@ -423,10 +422,10 @@ const EditorImage = ({
             ref={filterLayerRef}
             image={image} 
             x={0} y={0}
-            width={element.w_mm * mmToPx} 
-            height={element.h_mm * mmToPx} 
+            width={element.w_mm} 
+            height={element.h_mm} 
             opacity={element.filterIntensity !== undefined ? element.filterIntensity : 1}
-            cornerRadius={appliedBorderRadius * mmToPx}
+            cornerRadius={appliedBorderRadius}
             stroke={appliedStrokeWidth > 0 ? appliedStrokeColor : undefined}
             strokeWidth={appliedStrokeWidth * mmToPx}
           />
