@@ -708,8 +708,8 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
         style={{ boxShadow: '0px 10px 30px rgba(0,0,0,0.1)' }}
         onContextMenu={(e) => e.evt.preventDefault()}
       >
-      <Group x={panX} y={panY} scaleX={scale} scaleY={scale}>
       <Layer>
+      <Group x={panX} y={panY} scaleX={scale} scaleY={scale}>
         {/* Background Paper */}
         <Rect
           name="background-paper"
@@ -791,10 +791,8 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
              listening={false}
            />
         )}
-      </Layer>
         
       {/* Print Guides Overlay separated safely from elements */}
-      <Layer>
         {/* Bleed Guide: Red Dashed */}
         <Rect
            x={project.bleed_mm}
@@ -822,10 +820,8 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
         />
         
         {/* Center Fold Line Component replaced by individual Spread Canvases - No Center Fold needed here */}
-      </Layer>
       
       {/* Dynamic Native Ruler Guides Overlay */}
-      <Layer>
         {spread.guides?.map(guide => (
           <Line
             key={guide.id}
@@ -872,8 +868,8 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
             }}
           />
         ))}
-      </Layer>
       </Group>
+      </Layer>
       </Stage>
 
       {contextMenu && (
