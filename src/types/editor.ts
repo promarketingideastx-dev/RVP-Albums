@@ -18,6 +18,12 @@ export interface EditorElement {
   scale?: number; // Phase 7.G.4: Generic internal dimension multiplier decoupling generic bounding constraints
   color?: string; // Phase 7.G.4: Configurable base shape/stroke overlay styling mapping hex variants 
   variant?: string; // Phase 7.G.4: Strict variant discriminator supporting parametric overrides
+  text?: string;
+  fontSize?: number;
+  fontFamily?: string;
+  textAlign?: string;
+  isBold?: boolean;
+  isItalic?: boolean;
   x_mm: number;
   y_mm: number;
   w_mm: number;

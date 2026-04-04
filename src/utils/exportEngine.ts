@@ -64,6 +64,9 @@ export async function exportSpreadToJPG(spread: Spread, meta: ExportMeta): Promi
             height: el.h_mm * mmToPx,
             fill: el.fillColor,
             rotation: el.rotation_deg,
+            opacity: el.opacity !== undefined ? el.opacity : 1,
+            scaleX: el.scale || 1,
+            scaleY: el.scale || 1,
           }));
         } else if (el.shapeType === 'ellipse') {
           layer.add(new Konva.Ellipse({
@@ -74,12 +77,15 @@ export async function exportSpreadToJPG(spread: Spread, meta: ExportMeta): Promi
             offset: { x: -(el.w_mm / 2) * mmToPx, y: -(el.h_mm / 2) * mmToPx },
             fill: el.fillColor,
             rotation: el.rotation_deg,
+            opacity: el.opacity !== undefined ? el.opacity : 1,
+            scaleX: el.scale || 1,
+            scaleY: el.scale || 1,
           }));
         }
-    } else if (el.type === 'image') {
+    } else if (el.type === 'image' || el.type === 'decoration') {
         let url = '';
         
-        // Block 1 API: Retrieve Deep Native Resolucion Blob
+        // Deep local IndexedDB payload resolving
         if (el.originalBlobId) {
           const blob = await idbGet<Blob>(el.originalBlobId);
           if (blob) {
@@ -88,7 +94,7 @@ export async function exportSpreadToJPG(spread: Spread, meta: ExportMeta): Promi
           }
         }
         
-        // Fallback for mock elements or corrupted blobs
+        // Native DB & SVGs fallback
         if (!url && el.previewUrl) url = el.previewUrl; 
         if (!url && el.src) url = el.src; 
 
@@ -96,17 +102,38 @@ export async function exportSpreadToJPG(spread: Spread, meta: ExportMeta): Promi
 
         try {
           const imgObj = await loadHtmlImage(url);
-          layer.add(new Konva.Image({
+          const kImg = new Konva.Image({
             image: imgObj,
             x: el.x_mm * mmToPx,
             y: el.y_mm * mmToPx,
             width: el.w_mm * mmToPx,
             height: el.h_mm * mmToPx,
             rotation: el.rotation_deg,
-          }));
+            opacity: el.opacity !== undefined ? el.opacity : 1,
+            scaleX: el.scale || 1,
+            scaleY: el.scale || 1,
+          });
+          layer.add(kImg);
         } catch (e) {
           console.warn(`Export Engine failed rendering element ${el.id}`, e);
         }
+    } else if (el.type === 'text') {
+        layer.add(new Konva.Text({
+            x: el.x_mm * mmToPx,
+            y: el.y_mm * mmToPx,
+            text: el.text || '',
+            fontSize: (el.fontSize || 12) * mmToPx,
+            fontFamily: el.fontFamily || 'sans-serif',
+            fill: el.fillColor || el.color || '#000000',
+            align: el.textAlign || 'left',
+            fontStyle: (el.isBold ? 'bold ' : '') + (el.isItalic ? 'italic' : ''),
+            rotation: el.rotation_deg,
+            opacity: el.opacity !== undefined ? el.opacity : 1,
+            scaleX: el.scale || 1,
+            scaleY: el.scale || 1,
+            width: el.w_mm ? el.w_mm * mmToPx : undefined,
+            height: el.h_mm ? el.h_mm * mmToPx : undefined,
+        }));
     }
   }
 
