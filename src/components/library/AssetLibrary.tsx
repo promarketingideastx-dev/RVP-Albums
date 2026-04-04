@@ -126,7 +126,7 @@ export default function AssetLibrary() {
                 return (
                   <div key={asset.id} className={`aspect-square ${bgClass} rounded-xl border relative overflow-hidden cursor-grab active:cursor-grabbing transition-transform duration-200 hover:scale-[1.03] shadow-sm hover:shadow-md hover:border-blue-400 group p-0`} draggable onDragStart={(e) => handleDragStartDefault(e, asset, activeCategory)} title={asset.name}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={asset.src} alt={asset.name} className={`absolute inset-0 w-full h-full pointer-events-none ${activeCategory === 'backgrounds' ? 'object-cover' : 'object-contain p-2'}`} />
+                    <img src={asset.src} alt={asset.name} className="absolute inset-0 w-full h-full object-contain pointer-events-none" />
                     
                     {/* Asset Identification Overlay */}
                     <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] font-bold px-2 py-1 text-center backdrop-blur-sm pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
@@ -166,7 +166,7 @@ export default function AssetLibrary() {
             {decs.map((dec) => (
               <div key={dec.id} className="aspect-square bg-neutral-50 dark:bg-neutral-900 p-0 rounded-xl border border-neutral-200 dark:border-neutral-800 relative overflow-hidden cursor-grab active:cursor-grabbing transition-transform duration-200 hover:scale-[1.03] shadow-sm hover:shadow-md hover:border-blue-400 group" draggable onDragStart={(e) => handleDragStartUser(e, dec)}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={dec.preview} alt="user decoration" className="absolute inset-0 w-full h-full object-contain pointer-events-none p-2" />
+                <img src={dec.preview} alt="user decoration" className="absolute inset-0 w-full h-full object-contain pointer-events-none" />
                 <button onClick={(e) => handleDeleteDecoration(e, dec.id)} className="absolute top-2 right-2 bg-white dark:bg-neutral-800 rounded-full p-1 opacity-0 group-hover:opacity-100 shadow-sm border border-neutral-200 dark:border-neutral-700 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-500 transition-all z-10">
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
