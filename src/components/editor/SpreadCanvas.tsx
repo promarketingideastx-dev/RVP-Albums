@@ -51,6 +51,7 @@ const EditorImage = ({
     if (filterLayerRef.current && image) {
       const node = filterLayerRef.current;
       if (element.photoFilter && element.photoFilter !== 'none') {
+        node.clearCache();
         node.cache();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const filtersArray: any[] = [];
@@ -105,7 +106,7 @@ const EditorImage = ({
         node.getLayer()?.batchDraw();
       }
     }
-  }, [element.photoFilter, image, element.filterIntensity, previewOriginalPhotoId]);
+  }, [element.photoFilter, image, element.filterIntensity, previewOriginalPhotoId, element.w_mm, element.h_mm, element.scale]);
 
   const mmToPx = 3.779527559;
 

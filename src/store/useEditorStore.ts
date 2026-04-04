@@ -136,12 +136,11 @@ export const useEditorStore = create<EditorState>()(
       const idx = elements.findIndex(e => e.id === elementId);
       if (idx === -1 || idx === elements.length - 1) return spread;
 
-      const temp = elements[idx];
-      elements[idx] = elements[idx + 1];
-      elements[idx + 1] = temp;
+      const target = elements.splice(idx, 1)[0];
+      elements.splice(idx + 1, 0, target);
 
-      elements.forEach((el, index) => { el.zIndex = index; });
-      return { ...spread, elements };
+      const immutableElements = elements.map((el, index) => ({ ...el, zIndex: index }));
+      return { ...spread, elements: immutableElements };
     });
     return { project: { ...state.project, spreads: newSpreads } };
   }),
@@ -154,12 +153,11 @@ export const useEditorStore = create<EditorState>()(
       const idx = elements.findIndex(e => e.id === elementId);
       if (idx <= 0) return spread;
 
-      const temp = elements[idx];
-      elements[idx] = elements[idx - 1];
-      elements[idx - 1] = temp;
+      const target = elements.splice(idx, 1)[0];
+      elements.splice(idx - 1, 0, target);
 
-      elements.forEach((el, index) => { el.zIndex = index; });
-      return { ...spread, elements };
+      const immutableElements = elements.map((el, index) => ({ ...el, zIndex: index }));
+      return { ...spread, elements: immutableElements };
     });
     return { project: { ...state.project, spreads: newSpreads } };
   }),
@@ -175,8 +173,8 @@ export const useEditorStore = create<EditorState>()(
       const target = elements.splice(idx, 1)[0];
       elements.push(target);
 
-      elements.forEach((el, index) => { el.zIndex = index; });
-      return { ...spread, elements };
+      const immutableElements = elements.map((el, index) => ({ ...el, zIndex: index }));
+      return { ...spread, elements: immutableElements };
     });
     return { project: { ...state.project, spreads: newSpreads } };
   }),
@@ -192,8 +190,8 @@ export const useEditorStore = create<EditorState>()(
       const target = elements.splice(idx, 1)[0];
       elements.unshift(target);
 
-      elements.forEach((el, index) => { el.zIndex = index; });
-      return { ...spread, elements };
+      const immutableElements = elements.map((el, index) => ({ ...el, zIndex: index }));
+      return { ...spread, elements: immutableElements };
     });
     return { project: { ...state.project, spreads: newSpreads } };
   }),
