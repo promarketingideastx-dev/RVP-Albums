@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useEditorStore } from '@/store/useEditorStore';
 import { v4 as uuidv4 } from 'uuid';
 import { useState } from 'react';
+import AssetLibrary from './library/AssetLibrary';
 
 export default function Sidebar() {
   const [activeTab, setActiveTab] = useState<'photos' | 'decorations'>('photos');
@@ -36,22 +37,7 @@ export default function Sidebar() {
     });
   };
 
-  const handleAddShape = (shapeType: 'rect' | 'ellipse') => {
-    if (!activeSpreadId) return;
-    const offset = getCascadeOffset();
-    addElement(activeSpreadId, {
-      id: uuidv4(),
-      type: 'shape',
-      shapeType,
-      fillColor: '#888888',
-      x_mm: offset,
-      y_mm: offset,
-      w_mm: 50,
-      h_mm: 50,
-      rotation_deg: 0,
-      zIndex: 0
-    });
-  };
+
 
   return (
     <aside className="w-64 border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col">
@@ -70,7 +56,7 @@ export default function Sidebar() {
         </button>
       </div>
 
-      <div className="p-4 flex flex-col gap-4 flex-1 overflow-y-auto">
+      <div className={`p-4 flex flex-col gap-4 flex-1 overflow-y-auto ${activeTab === 'decorations' ? 'p-0' : ''}`}>
         {activeTab === 'photos' ? (
           <>
             <button onClick={handleAddMockImage} className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors">
@@ -81,14 +67,9 @@ export default function Sidebar() {
             </div>
           </>
         ) : (
-          <>
-            <button onClick={() => handleAddShape('rect')} className="w-full py-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-center rounded-md text-sm transition-colors border border-neutral-300 dark:border-neutral-700">
-              {t('add_rect')}
-            </button>
-            <button onClick={() => handleAddShape('ellipse')} className="w-full py-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-center rounded-md text-sm transition-colors border border-neutral-300 dark:border-neutral-700">
-              {t('add_ellipse')}
-            </button>
-          </>
+          <div className="h-full -m-4">
+            <AssetLibrary />
+          </div>
         )}
       </div>
     </aside>

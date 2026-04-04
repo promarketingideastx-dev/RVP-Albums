@@ -1,4 +1,4 @@
-export type ElementType = 'image' | 'text' | 'shape';
+export type ElementType = 'image' | 'text' | 'shape' | 'decoration';
 
 // Coordinates strictly in absolute mm. Precision mapping is applied in presentation components.
 export interface EditorElement {
@@ -11,6 +11,7 @@ export interface EditorElement {
   originalUrl?: string; // Phase 2: High resolution original file for print export
   previewBlobId?: string; // Phase 3 Block 1: IndexedDB blob reference
   originalBlobId?: string; // Phase 3 Block 1: IndexedDB blob reference
+  libraryCategory?: string; // Phase 7.G: Category discriminator strictly for decoration variants
   x_mm: number;
   y_mm: number;
   w_mm: number;

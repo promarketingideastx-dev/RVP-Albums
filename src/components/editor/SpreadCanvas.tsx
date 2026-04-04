@@ -190,7 +190,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
         e.preventDefault();
         try {
           const payload = JSON.parse(e.dataTransfer.getData('application/json'));
-          if (payload && payload.type === 'image') {
+          if (payload && (payload.type === 'image' || payload.type === 'decoration')) {
             const img = new window.Image();
             img.onload = () => {
               const aspect = img.width / img.height;
@@ -202,22 +202,37 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
                  w = 120 * aspect;
               }
 
-              useEditorStore.getState().addElement(activeSpreadId, {
-                id: `el_${Date.now()}`,
-                type: 'image',
-                previewUrl: payload.previewUrl,
-                originalUrl: payload.originalUrl,
-                previewBlobId: payload.previewBlobId,
-                originalBlobId: payload.originalBlobId,
-                x_mm: 20, // default injection x
-                y_mm: 20, // default injection y
-                w_mm: w,
-                h_mm: h,
-                rotation_deg: 0,
-                zIndex: 0
-              });
+              if (payload.type === 'image') {
+                useEditorStore.getState().addElement(activeSpreadId, {
+                  id: `el_${Date.now()}`,
+                  type: 'image',
+                  previewUrl: payload.previewUrl,
+                  originalUrl: payload.originalUrl,
+                  previewBlobId: payload.previewBlobId,
+                  originalBlobId: payload.originalBlobId,
+                  x_mm: 20, // default injection x
+                  y_mm: 20, // default injection y
+                  w_mm: w,
+                  h_mm: h,
+                  rotation_deg: 0,
+                  zIndex: 0
+                });
+              } else if (payload.type === 'decoration') {
+                useEditorStore.getState().addElement(activeSpreadId, {
+                  id: `el_${Date.now()}`,
+                  type: 'decoration',
+                  src: payload.src,
+                  libraryCategory: payload.libraryCategory,
+                  x_mm: 20,
+                  y_mm: 20,
+                  w_mm: w,
+                  h_mm: h,
+                  rotation_deg: 0,
+                  zIndex: 0
+                });
+              }
             };
-            img.src = payload.previewUrl;
+            img.src = payload.type === 'decoration' ? payload.src : payload.previewUrl;
           }
         } catch {
           // Ignore invalid drags
