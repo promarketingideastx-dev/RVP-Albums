@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useEditorStore } from '@/store/useEditorStore';
 import { RulerGuides } from './RulerGuides';
+import { TYPOGRAPHY_PRESETS } from '@/lib/typography-presets';
 
 const SpreadCanvas = dynamic(() => import('./SpreadCanvas'), {
   ssr: false,
@@ -15,6 +16,20 @@ export default function EditorWorkspace() {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const project = useEditorStore((state) => state.project);
   const measurementUnit = useEditorStore((state) => state.measurementUnit);
+
+  // Auto-inject Google Fonts globally so preset fonts don't break when sidebar unmounts
+  const fontLinks = React.useMemo(() => {
+    const fontsSet = new Set<string>();
+    TYPOGRAPHY_PRESETS.forEach(p => {
+      fontsSet.add(p.fonts.h1);
+      fontsSet.add(p.fonts.h2);
+      fontsSet.add(p.fonts.body);
+      fontsSet.add(p.fonts.small);
+    });
+    return Array.from(fontsSet).map(font => 
+      `@import url('https://fonts.googleapis.com/css2?family=${font.replace(/ /g, '+')}:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap');`
+    ).join('\n');
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -57,6 +72,7 @@ export default function EditorWorkspace() {
 
   return (
     <div ref={containerRef} className="flex-1 overflow-hidden bg-neutral-200 dark:bg-neutral-900 flex items-center justify-center relative w-full h-full">
+       <style dangerouslySetInnerHTML={{ __html: fontLinks }} />
        {!isReady ? (
          <div className="text-xs text-neutral-400">Loading Canvas...</div>
        ) : (

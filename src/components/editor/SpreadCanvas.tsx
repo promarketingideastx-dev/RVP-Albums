@@ -311,6 +311,17 @@ const EditorText = ({ element, spreadId, isSelected, onSelect, onContextMenu }: 
     }
   }, [isSelected]);
 
+  // Forces the canvas to redraw as soon as the font is downloaded
+  useEffect(() => {
+    if (element.fontFamily && typeof document !== 'undefined' && document.fonts) {
+      document.fonts.load(`12px "${element.fontFamily}"`).then(() => {
+        if (shapeRef.current) {
+          shapeRef.current.getLayer()?.batchDraw();
+        }
+      }).catch(() => {});
+    }
+  }, [element.fontFamily]);
+
   const onTransformEnd = () => {
     const node = shapeRef.current;
     if (!node) return;
