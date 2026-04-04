@@ -543,10 +543,20 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const checkDeselect = (e: any) => {
-    const clickedOnEmpty = e.target === e.target.getStage();
-    const clickedOnBackground = e.target.name() === 'background-paper';
-    if (clickedOnEmpty || clickedOnBackground) {
-      setSelectedElement(null);
+    try {
+      if (typeof e.target?.getStage === 'function') {
+        const clickedOnEmpty = e.target === e.target.getStage();
+        const clickedOnBackground = typeof e.target?.name === 'function' && e.target.name() === 'background-paper';
+        if (clickedOnEmpty || clickedOnBackground) {
+          setSelectedElement(null);
+        }
+      } else {
+        if (typeof e.target?.tagName === 'string' && e.target.tagName.toUpperCase() !== 'CANVAS') {
+          setSelectedElement(null);
+        }
+      }
+    } catch (err) {
+      console.warn("Deselect check failed silently natively", err);
     }
   };
 
