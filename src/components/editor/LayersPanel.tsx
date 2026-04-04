@@ -88,7 +88,7 @@ export default function LayersPanel() {
   return (
     <div className="flex flex-col h-full bg-white dark:bg-neutral-950 overflow-hidden w-full relative">
       <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
-        <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-widest">{t('layers')}</h3>
+        <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-widest truncate">{t('layers').includes('.') ? 'Capas' : t('layers')}</h3>
       </div>
       
       {/* PHOTOSHOP TOP GLOBAL BAR */}
@@ -96,11 +96,11 @@ export default function LayersPanel() {
          const selEl = selectedElementId ? spread.elements.find(e => e.id === selectedElementId) : null;
          return (
            <div className="flex flex-col gap-2 px-4 py-3 bg-neutral-50/80 dark:bg-neutral-900/80 border-b border-neutral-200 dark:border-neutral-800 text-[12px] font-medium transition-colors">
-             <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <select 
                   value={selEl?.blendMode || 'source-over'} 
                   onChange={(e) => { if(selEl) updateElement(spread.id, selEl.id, { blendMode: e.target.value })}}
-                  className="bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-neutral-300 dark:border-neutral-700 rounded-md outline-none px-2 py-1 cursor-pointer w-[110px] shadow-sm disabled:opacity-50"
+                  className="bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-neutral-300 dark:border-neutral-700 rounded-md outline-none px-2 py-1 cursor-pointer w-24 shrink-0 shadow-sm disabled:opacity-50"
                   disabled={!selEl || selEl.type === 'text' || selEl.type === 'group'}
                 >
                   <option value="source-over">Normal</option>
@@ -117,24 +117,24 @@ export default function LayersPanel() {
                   <option value="exclusion">Exclusion</option>
                 </select>
                 
-                <div className="flex items-center gap-1 opacity-90">
-                   <span className="text-neutral-500 mr-1">{t('op') || 'Op:'}</span>
+                <div className="flex items-center gap-1.5 opacity-90 flex-1 justify-end">
+                   <span className="text-[10px] uppercase font-bold text-neutral-500">{t('op').includes('.') ? 'Op' : t('op')}</span>
                    <input 
                      disabled={!selEl}
                      type="range" 
                      min="0" max="100" 
                      value={Math.round(((selEl && selEl.opacity !== undefined) ? selEl.opacity : 1) * 100)} 
                      onChange={(e) => { if(selEl) updateElement(spread.id, selEl.id, { opacity: Number(e.target.value) / 100 })}}
-                     className="w-16 accent-blue-500 disabled:opacity-50 cursor-pointer"
+                     className="w-full max-w-[60px] accent-blue-500 disabled:opacity-50 cursor-pointer shrink-0"
                    />
-                   <div className="flex items-center border border-neutral-300 dark:border-neutral-700 rounded bg-white dark:bg-neutral-800 px-1 py-0.5 ml-1">
+                   <div className="flex items-center border border-neutral-300 dark:border-neutral-700 rounded bg-white dark:bg-neutral-800 px-1 py-0.5 shrink-0">
                      <input 
                        disabled={!selEl}
                        type="number" 
                        min="0" max="100" 
                        value={Math.round(((selEl && selEl.opacity !== undefined) ? selEl.opacity : 1) * 100)} 
                        onChange={(e) => { if(selEl) updateElement(spread.id, selEl.id, { opacity: Number(e.target.value) / 100 })}}
-                       className="w-8 bg-transparent text-neutral-800 dark:text-neutral-200 text-right outline-none ring-0 p-0 m-0 text-[11px]"
+                       className="w-6 bg-transparent text-neutral-800 dark:text-neutral-200 text-right outline-none ring-0 p-0 m-0 text-[11px]"
                        onClick={(e) => { (e.target as HTMLInputElement).select() }}
                      />
                      <span className="text-neutral-500 font-normal ml-0.5">%</span>
