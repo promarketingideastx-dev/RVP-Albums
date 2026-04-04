@@ -118,7 +118,32 @@ export default function AssetTray() {
   };
 
   return (
-    <div className="h-64 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 flex flex-col shrink-0">
+    <div className="h-[170px] border-t border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 flex flex-col shrink-0 w-full relative">
+      <style>{`
+        .fundy-scroll::-webkit-scrollbar {
+          height: 14px;
+        }
+        .fundy-scroll::-webkit-scrollbar-track {
+          background: #e5e5e5;
+          border-top: 1px solid #d4d4d8;
+        }
+        .dark .fundy-scroll::-webkit-scrollbar-track {
+          background: #171717;
+          border-top: 1px solid #262626;
+        }
+        .fundy-scroll::-webkit-scrollbar-thumb {
+          background-color: #a3a3a3;
+          border-radius: 10px;
+          border: 3px solid #e5e5e5;
+        }
+        .dark .fundy-scroll::-webkit-scrollbar-thumb {
+          background-color: #525252;
+          border: 3px solid #171717;
+        }
+        .fundy-scroll::-webkit-scrollbar-thumb:hover {
+          background-color: #737373;
+        }
+      `}</style>
       
       {/* Top Toolbar */}
       <div className="h-14 bg-white dark:bg-neutral-950 flex items-center px-4 justify-between border-b border-neutral-200 dark:border-neutral-800 py-2">
@@ -182,7 +207,7 @@ export default function AssetTray() {
       </div>
       
       {/* Scrollable Asset Strip */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden p-3 flex gap-3 h-full">
+      <div className="flex-1 overflow-x-auto overflow-y-hidden pt-2 pb-0 px-3 flex gap-2 fundy-scroll relative">
         {visibleAssets.map(asset => {
           const isSelected = selectedAssetIds.has(asset.id);
           const currentRating = asset.rating || 0;
@@ -245,13 +270,13 @@ export default function AssetTray() {
               </div>
               
               {/* Metadata Control Strip */}
-              <div className="h-8 bg-white dark:bg-neutral-800 flex items-center justify-between px-2 shrink-0 border-t border-neutral-100 dark:border-neutral-700">
-                 <div className="flex gap-0.5 text-xs tracking-tighter">
+              <div className="h-6 bg-white dark:bg-neutral-800 flex items-center justify-between px-1.5 shrink-0 border-t border-neutral-100 dark:border-neutral-700">
+                 <div className="flex gap-0.5 text-[10px] tracking-tighter">
                    {[1, 2, 3, 4, 5].map(star => (
                      <span 
                        key={star}
                        onClick={(e) => setRating(e, asset.id, currentRating === star ? 0 : star)}
-                       className={`cursor-pointer ${star <= currentRating ? 'text-orange-500' : 'text-neutral-300 dark:text-neutral-600'} hover:text-orange-400`}
+                       className={`cursor-pointer ${star <= currentRating ? 'text-orange-500' : 'text-neutral-300 dark:text-neutral-600'} hover:text-orange-400 leading-none`}
                      >
                        ★
                      </span>
@@ -259,7 +284,7 @@ export default function AssetTray() {
                  </div>
                  <div 
                    onClick={(e) => toggleFavorite(e, asset)}
-                   className={`${asset.isFavorite ? 'text-red-500' : 'text-neutral-300 dark:text-neutral-600'} hover:text-red-500 cursor-pointer text-sm font-bold`}
+                   className={`${asset.isFavorite ? 'text-red-500' : 'text-neutral-300 dark:text-neutral-600'} hover:text-red-500 cursor-pointer text-[12px] font-bold leading-none`}
                  >
                    {asset.isFavorite ? '♥' : '♡'}
                  </div>
