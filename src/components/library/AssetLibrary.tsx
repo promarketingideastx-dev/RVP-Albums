@@ -121,7 +121,7 @@ export default function AssetLibrary() {
               <p>{t('lib_empty')}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 overflow-y-auto pr-1 pb-4 pt-1 px-1">
+            <div className={`grid ${activeCategory === 'cinematic' ? 'grid-cols-1 xl:grid-cols-2 gap-4' : 'grid-cols-2 xl:grid-cols-3 gap-3'} overflow-y-auto pr-1 pb-4 pt-1 px-1`}>
               {assets.map((asset) => {
                 const isDarkCat = ['overlays'].includes(activeCategory);
                 const bgClass = isDarkCat ? 'bg-[#1e1e1e] border-neutral-800' : 'bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800';
@@ -133,7 +133,7 @@ export default function AssetLibrary() {
                       <img src={asset.src} alt={asset.name} className="w-full h-full object-cover pointer-events-none" />
                       
                       {/* Asset Identification Overlay */}
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] font-bold px-2 py-1 text-center backdrop-blur-sm pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className={`absolute bottom-0 left-0 right-0 bg-black/50 text-white font-bold text-center backdrop-blur-sm pointer-events-none transition-opacity ${activeCategory === 'cinematic' ? 'opacity-100 text-xs px-2 py-2' : 'opacity-0 group-hover:opacity-100 text-[10px] px-2 py-1'}`}>
                          {asset.name || asset.id.split('-').slice(0, 2).join('-').toUpperCase()}
                       </div>
                     </div>
