@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useEditorStore } from '@/store/useEditorStore';
 import { LUT_LIBRARY } from '@/lib/lut-presets';
 import TypographyPresetSelector from './editor/TypographyPresetSelector';
-import { AlignLeft, AlignCenter, AlignRight, Baseline, LetterText, Type, PaintBucket, TypeOutline, Baseline as ShadowIcon, TextSelect, Layers, SlidersHorizontal, Globe } from 'lucide-react';
+import { AlignLeft, AlignCenter, AlignRight, Baseline, LetterText, Type, PaintBucket, TypeOutline, TextSelect, Layers, SlidersHorizontal, Globe } from 'lucide-react';
 import LayersPanel from './editor/LayersPanel';
 import GlobalStylesPanel from './editor/GlobalStylesPanel';
 
