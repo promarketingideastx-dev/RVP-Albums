@@ -118,7 +118,31 @@ export default function AssetLibrary() {
           <h3 className="text-sm font-bold uppercase tracking-wide text-neutral-800 dark:text-neutral-200 mb-4">
             {t(`lib_${activeCategory}`)}
           </h3>
-          {assets.length === 0 ? (
+          {activeCategory === 'typography' ? (
+            <div className="flex flex-col gap-3 px-1 mt-2">
+              <div 
+                className="w-full bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 cursor-grab hover:border-blue-400 hover:shadow-md transition-all group flex items-center justify-center text-center"
+                draggable 
+                onDragStart={(e) => handleDragStartDefault(e, { id: 'txt-heading', src: '', name: 'Heading', category: 'typography' }, activeCategory)}
+              >
+                <span className="font-serif text-3xl font-bold text-neutral-800 dark:text-neutral-200 group-hover:text-blue-500 transition-colors">Add a heading</span>
+              </div>
+              <div 
+                className="w-full bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-3 cursor-grab hover:border-blue-400 hover:shadow-md transition-all group flex items-center justify-center text-center"
+                draggable 
+                onDragStart={(e) => handleDragStartDefault(e, { id: 'txt-subheading', src: '', name: 'Subheading', category: 'typography' }, activeCategory)}
+              >
+                <span className="font-sans text-xl font-semibold text-neutral-700 dark:text-neutral-300 group-hover:text-blue-500 transition-colors">Add a subheading</span>
+              </div>
+              <div 
+                className="w-full bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-3 cursor-grab hover:border-blue-400 hover:shadow-md transition-all group flex items-center justify-center text-center"
+                draggable 
+                onDragStart={(e) => handleDragStartDefault(e, { id: 'txt-body', src: '', name: 'Body text', category: 'typography' }, activeCategory)}
+              >
+                <span className="font-sans text-sm text-neutral-600 dark:text-neutral-400 group-hover:text-blue-500 transition-colors">Add a little bit of body text</span>
+              </div>
+            </div>
+          ) : assets.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center text-neutral-400 text-xs">
               <p>{t('lib_empty')}</p>
             </div>

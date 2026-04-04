@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useEditorStore } from '@/store/useEditorStore';
 import { LUT_LIBRARY } from '@/lib/lut-presets';
 import TypographyPresetSelector from './editor/TypographyPresetSelector';
+import { AlignLeft, AlignCenter, AlignRight, Baseline, LetterText, Type, PaintBucket, TypeOutline, Baseline as ShadowIcon, TextSelect } from 'lucide-react';
 
 export default function Inspector() {
   const t = useTranslations('Editor');
@@ -278,108 +279,156 @@ export default function Inspector() {
       )}
 
       {element.type === 'text' && (
-        <div className="mb-4 bg-neutral-50 dark:bg-neutral-900/50 p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
-          <TypographyPresetSelector />
-          <div className="flex flex-col gap-1 mb-3">
-            <label className="text-xs font-semibold text-neutral-500 uppercase">Text Source</label>
-            <textarea
-              className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-700 rounded px-2 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow min-h-[60px]"
-              value={element.text || ''}
-              onChange={(e) => updateElement(activeSpreadId, element.id, { text: e.target.value })}
-            />
-          </div>
-          <div className="flex flex-col gap-1 mb-3">
-            <label className="text-xs font-semibold text-neutral-500 uppercase">Font Family</label>
-            <select
-              className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-700 rounded px-2 py-1.5 text-sm focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-              value={element.fontFamily || 'Inter'}
-              disabled={element.lockedFonts !== false && !!project?.typographyPresetId}
-              title={element.lockedFonts !== false && !!project?.typographyPresetId ? "Locked by active Typography Preset" : ""}
-              onChange={(e) => updateElement(activeSpreadId, element.id, { fontFamily: e.target.value })}
-            >
-              <option value="Inter">Inter (Sans Serif)</option>
-              <option value="Arial">Arial</option>
-              <option value="Times New Roman">Times New Roman</option>
-              <option value="Courier New">Courier New</option>
-              <option value="Georgia">Georgia</option>
-              <option value="Verdana">Verdana</option>
-              <option value="Impact">Impact</option>
-              <option value="Comic Sans MS">Comic Sans MS</option>
-              <option value="Oswald">Oswald</option>
-              <option value="Playfair Display">Playfair Display</option>
-            </select>
-          </div>
-          <div className={element.lockedFonts !== false && !!project?.typographyPresetId ? 'opacity-50 pointer-events-none grayscale' : ''} title={element.lockedFonts !== false && !!project?.typographyPresetId ? "Layout controlled by active Typography Preset" : ""}>
-            <InputField 
-              label={"Font Size"} 
-              value={element.fontSize !== undefined ? element.fontSize.toString() : "32"} 
-              setter={(val) => updateElement(activeSpreadId, element.id, { fontSize: parseFloat(val) })} 
-              min={8} max={250} step="1"
-            />
-          </div>
-          <div className="flex flex-col gap-1 mb-3">
-            <label className="text-xs font-semibold text-neutral-500 uppercase">Text Fill Color</label>
-            <input
-              type="color"
-              className="w-full h-8 cursor-pointer rounded border border-neutral-200 dark:border-neutral-700"
-              value={element.textColor || '#000000'}
-              onChange={(e) => updateElement(activeSpreadId, element.id, { textColor: e.target.value })}
-            />
+        <div className="mb-4">
+          {/* Typograpy Presets Block */}
+          <div className="bg-neutral-50 dark:bg-neutral-900/50 p-2 rounded-lg border border-neutral-200 dark:border-neutral-800 mb-3">
+             <TypographyPresetSelector />
           </div>
           
-          <div className="pt-3 mt-3 border-t border-neutral-200 dark:border-neutral-800">
-             <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-800 dark:text-neutral-200 mb-2">Outline (Stroke)</h3>
-             <InputField 
-               label={"Outline Thickness"} 
-               value={element.strokeWidth !== undefined ? element.strokeWidth.toString() : "0"} 
-               setter={(val) => updateElement(activeSpreadId, element.id, { strokeWidth: parseFloat(val) })} 
-             />
-             <div className="flex flex-col gap-1 mb-2 mt-1">
-               <label className="text-xs font-semibold text-neutral-500 uppercase">Outline Color</label>
-               <input
-                 type="color"
-                 className="w-full h-8 cursor-pointer rounded border border-neutral-200 dark:border-neutral-700"
-                 value={element.strokeColor || '#000000'}
-                 onChange={(e) => updateElement(activeSpreadId, element.id, { strokeColor: e.target.value })}
-               />
-             </div>
-          </div>
+          <div className="bg-neutral-50 dark:bg-neutral-900/50 p-3 rounded-lg border border-neutral-200 dark:border-neutral-800 space-y-4">
+            {/* Raw Text Box */}
+            <div>
+              <div className="flex items-center gap-1.5 mb-2">
+                <TextSelect className="w-3.5 h-3.5 text-neutral-500" />
+                <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Text Source</label>
+              </div>
+              <textarea
+                className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-700 rounded px-2 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow min-h-[60px]"
+                value={element.text || ''}
+                onChange={(e) => updateElement(activeSpreadId, element.id, { text: e.target.value })}
+                placeholder="Escribe tu texto..."
+              />
+            </div>
 
-          <div className="pt-3 mt-3 border-t border-neutral-200 dark:border-neutral-800">
-             <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-800 dark:text-neutral-200 mb-2">Text Shadow Drops</h3>
-             <InputField 
-               label={"Shadow Blur Radius"} 
-               value={element.shadowBlur !== undefined ? element.shadowBlur.toString() : "0"} 
-               setter={(val) => updateElement(activeSpreadId, element.id, { shadowBlur: parseFloat(val) })} 
-             />
-             <div className="flex gap-2">
-               <InputField 
-                 label={"Offset X"} 
-                 value={element.shadowOffsetX !== undefined ? element.shadowOffsetX.toString() : "0"} 
-                 setter={(val) => updateElement(activeSpreadId, element.id, { shadowOffsetX: parseFloat(val) })} 
-                 min={-100} max={100} step="1"
-               />
-               <InputField 
-                 label={"Offset Y"} 
-                 value={element.shadowOffsetY !== undefined ? element.shadowOffsetY.toString() : "0"} 
-                 setter={(val) => updateElement(activeSpreadId, element.id, { shadowOffsetY: parseFloat(val) })} 
-                 min={-100} max={100} step="1"
-               />
-             </div>
-             <div className="flex flex-col gap-1 mb-2 mt-1">
-               <label className="text-xs font-semibold text-neutral-500 uppercase">Shadow Color</label>
-               <input
-                 type="color"
-                 className="w-full h-8 cursor-pointer rounded border border-neutral-200 dark:border-neutral-700"
-                 value={element.shadowColor || '#000000'}
-                 onChange={(e) => updateElement(activeSpreadId, element.id, { shadowColor: e.target.value })}
-               />
-             </div>
-             <InputField 
-               label={"Shadow Translucency"} 
-               value={element.shadowOpacity !== undefined ? element.shadowOpacity.toString() : "0.5"} 
-               setter={(val) => updateElement(activeSpreadId, element.id, { shadowOpacity: parseFloat(val) })} 
-             />
+            {/* Font Typography Bar */}
+            <div className={element.lockedFonts !== false && !!project?.typographyPresetId ? 'opacity-50 pointer-events-none grayscale' : ''} title={element.lockedFonts !== false && !!project?.typographyPresetId ? "Layout controlled by active Typography Preset" : ""}>
+              <div className="flex items-center gap-1.5 mb-2">
+                <Type className="w-3.5 h-3.5 text-neutral-500" />
+                <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Typography</label>
+              </div>
+              <div className="grid grid-cols-[1fr_auto] gap-2 items-center">
+                <select
+                  className="w-full h-8 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-700 rounded px-2 text-sm focus:outline-none disabled:opacity-50"
+                  value={element.fontFamily || 'Inter'}
+                  disabled={element.lockedFonts !== false && !!project?.typographyPresetId}
+                  onChange={(e) => updateElement(activeSpreadId, element.id, { fontFamily: e.target.value })}
+                >
+                  <option value="Inter">Inter (Sans Serif)</option>
+                  <option value="Playfair Display">Playfair Display</option>
+                  <option value="Bodoni Moda">Bodoni Moda</option>
+                  <option value="Cormorant Garamond">Cormorant Garamond</option>
+                  <option value="Great Vibes">Great Vibes</option>
+                  <option value="Outfit">Outfit</option>
+                  <option value="Cinzel">Cinzel</option>
+                  <option value="Montserrat">Montserrat</option>
+                  <option value="Oswald">Oswald</option>
+                  <option value="Arial">Arial</option>
+                </select>
+                <div className="flex items-center bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-700 rounded h-8 px-1">
+                   <input type="number" value={element.fontSize || 32} onChange={(e) => updateElement(activeSpreadId, element.id, { fontSize: parseFloat(e.target.value) || 32 })} className="w-10 text-center bg-transparent border-none text-sm outline-none" min={8} max={500} />
+                </div>
+              </div>
+            </div>
+
+            {/* Formatting Row */}
+            <div className="grid grid-cols-2 gap-2">
+              {/* Spacing Adjustments */}
+              <div className="flex bg-neutral-200/50 dark:bg-neutral-800/50 p-1 rounded-md">
+                <button onClick={() => updateElement(activeSpreadId, element.id, { textAlign: 'left' })} className={`flex-1 flex justify-center py-1 rounded transition-colors ${!element.textAlign || element.textAlign === 'left' ? 'bg-white dark:bg-neutral-700 shadow-sm' : 'text-neutral-500'}`}>
+                  <AlignLeft className="w-4 h-4" />
+                </button>
+                <button onClick={() => updateElement(activeSpreadId, element.id, { textAlign: 'center' })} className={`flex-1 flex justify-center py-1 rounded transition-colors ${element.textAlign === 'center' ? 'bg-white dark:bg-neutral-700 shadow-sm' : 'text-neutral-500'}`}>
+                  <AlignCenter className="w-4 h-4" />
+                </button>
+                <button onClick={() => updateElement(activeSpreadId, element.id, { textAlign: 'right' })} className={`flex-1 flex justify-center py-1 rounded transition-colors ${element.textAlign === 'right' ? 'bg-white dark:bg-neutral-700 shadow-sm' : 'text-neutral-500'}`}>
+                  <AlignRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Text Case Segment (using a clean segmented structure) */}
+              <div className="flex bg-neutral-200/50 dark:bg-neutral-800/50 p-1 rounded-md text-xs font-medium">
+                <button onClick={() => updateElement(activeSpreadId, element.id, { textTransform: 'uppercase' })} className={`flex-1 flex justify-center py-1 rounded transition-colors ${element.textTransform === 'uppercase' ? 'bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white' : 'text-neutral-500'}`}>
+                  AA
+                </button>
+                <button onClick={() => updateElement(activeSpreadId, element.id, { textTransform: 'lowercase' })} className={`flex-1 flex justify-center py-1 rounded transition-colors ${element.textTransform === 'lowercase' ? 'bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white' : 'text-neutral-500'}`}>
+                  aa
+                </button>
+                <button onClick={() => updateElement(activeSpreadId, element.id, { textTransform: undefined })} className={`flex-1 flex justify-center py-1 rounded transition-colors ${!element.textTransform ? 'bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white' : 'text-neutral-500'}`}>
+                  Aa
+                </button>
+              </div>
+            </div>
+
+            {/* Metrics */}
+            <div className={`grid grid-cols-2 gap-3 ${element.lockedFonts !== false && !!project?.typographyPresetId ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
+              <div className="flex items-center gap-2">
+                <LetterText className="w-4 h-4 text-neutral-400 shrink-0" />
+                <input type="range" min="-10" max="100" step="1" value={element.letterSpacing || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { letterSpacing: parseFloat(e.target.value) })} className="w-full accent-blue-500 h-1 bg-neutral-200 rounded-lg appearance-none cursor-pointer" />
+                <span className="text-xs text-neutral-400 w-6 text-right tabular-nums">{element.letterSpacing || 0}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Baseline className="w-4 h-4 text-neutral-400 shrink-0" />
+                <input type="range" min="0.5" max="3" step="0.1" value={element.lineHeight || 1} onChange={(e) => updateElement(activeSpreadId, element.id, { lineHeight: parseFloat(e.target.value) })} className="w-full accent-blue-500 h-1 bg-neutral-200 rounded-lg appearance-none cursor-pointer" />
+                <span className="text-xs text-neutral-400 w-6 text-right tabular-nums">{element.lineHeight || 1}</span>
+              </div>
+            </div>
+
+            {/* Fills & Strokes */}
+            <div className="grid grid-cols-[1fr_1fr] gap-4 pt-2 border-t border-neutral-200 dark:border-neutral-800">
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-1.5">
+                  <PaintBucket className="w-3.5 h-3.5 text-neutral-500" />
+                  <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Fill</label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="color" className="w-8 h-8 rounded-full border border-neutral-200 shadow-sm cursor-pointer p-0 overflow-hidden" value={element.textColor || '#000000'} onChange={(e) => updateElement(activeSpreadId, element.id, { textColor: e.target.value })} />
+                  <span className="text-xs text-neutral-600 font-mono uppercase bg-white border px-1.5 py-1 rounded">{element.textColor || '#000000'}</span>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-1.5">
+                  <TypeOutline className="w-3.5 h-3.5 text-neutral-500" />
+                  <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Stroke</label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="color" className="w-6 h-6 rounded border border-neutral-200 shadow-sm cursor-pointer p-0 overflow-hidden" value={element.strokeColor || '#000000'} onChange={(e) => updateElement(activeSpreadId, element.id, { strokeColor: e.target.value })} />
+                  <input type="number" min="0" max="100" value={element.strokeWidth || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { strokeWidth: parseFloat(e.target.value) || 0 })} className="w-10 h-6 border rounded text-xs text-center outline-none bg-white font-mono" />
+                </div>
+              </div>
+            </div>
+            
+            {/* Shadow Mini Accordion */}
+            <details className="group pt-2 border-t border-neutral-200 dark:border-neutral-800">
+               <summary className="flex items-center justify-between cursor-pointer list-none text-xs font-semibold text-neutral-500 uppercase tracking-wide">
+                 <div className="flex items-center gap-1.5">
+                    <ShadowIcon className="w-3.5 h-3.5" />
+                    Drop Shadow
+                 </div>
+                 <span className="text-neutral-400 group-open:rotate-180 transition-transform">▼</span>
+               </summary>
+               <div className="pt-3 grid grid-cols-2 gap-3 pb-1">
+                 <div className="flex flex-col gap-1">
+                   <label className="text-[10px] text-neutral-400 uppercase">Blur Radius</label>
+                   <input type="range" min="0" max="100" value={element.shadowBlur || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowBlur: parseFloat(e.target.value) })} className="w-full accent-blue-500 h-1 bg-neutral-200 rounded-lg appearance-none cursor-pointer" />
+                 </div>
+                 <div className="flex flex-col gap-1">
+                   <label className="text-[10px] text-neutral-400 uppercase">Opacity</label>
+                   <input type="range" min="0" max="1" step="0.05" value={element.shadowOpacity !== undefined ? element.shadowOpacity : 0.5} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOpacity: parseFloat(e.target.value) })} className="w-full accent-blue-500 h-1 bg-neutral-200 rounded-lg appearance-none cursor-pointer" />
+                 </div>
+                 <div className="flex flex-col gap-1">
+                   <label className="text-[10px] text-neutral-400 uppercase">Offset X ({element.shadowOffsetX || 0})</label>
+                   <input type="range" min="-100" max="100" value={element.shadowOffsetX || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOffsetX: parseFloat(e.target.value) })} className="w-full accent-blue-500 h-1 bg-neutral-200 rounded-lg appearance-none cursor-pointer" />
+                 </div>
+                 <div className="flex flex-col gap-1">
+                   <label className="text-[10px] text-neutral-400 uppercase">Offset Y ({element.shadowOffsetY || 0})</label>
+                   <input type="range" min="-100" max="100" value={element.shadowOffsetY || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOffsetY: parseFloat(e.target.value) })} className="w-full accent-blue-500 h-1 bg-neutral-200 rounded-lg appearance-none cursor-pointer" />
+                 </div>
+                 <div className="col-span-2 flex items-center justify-between border-t border-neutral-100 dark:border-neutral-800 pt-2 mt-1">
+                   <label className="text-[10px] text-neutral-400 uppercase">Shadow Color</label>
+                   <input type="color" className="w-full max-w-[120px] h-6 rounded border border-neutral-200 cursor-pointer p-0" value={element.shadowColor || '#000000'} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowColor: e.target.value })} />
+                 </div>
+               </div>
+            </details>
           </div>
         </div>
       )}
