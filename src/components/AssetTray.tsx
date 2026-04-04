@@ -35,25 +35,12 @@ export default function AssetTray() {
     return filtered;
   }, [assets, filterRating, sortMode]);
 
-  // Compute absolute asset occurrences synchronously tracking spread insertions locally across entire project
-  const usageMap = useMemo(() => {
-    const map: Record<string, number> = {};
-    if (!project) return map;
-    
-    project.spreads.forEach(spread => {
-      spread.elements.forEach(element => {
-        if (element.type === 'image') {
-          // Identify local blob or direct URI equivalents propagating increments flawlessly
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const imgEl = element as any;
-          const key = imgEl.image_blob_id || imgEl.image_url;
-          if (key) {
-             map[key] = (map[key] || 0) + 1;
-          }
-        }
-      });
-    });
-    return map;
+
+          
+  // Extract all existing image elements across all spreads efficiently updating live drops
+  const allImageElements = useMemo(() => {
+    if (!project) return [];
+    return project.spreads.flatMap(s => s.elements.filter(e => e.type === 'image'));
   }, [project]);
 
   if (!project) return null;
@@ -233,11 +220,18 @@ export default function AssetTray() {
           const isSelected = selectedAssetIds.has(asset.id);
           const currentRating = asset.rating || 0;
           
-          // Match by precise deterministic token isolating exact blob references cleanly natively 
-          const countId = usageMap[asset.id] || 0;
-          const countPreview = asset.previewUrl ? (usageMap[asset.previewUrl] || 0) : 0;
-          const countOriginal = asset.originalUrl ? (usageMap[asset.originalUrl] || 0) : 0;
-          const usageCount = countId + countPreview + countOriginal;
+          // Match by precise deterministic properties natively ensuring overlapping attributes don't double count
+          const usageCount = allImageElements.filter((el) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const imgEl = el as any;
+            return (
+              (asset.previewBlobId && imgEl.previewBlobId === asset.previewBlobId) ||
+              (asset.originalBlobId && imgEl.originalBlobId === asset.originalBlobId) ||
+              (asset.previewUrl && imgEl.previewUrl === asset.previewUrl) ||
+              (asset.originalUrl && imgEl.originalUrl === asset.originalUrl) ||
+              (asset.previewUrl && imgEl.src === asset.previewUrl)
+            );
+          }).length;
 
           return (
             <div
