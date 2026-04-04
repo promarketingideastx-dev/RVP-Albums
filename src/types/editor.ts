@@ -24,6 +24,7 @@ export interface EditorElement {
   shadowColor?: string;
   shadowOpacity?: number;
   borderRadius?: number; // Phase 7.G.9: Border radius element manually applying masks
+  isolateFromGlobalStyles?: boolean; // Phase 7.G.10: Manual decoupling from cascading style overrides
   blendMode?: string;
   visible?: boolean; // Phase 7.G.6.C: Visibility cascade mapping
   locked?: boolean; // Phase 7.G.6.C: Selection and Dragging constraint 

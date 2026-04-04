@@ -148,17 +148,17 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
           const imgObj = await loadHtmlImage(url);
           const globalStyles = project.globalImageStyles;
           
-          const appliedShadowColor = el.shadowColor || (globalStyles?.shadowEnabled ? (globalStyles.shadowColor || '#000000') : 'transparent');
-          const appliedShadowBlur = el.shadowBlur ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowBlur ?? 0) : 0);
-          const appliedShadowOffsetX = el.shadowOffsetX ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetX ?? 0) : 0);
-          const appliedShadowOffsetY = el.shadowOffsetY ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetY ?? 0) : 0);
-          const appliedShadowOpacity = el.shadowOpacity ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowOpacity ?? 0.5) : 0.5);
+          const appliedShadowColor = el.shadowColor || (!el.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowColor || '#000000') : 'transparent');
+          const appliedShadowBlur = el.shadowBlur ?? (!el.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowBlur ?? 0) : 0);
+          const appliedShadowOffsetX = el.shadowOffsetX ?? (!el.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetX ?? 0) : 0);
+          const appliedShadowOffsetY = el.shadowOffsetY ?? (!el.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetY ?? 0) : 0);
+          const appliedShadowOpacity = el.shadowOpacity ?? (!el.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowOpacity ?? 0.5) : 0.5);
 
-          const strokeEnabled = globalStyles?.strokeEnabled ?? false;
+          const strokeEnabled = !el.isolateFromGlobalStyles && (globalStyles?.strokeEnabled ?? false);
           const appliedStrokeWidth = el.strokeWidth ?? (strokeEnabled ? (globalStyles?.strokeWidth ?? 0) : 0);
           const appliedStrokeColor = el.strokeColor ?? (strokeEnabled ? (globalStyles?.strokeColor ?? '#ffffff') : undefined);
           
-          const cornerRadiusEnabled = globalStyles?.borderRadiusEnabled ?? false;
+          const cornerRadiusEnabled = !el.isolateFromGlobalStyles && (globalStyles?.borderRadiusEnabled ?? false);
           const appliedBorderRadius = el.borderRadius ?? (cornerRadiusEnabled ? (globalStyles?.borderRadius ?? 0) : 0);
 
           const kGroup = new Konva.Group({

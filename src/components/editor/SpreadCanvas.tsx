@@ -162,17 +162,17 @@ const EditorImage = ({
 
   const mmToPx = 3.779527559;
 
-  const appliedShadowColor = element.shadowColor || (globalStyles?.shadowEnabled ? (globalStyles.shadowColor || '#000000') : 'transparent');
-  const appliedShadowBlur = element.shadowBlur ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowBlur ?? 0) : 0);
-  const appliedShadowOffsetX = element.shadowOffsetX ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetX ?? 0) : 0);
-  const appliedShadowOffsetY = element.shadowOffsetY ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetY ?? 0) : 0);
-  const appliedShadowOpacity = element.shadowOpacity ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowOpacity ?? 0.5) : 0.5);
+  const appliedShadowColor = element.shadowColor || (!element.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowColor || '#000000') : 'transparent');
+  const appliedShadowBlur = element.shadowBlur ?? (!element.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowBlur ?? 0) : 0);
+  const appliedShadowOffsetX = element.shadowOffsetX ?? (!element.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetX ?? 0) : 0);
+  const appliedShadowOffsetY = element.shadowOffsetY ?? (!element.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetY ?? 0) : 0);
+  const appliedShadowOpacity = element.shadowOpacity ?? (!element.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowOpacity ?? 0.5) : 0.5);
 
-  const strokeEnabled = globalStyles?.strokeEnabled ?? false;
+  const strokeEnabled = !element.isolateFromGlobalStyles && (globalStyles?.strokeEnabled ?? false);
   const appliedStrokeWidth = element.strokeWidth ?? (strokeEnabled ? (globalStyles?.strokeWidth ?? 0) : 0);
   const appliedStrokeColor = element.strokeColor ?? (strokeEnabled ? (globalStyles?.strokeColor ?? '#ffffff') : undefined);
   
-  const cornerRadiusEnabled = globalStyles?.borderRadiusEnabled ?? false;
+  const cornerRadiusEnabled = !element.isolateFromGlobalStyles && (globalStyles?.borderRadiusEnabled ?? false);
   const appliedBorderRadius = element.borderRadius ?? (cornerRadiusEnabled ? (globalStyles?.borderRadius ?? 0) : 0);
 
   return (

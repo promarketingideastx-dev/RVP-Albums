@@ -492,6 +492,19 @@ export default function Inspector() {
               </div>
             </div>
 
+            {/* Global Style Isolation */}
+            <div className="pt-3 pb-2 border-t border-neutral-200 dark:border-neutral-800">
+               <label className="flex items-center gap-2 cursor-pointer">
+                 <input 
+                   type="checkbox" 
+                   checked={element.isolateFromGlobalStyles || false} 
+                   onChange={(e) => updateElement(activeSpreadId, element.id, { isolateFromGlobalStyles: e.target.checked })} 
+                   className="w-3.5 h-3.5 rounded border-neutral-300 text-blue-500 focus:ring-blue-500" 
+                 />
+                 <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-300">Aislar de Estilos Globales</span>
+               </label>
+            </div>
+
             {/* Fills & Strokes */}
             <div className="grid grid-cols-[1fr_1fr] gap-4 pt-2 border-t border-neutral-200 dark:border-neutral-800">
               <div className="flex flex-col gap-1.5">
