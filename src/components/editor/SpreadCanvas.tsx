@@ -169,6 +169,20 @@ const EditorImage = ({
   const appliedShadowOpacity = element.shadowOpacity ?? (!element.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowOpacity ?? 0.5) : 0.5);
 
   const shadowIsInvisibleArtifact = (appliedShadowBlur === 0 && appliedShadowOffsetX === 0 && appliedShadowOffsetY === 0) || appliedShadowOpacity === 0;
+  
+  if (element.type === 'image' || element.type === 'decoration') {
+    console.log("SHADOW TRACE:", {
+      id: element.id,
+      globalEnabled: globalStyles?.shadowEnabled,
+      appliedShadowColor,
+      appliedShadowBlur,
+      appliedShadowOffsetX,
+      appliedShadowOffsetY,
+      appliedShadowOpacity,
+      shadowIsInvisibleArtifact
+    });
+  }
+
   const finalShadowColor = shadowIsInvisibleArtifact ? 'transparent' : appliedShadowColor;
 
   const strokeEnabled = !element.isolateFromGlobalStyles && (globalStyles?.strokeEnabled ?? false);
@@ -195,11 +209,6 @@ const EditorImage = ({
         opacity={element.opacity !== undefined ? element.opacity : 1}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         globalCompositeOperation={(element.blendMode as any) || 'source-over'}
-        shadowColor={finalShadowColor}
-        shadowBlur={appliedShadowBlur}
-        shadowOffsetX={appliedShadowOffsetX}
-        shadowOffsetY={appliedShadowOffsetY}
-        shadowOpacity={appliedShadowOpacity}
         onContextMenu={(e) => {
           e.evt.preventDefault();
           onContextMenu(e.evt.clientX, e.evt.clientY, element.id);
@@ -237,6 +246,11 @@ const EditorImage = ({
           cornerRadius={appliedBorderRadius * mmToPx}
           stroke={appliedStrokeWidth > 0 ? appliedStrokeColor : undefined}
           strokeWidth={appliedStrokeWidth * mmToPx}
+          shadowColor={finalShadowColor}
+          shadowBlur={appliedShadowBlur}
+          shadowOffsetX={appliedShadowOffsetX}
+          shadowOffsetY={appliedShadowOffsetY}
+          shadowOpacity={appliedShadowOpacity}
         />
         {element.photoFilter && element.photoFilter !== 'none' && element.id !== previewOriginalPhotoId && (
           <KonvaImage 
