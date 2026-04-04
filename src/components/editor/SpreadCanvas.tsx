@@ -168,6 +168,9 @@ const EditorImage = ({
   const appliedShadowOffsetY = element.shadowOffsetY ?? (!element.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetY ?? 0) : 0);
   const appliedShadowOpacity = element.shadowOpacity ?? (!element.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowOpacity ?? 0.5) : 0.5);
 
+  const shadowIsInvisibleArtifact = (appliedShadowBlur === 0 && appliedShadowOffsetX === 0 && appliedShadowOffsetY === 0) || appliedShadowOpacity === 0;
+  const finalShadowColor = shadowIsInvisibleArtifact ? 'transparent' : appliedShadowColor;
+
   const strokeEnabled = !element.isolateFromGlobalStyles && (globalStyles?.strokeEnabled ?? false);
   const appliedStrokeWidth = element.strokeWidth ?? (strokeEnabled ? (globalStyles?.strokeWidth ?? 0) : 0);
   const appliedStrokeColor = element.strokeColor ?? (strokeEnabled ? (globalStyles?.strokeColor ?? '#ffffff') : undefined);
@@ -192,7 +195,7 @@ const EditorImage = ({
         opacity={element.opacity !== undefined ? element.opacity : 1}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         globalCompositeOperation={(element.blendMode as any) || 'source-over'}
-        shadowColor={appliedShadowColor}
+        shadowColor={finalShadowColor}
         shadowBlur={appliedShadowBlur}
         shadowOffsetX={appliedShadowOffsetX}
         shadowOffsetY={appliedShadowOffsetY}

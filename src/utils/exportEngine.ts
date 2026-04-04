@@ -154,6 +154,9 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
           const appliedShadowOffsetY = el.shadowOffsetY ?? (!el.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetY ?? 0) : 0);
           const appliedShadowOpacity = el.shadowOpacity ?? (!el.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowOpacity ?? 0.5) : 0.5);
 
+          const shadowIsInvisibleArtifact = (appliedShadowBlur === 0 && appliedShadowOffsetX === 0 && appliedShadowOffsetY === 0) || appliedShadowOpacity === 0;
+          const finalShadowColor = shadowIsInvisibleArtifact ? 'transparent' : appliedShadowColor;
+
           const strokeEnabled = !el.isolateFromGlobalStyles && (globalStyles?.strokeEnabled ?? false);
           const appliedStrokeWidth = el.strokeWidth ?? (strokeEnabled ? (globalStyles?.strokeWidth ?? 0) : 0);
           const appliedStrokeColor = el.strokeColor ?? (strokeEnabled ? (globalStyles?.strokeColor ?? '#ffffff') : undefined);
@@ -170,9 +173,8 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
             opacity: el.opacity !== undefined ? el.opacity : 1,
             scaleX: el.scale || 1,
             scaleY: el.scale || 1,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             globalCompositeOperation: (el.blendMode as any) || 'source-over',
-            shadowColor: appliedShadowColor,
+            shadowColor: finalShadowColor,
             shadowBlur: appliedShadowBlur * mmToPx,
             shadowOffsetX: appliedShadowOffsetX * mmToPx,
             shadowOffsetY: appliedShadowOffsetY * mmToPx,
