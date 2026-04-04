@@ -35,6 +35,27 @@ export default function AssetTray() {
     return filtered;
   }, [assets, filterRating, sortMode]);
 
+  // Compute absolute asset occurrences synchronously tracking spread insertions locally across entire project
+  const usageMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    if (!project) return map;
+    
+    project.spreads.forEach(spread => {
+      spread.elements.forEach(element => {
+        if (element.type === 'image') {
+          // Identify local blob or direct URI equivalents propagating increments flawlessly
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const imgEl = element as any;
+          const key = imgEl.image_blob_id || imgEl.image_url;
+          if (key) {
+             map[key] = (map[key] || 0) + 1;
+          }
+        }
+      });
+    });
+    return map;
+  }, [project]);
+
   if (!project) return null;
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -211,6 +232,13 @@ export default function AssetTray() {
         {visibleAssets.map(asset => {
           const isSelected = selectedAssetIds.has(asset.id);
           const currentRating = asset.rating || 0;
+          
+          // Match by precise deterministic token isolating exact blob references cleanly natively 
+          const countId = usageMap[asset.id] || 0;
+          const countPreview = asset.previewUrl ? (usageMap[asset.previewUrl] || 0) : 0;
+          const countOriginal = asset.originalUrl ? (usageMap[asset.originalUrl] || 0) : 0;
+          const usageCount = countId + countPreview + countOriginal;
+
           return (
             <div
               key={asset.id}
@@ -218,11 +246,18 @@ export default function AssetTray() {
             >
               {/* Checkbox Hook Layer */}
               <div 
-                className="absolute top-2 left-2 z-10 w-5 h-5 rounded border border-white bg-black/30 cursor-pointer flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-2 right-10 z-20 w-5 h-5 rounded border border-white bg-black/30 cursor-pointer flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                 onClick={(e) => toggleSelection(e, asset.id)}
               >
                 {isSelected && <div className="w-3 h-3 bg-orange-500 rounded-sm"></div>}
               </div>
+
+              {/* Usage Count Badge Layer */}
+              {usageCount > 0 && (
+                <div className="absolute top-2 left-2 z-20 bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-[11px] font-bold shadow-md shadow-black/20 ring-1 ring-white/30 backdrop-blur-sm pointer-events-none transition-transform scale-in">
+                  {usageCount}
+                </div>
+              )}
 
               {/* Delete Hook Layer */}
               <button
