@@ -544,7 +544,8 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const checkDeselect = (e: any) => {
     const clickedOnEmpty = e.target === e.target.getStage();
-    if (clickedOnEmpty) {
+    const clickedOnBackground = e.target.name() === 'background-paper';
+    if (clickedOnEmpty || clickedOnBackground) {
       setSelectedElement(null);
     }
   };
@@ -662,6 +663,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
       <Layer scaleX={scale} scaleY={scale}>
         {/* Background Paper */}
         <Rect
+          name="background-paper"
           x={0}
           y={0}
           width={project.size.w_mm}
