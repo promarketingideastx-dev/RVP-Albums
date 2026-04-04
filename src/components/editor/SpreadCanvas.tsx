@@ -18,7 +18,14 @@ interface SpreadCanvasProps {
 
 const ShadowDragAnchor = ({ element, spreadId, isSelected }: { element: EditorElement, spreadId: string, isSelected: boolean }) => {
   const updateElement = useEditorStore((state) => state.updateElement);
-  if (!isSelected || element.shadowOpacity === undefined || element.shadowOpacity <= 0 || element.shadowColor === 'transparent') return null;
+  const globalStyles = useEditorStore((state) => state.project?.globalImageStyles);
+  
+  const appliedShadowOpacity = element.shadowOpacity ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowOpacity ?? 0.5) : 0);
+  const appliedShadowColor = element.shadowColor || (globalStyles?.shadowEnabled ? (globalStyles.shadowColor || 'transparent') : 'transparent');
+  const appliedShadowOffsetX = element.shadowOffsetX ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetX ?? 0) : 0);
+  const appliedShadowOffsetY = element.shadowOffsetY ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetY ?? 0) : 0);
+
+  if (!isSelected || appliedShadowOpacity <= 0 || appliedShadowColor === 'transparent') return null;
 
   const centerX = element.x_mm + element.w_mm / 2;
   const centerY = element.y_mm + element.h_mm / 2;
@@ -26,15 +33,15 @@ const ShadowDragAnchor = ({ element, spreadId, isSelected }: { element: EditorEl
   return (
     <Group x={centerX} y={centerY}>
       <Line 
-        points={[0, 0, element.shadowOffsetX || 0, element.shadowOffsetY || 0]} 
+        points={[0, 0, appliedShadowOffsetX, appliedShadowOffsetY]} 
         stroke="#3b82f6" 
         dash={[4,4]} 
         strokeWidth={1.5} 
         opacity={0.8}
       />
       <Circle 
-        x={element.shadowOffsetX || 0} 
-        y={element.shadowOffsetY || 0} 
+        x={appliedShadowOffsetX} 
+        y={appliedShadowOffsetY} 
         radius={7} 
         fill="#ffffff" 
         stroke="#3b82f6" 
@@ -80,6 +87,7 @@ const EditorImage = ({
   const trRef = useRef<any>(null);
   const updateElement = useEditorStore((state) => state.updateElement);
   const previewOriginalPhotoId = useEditorStore((state) => state.previewOriginalPhotoId);
+  const globalStyles = useEditorStore((state) => state.project?.globalImageStyles);
   
   const [image] = useImage(element.previewUrl || element.src || 'https://via.placeholder.com/150');
 
@@ -154,6 +162,19 @@ const EditorImage = ({
 
   const mmToPx = 3.779527559;
 
+  const appliedShadowColor = element.shadowColor || (globalStyles?.shadowEnabled ? (globalStyles.shadowColor || '#000000') : 'transparent');
+  const appliedShadowBlur = element.shadowBlur ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowBlur ?? 0) : 0);
+  const appliedShadowOffsetX = element.shadowOffsetX ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetX ?? 0) : 0);
+  const appliedShadowOffsetY = element.shadowOffsetY ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetY ?? 0) : 0);
+  const appliedShadowOpacity = element.shadowOpacity ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowOpacity ?? 0.5) : 0.5);
+
+  const strokeEnabled = globalStyles?.strokeEnabled ?? false;
+  const appliedStrokeWidth = element.strokeWidth ?? (strokeEnabled ? (globalStyles?.strokeWidth ?? 0) : 0);
+  const appliedStrokeColor = element.strokeColor ?? (strokeEnabled ? (globalStyles?.strokeColor ?? '#ffffff') : undefined);
+  
+  const cornerRadiusEnabled = globalStyles?.borderRadiusEnabled ?? false;
+  const appliedBorderRadius = element.borderRadius ?? (cornerRadiusEnabled ? (globalStyles?.borderRadius ?? 0) : 0);
+
   return (
     <React.Fragment>
       <Group
@@ -171,11 +192,11 @@ const EditorImage = ({
         opacity={element.opacity !== undefined ? element.opacity : 1}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         globalCompositeOperation={(element.blendMode as any) || 'source-over'}
-        shadowColor={element.shadowColor || 'transparent'}
-        shadowBlur={element.shadowBlur || 0}
-        shadowOffsetX={element.shadowOffsetX || 0}
-        shadowOffsetY={element.shadowOffsetY || 0}
-        shadowOpacity={element.shadowOpacity !== undefined ? element.shadowOpacity : 0.5}
+        shadowColor={appliedShadowColor}
+        shadowBlur={appliedShadowBlur}
+        shadowOffsetX={appliedShadowOffsetX}
+        shadowOffsetY={appliedShadowOffsetY}
+        shadowOpacity={appliedShadowOpacity}
         onContextMenu={(e) => {
           e.evt.preventDefault();
           onContextMenu(e.evt.clientX, e.evt.clientY, element.id);
@@ -210,6 +231,9 @@ const EditorImage = ({
           x={0} y={0}
           width={element.w_mm * mmToPx} 
           height={element.h_mm * mmToPx} 
+          cornerRadius={appliedBorderRadius * mmToPx}
+          stroke={appliedStrokeWidth > 0 ? appliedStrokeColor : undefined}
+          strokeWidth={appliedStrokeWidth * mmToPx}
         />
         {element.photoFilter && element.photoFilter !== 'none' && element.id !== previewOriginalPhotoId && (
           <KonvaImage 
@@ -219,6 +243,9 @@ const EditorImage = ({
             width={element.w_mm * mmToPx} 
             height={element.h_mm * mmToPx} 
             opacity={element.filterIntensity !== undefined ? element.filterIntensity : 1}
+            cornerRadius={appliedBorderRadius * mmToPx}
+            stroke={appliedStrokeWidth > 0 ? appliedStrokeColor : undefined}
+            strokeWidth={appliedStrokeWidth * mmToPx}
           />
         )}
       </Group>
@@ -481,6 +508,37 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
   // Sorting elements by zIndex to render properly
   const elements = [...spread.elements].sort((a, b) => a.zIndex - b.zIndex);
 
+  // Parse advanced Background properties smoothly native organically
+  const bgConfig = spread.bg_config || { type: 'none' };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let bgProps: any = { fill: spread.bg_color || '#ffffff' };
+  
+  if (bgConfig.type === 'solid' && bgConfig.color1) {
+    bgProps = { fill: bgConfig.color1 };
+  } else if (bgConfig.type === 'linear' && bgConfig.color1 && bgConfig.color2) {
+    const angleRad = (bgConfig.gradientAngle || 0) * (Math.PI / 180);
+    const cx = project.size.w_mm / 2;
+    const cy = project.size.h_mm / 2;
+    const r = Math.sqrt(cx * cx + cy * cy);
+    bgProps = {
+       fillLinearGradientStartPoint: { x: cx - Math.cos(angleRad) * r, y: cy - Math.sin(angleRad) * r },
+       fillLinearGradientEndPoint: { x: cx + Math.cos(angleRad) * r, y: cy + Math.sin(angleRad) * r },
+       fillLinearGradientColorStops: [0, bgConfig.color1, 1, bgConfig.color2]
+    };
+  } else if (bgConfig.type === 'radial' && bgConfig.color1 && bgConfig.color2) {
+    const cx = ((bgConfig.radialCenterX ?? 50) / 100) * project.size.w_mm;
+    const cy = ((bgConfig.radialCenterY ?? 50) / 100) * project.size.h_mm;
+    const maxRadius = Math.max(project.size.w_mm, project.size.h_mm);
+    const radius = ((bgConfig.radialSize ?? 50) / 100) * maxRadius;
+    bgProps = {
+       fillRadialGradientStartPoint: { x: cx, y: cy },
+       fillRadialGradientStartRadius: 0,
+       fillRadialGradientEndPoint: { x: cx, y: cy },
+       fillRadialGradientEndRadius: radius,
+       fillRadialGradientColorStops: [0, bgConfig.color1, 1, bgConfig.color2]
+    };
+  }
+
 
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -608,7 +666,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
           y={0}
           width={project.size.w_mm}
           height={project.size.h_mm}
-          fill={spread.bg_color || '#ffffff'}
+          {...bgProps}
           shadowColor="black"
           shadowBlur={10}
           shadowOpacity={0.1}

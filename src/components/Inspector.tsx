@@ -7,6 +7,7 @@ import { LUT_LIBRARY } from '@/lib/lut-presets';
 import TypographyPresetSelector from './editor/TypographyPresetSelector';
 import { AlignLeft, AlignCenter, AlignRight, Baseline, LetterText, Type, PaintBucket, TypeOutline, Baseline as ShadowIcon, TextSelect, Layers, SlidersHorizontal } from 'lucide-react';
 import LayersPanel from './editor/LayersPanel';
+import GlobalStylesPanel from './editor/GlobalStylesPanel';
 
 export default function Inspector() {
   const t = useTranslations('Editor');
@@ -85,9 +86,7 @@ export default function Inspector() {
             <Layers className="w-3.5 h-3.5" /> Capas
           </button>
         </div>
-        <div className="flex-1 p-4 flex items-center justify-center text-sm text-neutral-400">
-          {t('no_selection')}
-        </div>
+        <GlobalStylesPanel />
       </aside>
     );
   }

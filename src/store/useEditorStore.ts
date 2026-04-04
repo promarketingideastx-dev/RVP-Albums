@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { temporal } from 'zundo';
-import { EditorProject, EditorElement, ProjectAsset } from '@/types/editor';
+import { EditorProject, EditorElement, ProjectAsset, GlobalImageStyles, SpreadBackgroundConfig } from '@/types/editor';
 import { storage } from '@/storage';
 import { TYPOGRAPHY_PRESETS } from '@/lib/typography-presets';
 
@@ -36,6 +36,12 @@ interface EditorState {
   bringToFront: (spreadId: string, elementId: string) => void;
   sendToBack: (spreadId: string, elementId: string) => void;
   applyTypographyPreset: (presetId: string) => void;
+
+  updateGlobalImageStyles: (styles: Partial<GlobalImageStyles>) => void;
+  updateSpreadBackground: (spreadId: string, config: Partial<SpreadBackgroundConfig>) => void;
+  resetGlobalImageStyles: () => void;
+  resetSpreadBackground: (spreadId: string) => void;
+  resetAllGlobalStyles: () => void;
 }
 
 export const useEditorStore = create<EditorState>()(
@@ -113,6 +119,53 @@ export const useEditorStore = create<EditorState>()(
         typographyPresetId: presetId, 
         spreads: newSpreads 
       } 
+    };
+  }),
+
+  updateGlobalImageStyles: (styles) => set((state) => {
+    if (!state.project) return state;
+    return {
+      project: {
+        ...state.project,
+        globalImageStyles: { ...(state.project.globalImageStyles || {}), ...styles }
+      }
+    };
+  }),
+
+  updateSpreadBackground: (spreadId, config) => set((state) => {
+    if (!state.project) return state;
+    const newSpreads = state.project.spreads.map((s) => {
+      if (s.id !== spreadId) return s;
+      return { ...s, bg_config: { ...(s.bg_config || { type: 'none' }), ...config } };
+    });
+    return { project: { ...state.project, spreads: newSpreads } };
+  }),
+
+  resetGlobalImageStyles: () => set((state) => {
+    if (!state.project) return state;
+    return {
+      project: { ...state.project, globalImageStyles: undefined }
+    };
+  }),
+
+  resetSpreadBackground: (spreadId) => set((state) => {
+    if (!state.project) return state;
+    const newSpreads = state.project.spreads.map((s) => {
+      if (s.id !== spreadId) return s;
+      return { ...s, bg_config: undefined };
+    });
+    return { project: { ...state.project, spreads: newSpreads } };
+  }),
+
+  resetAllGlobalStyles: () => set((state) => {
+    if (!state.project) return state;
+    const newSpreads = state.project.spreads.map(s => ({ ...s, bg_config: undefined }));
+    return {
+      project: { 
+        ...state.project, 
+        globalImageStyles: undefined,
+        spreads: newSpreads 
+      }
     };
   }),
 

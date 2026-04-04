@@ -89,7 +89,7 @@ export default function Toolbar() {
            quality = 1.0;
        }
 
-       const dataUrl = await exportSpreadToJPG(spread, { 
+       const dataUrl = await exportSpreadToJPG(project, spread, { 
          size: project.size, 
          pixelMultiplier, 
          quality 

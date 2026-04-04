@@ -1,4 +1,4 @@
-import { Spread } from '@/types/editor';
+import { EditorProject, Spread } from '@/types/editor';
 
 // Project Metadata structure subset
 interface ExportMeta {
@@ -7,7 +7,7 @@ interface ExportMeta {
   quality?: number;
 }
 
-export async function exportSpreadToJPG(spread: Spread, meta: ExportMeta): Promise<string> {
+export async function exportSpreadToJPG(project: EditorProject, spread: Spread, meta: ExportMeta): Promise<string> {
   const Konva = (await import('konva')).default;
   const { get: idbGet } = await import('idb-keyval');
   
@@ -41,13 +41,43 @@ export async function exportSpreadToJPG(spread: Spread, meta: ExportMeta): Promi
 
   const layer = new Konva.Layer();
   
+  const bgConfig = spread.bg_config || { type: 'none' };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let bgProps: any = { fill: spread.bg_color || '#ffffff' };
+  
+  if (bgConfig.type === 'solid' && bgConfig.color1) {
+    bgProps = { fill: bgConfig.color1 };
+  } else if (bgConfig.type === 'linear' && bgConfig.color1 && bgConfig.color2) {
+    const angleRad = (bgConfig.gradientAngle || 0) * (Math.PI / 180);
+    const cx = pxW / 2;
+    const cy = pxH / 2;
+    const r = Math.sqrt(cx * cx + cy * cy);
+    bgProps = {
+       fillLinearGradientStartPoint: { x: cx - Math.cos(angleRad) * r, y: cy - Math.sin(angleRad) * r },
+       fillLinearGradientEndPoint: { x: cx + Math.cos(angleRad) * r, y: cy + Math.sin(angleRad) * r },
+       fillLinearGradientColorStops: [0, bgConfig.color1, 1, bgConfig.color2]
+    };
+  } else if (bgConfig.type === 'radial' && bgConfig.color1 && bgConfig.color2) {
+    const cx = ((bgConfig.radialCenterX ?? 50) / 100) * pxW;
+    const cy = ((bgConfig.radialCenterY ?? 50) / 100) * pxH;
+    const maxRadius = Math.max(pxW, pxH);
+    const radius = ((bgConfig.radialSize ?? 50) / 100) * maxRadius;
+    bgProps = {
+       fillRadialGradientStartPoint: { x: cx, y: cy },
+       fillRadialGradientStartRadius: 0,
+       fillRadialGradientEndPoint: { x: cx, y: cy },
+       fillRadialGradientEndRadius: radius,
+       fillRadialGradientColorStops: [0, bgConfig.color1, 1, bgConfig.color2]
+    };
+  }
+
   // Background Mount
   const bg = new Konva.Rect({
     x: 0,
     y: 0,
     width: pxW,
     height: pxH,
-    fill: spread.bg_color || '#ffffff',
+    ...bgProps
   });
   layer.add(bg);
 
@@ -116,6 +146,21 @@ export async function exportSpreadToJPG(spread: Spread, meta: ExportMeta): Promi
 
         try {
           const imgObj = await loadHtmlImage(url);
+          const globalStyles = project.globalImageStyles;
+          
+          const appliedShadowColor = el.shadowColor || (globalStyles?.shadowEnabled ? (globalStyles.shadowColor || '#000000') : 'transparent');
+          const appliedShadowBlur = el.shadowBlur ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowBlur ?? 0) : 0);
+          const appliedShadowOffsetX = el.shadowOffsetX ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetX ?? 0) : 0);
+          const appliedShadowOffsetY = el.shadowOffsetY ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetY ?? 0) : 0);
+          const appliedShadowOpacity = el.shadowOpacity ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowOpacity ?? 0.5) : 0.5);
+
+          const strokeEnabled = globalStyles?.strokeEnabled ?? false;
+          const appliedStrokeWidth = el.strokeWidth ?? (strokeEnabled ? (globalStyles?.strokeWidth ?? 0) : 0);
+          const appliedStrokeColor = el.strokeColor ?? (strokeEnabled ? (globalStyles?.strokeColor ?? '#ffffff') : undefined);
+          
+          const cornerRadiusEnabled = globalStyles?.borderRadiusEnabled ?? false;
+          const appliedBorderRadius = el.borderRadius ?? (cornerRadiusEnabled ? (globalStyles?.borderRadius ?? 0) : 0);
+
           const kGroup = new Konva.Group({
             x: el.x_mm * mmToPx,
             y: el.y_mm * mmToPx,
@@ -127,11 +172,11 @@ export async function exportSpreadToJPG(spread: Spread, meta: ExportMeta): Promi
             scaleY: el.scale || 1,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             globalCompositeOperation: (el.blendMode as any) || 'source-over',
-            shadowColor: el.shadowColor || 'transparent',
-            shadowBlur: el.shadowBlur || 0,
-            shadowOffsetX: el.shadowOffsetX || 0,
-            shadowOffsetY: el.shadowOffsetY || 0,
-            shadowOpacity: el.shadowOpacity !== undefined ? el.shadowOpacity : 0.5,
+            shadowColor: appliedShadowColor,
+            shadowBlur: appliedShadowBlur * mmToPx,
+            shadowOffsetX: appliedShadowOffsetX * mmToPx,
+            shadowOffsetY: appliedShadowOffsetY * mmToPx,
+            shadowOpacity: appliedShadowOpacity,
           });
 
           const kBaseImg = new Konva.Image({
@@ -140,6 +185,9 @@ export async function exportSpreadToJPG(spread: Spread, meta: ExportMeta): Promi
             y: 0,
             width: el.w_mm * mmToPx,
             height: el.h_mm * mmToPx,
+            cornerRadius: appliedBorderRadius * mmToPx,
+            stroke: appliedStrokeWidth > 0 ? appliedStrokeColor : undefined,
+            strokeWidth: appliedStrokeWidth * mmToPx,
           });
           kGroup.add(kBaseImg);
 
@@ -154,7 +202,10 @@ export async function exportSpreadToJPG(spread: Spread, meta: ExportMeta): Promi
               y: 0,
               width: el.w_mm * mmToPx,
               height: el.h_mm * mmToPx,
-              opacity: el.filterIntensity !== undefined ? el.filterIntensity : 1
+              opacity: el.filterIntensity !== undefined ? el.filterIntensity : 1,
+              cornerRadius: appliedBorderRadius * mmToPx,
+              stroke: appliedStrokeWidth > 0 ? appliedStrokeColor : undefined,
+              strokeWidth: appliedStrokeWidth * mmToPx,
             });
             kGroup.add(kFilterImg);
             

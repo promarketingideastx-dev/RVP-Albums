@@ -23,6 +23,7 @@ export interface EditorElement {
   shadowBlur?: number;
   shadowColor?: string;
   shadowOpacity?: number;
+  borderRadius?: number; // Phase 7.G.9: Border radius element manually applying masks
   blendMode?: string;
   visible?: boolean; // Phase 7.G.6.C: Visibility cascade mapping
   locked?: boolean; // Phase 7.G.6.C: Selection and Dragging constraint 
@@ -53,10 +54,21 @@ export interface EditorElement {
   zIndex: number;
 }
 
+export interface SpreadBackgroundConfig {
+  type: 'none' | 'solid' | 'linear' | 'radial';
+  color1?: string; 
+  color2?: string; 
+  gradientAngle?: number; 
+  radialSize?: number; 
+  radialCenterX?: number; 
+  radialCenterY?: number; 
+}
+
 export interface Spread {
   id: string;
   elements: EditorElement[];
   bg_color: string;
+  bg_config?: SpreadBackgroundConfig; // Phase 7.G.9: Advanced Gradient spread backgrounds
 }
 
 export interface Size {
@@ -75,6 +87,20 @@ export interface ProjectAsset {
   isFavorite?: boolean;
 }
 
+export interface GlobalImageStyles {
+  strokeEnabled?: boolean;
+  strokeColor?: string;
+  strokeWidth?: number;
+  shadowEnabled?: boolean;
+  shadowColor?: string;
+  shadowOffsetX?: number;
+  shadowOffsetY?: number;
+  shadowBlur?: number;
+  shadowOpacity?: number;
+  borderRadiusEnabled?: boolean;
+  borderRadius?: number;
+}
+
 export interface EditorProject {
   id: string;
   title: string;
@@ -89,6 +115,7 @@ export interface EditorProject {
   bleed_mm: number;
   safe_zone_mm: number;
   typographyPresetId?: string; // Phase 7.I: Document-scope active typography pattern
+  globalImageStyles?: GlobalImageStyles; // Phase 7.G.9: Project-level cascading default styles
   spreads: Spread[];
   assets?: ProjectAsset[];
 }
