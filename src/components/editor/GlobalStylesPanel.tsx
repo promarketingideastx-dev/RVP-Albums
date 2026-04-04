@@ -1,6 +1,7 @@
 import React from 'react';
 import { useEditorStore } from '@/store/useEditorStore';
 import { useTranslations } from 'next-intl';
+import { RotateCcw } from 'lucide-react';
 
 export default function GlobalStylesPanel() {
   const project = useEditorStore((state) => state.project);
@@ -203,12 +204,15 @@ export default function GlobalStylesPanel() {
             <div className="space-y-3">
               <div>
                 <div className="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400 mb-1">
-                  <label>Radius (mm)</label>
+                  <label className="flex items-center gap-1.5">
+                    Radius (mm)
+                    <button onClick={() => updateGlobalImageStyles({ borderRadius: 0 })} className="text-neutral-400 hover:text-teal-500 transition-colors bg-neutral-100 dark:bg-neutral-800 rounded p-0.5" title="Reset"><RotateCcw className="w-2.5 h-2.5" /></button>
+                  </label>
                   <span>{globalStyles.borderRadius || 0}</span>
                 </div>
                 <div className="flex gap-2">
-                  <input type="range" min="0" max="50" step="1" className="w-full accent-teal-500" value={globalStyles.borderRadius || 0} onChange={(e) => updateGlobalImageStyles({ borderRadius: parseFloat(e.target.value) })}/>
-                  <input type="number" className="w-12 bg-neutral-100 dark:bg-neutral-800 text-xs px-1 rounded border-none text-center outline-none" value={globalStyles.borderRadius || 0} onChange={(e) => updateGlobalImageStyles({ borderRadius: parseFloat(e.target.value) || 0 })}/>
+                  <input type="range" min="0" max="50" step="0.5" className="w-full accent-teal-500" value={globalStyles.borderRadius || 0} onChange={(e) => updateGlobalImageStyles({ borderRadius: parseFloat(e.target.value) })}/>
+                  <input type="number" step="0.5" className="w-16 bg-neutral-100 dark:bg-neutral-800 text-xs px-1 rounded border border-neutral-200 dark:border-neutral-800 text-center outline-none" value={globalStyles.borderRadius || 0} onChange={(e) => updateGlobalImageStyles({ borderRadius: parseFloat(e.target.value) || 0 })}/>
                 </div>
               </div>
             </div>
@@ -239,12 +243,15 @@ export default function GlobalStylesPanel() {
               </div>
               <div>
                 <div className="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400 mb-1">
-                  <label>Width (mm)</label>
+                  <label className="flex items-center gap-1.5">
+                    Width (mm)
+                    <button onClick={() => updateGlobalImageStyles({ strokeWidth: 1 })} className="text-neutral-400 hover:text-teal-500 transition-colors bg-neutral-100 dark:bg-neutral-800 rounded p-0.5" title="Reset"><RotateCcw className="w-2.5 h-2.5" /></button>
+                  </label>
                   <span>{globalStyles.strokeWidth || 0}</span>
                 </div>
                 <div className="flex gap-2">
-                  <input type="range" min="0" max="25" step="0.5" className="w-full accent-teal-500" value={globalStyles.strokeWidth || 0} onChange={(e) => updateGlobalImageStyles({ strokeWidth: parseFloat(e.target.value) })}/>
-                  <input type="number" className="w-12 bg-neutral-100 dark:bg-neutral-800 text-xs px-1 rounded border-none text-center outline-none" value={globalStyles.strokeWidth || 0} onChange={(e) => updateGlobalImageStyles({ strokeWidth: parseFloat(e.target.value) || 0 })}/>
+                  <input type="range" min="0" max="25" step="0.1" className="w-full accent-teal-500" value={globalStyles.strokeWidth || 0} onChange={(e) => updateGlobalImageStyles({ strokeWidth: parseFloat(e.target.value) })}/>
+                  <input type="number" step="0.1" className="w-16 bg-neutral-100 dark:bg-neutral-800 text-xs px-1 rounded border border-neutral-200 dark:border-neutral-800 text-center outline-none" value={globalStyles.strokeWidth || 0} onChange={(e) => updateGlobalImageStyles({ strokeWidth: parseFloat(e.target.value) || 0 })}/>
                 </div>
               </div>
             </div>
@@ -276,45 +283,57 @@ export default function GlobalStylesPanel() {
 
               <div>
                 <div className="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400 mb-1">
-                  <label>Opacity</label>
+                  <label className="flex items-center gap-1.5">
+                    Opacity
+                    <button onClick={() => updateGlobalImageStyles({ shadowOpacity: 0.5 })} className="text-neutral-400 hover:text-teal-500 transition-colors bg-neutral-100 dark:bg-neutral-800 rounded p-0.5" title="Reset"><RotateCcw className="w-2.5 h-2.5" /></button>
+                  </label>
                   <span>{Math.round((globalStyles.shadowOpacity || 0.5) * 100)}%</span>
                 </div>
                 <div className="flex gap-2">
-                  <input type="range" min="0" max="1" step="0.1" className="w-full accent-teal-500" value={globalStyles.shadowOpacity ?? 0.5} onChange={(e) => updateGlobalImageStyles({ shadowOpacity: parseFloat(e.target.value) })}/>
-                  <input type="number" step="0.1" className="w-12 bg-neutral-100 dark:bg-neutral-800 text-xs px-1 rounded border-none text-center outline-none" value={globalStyles.shadowOpacity ?? 0.5} onChange={(e) => updateGlobalImageStyles({ shadowOpacity: parseFloat(e.target.value) || 0 })}/>
+                  <input type="range" min="0" max="1" step="0.05" className="w-full accent-teal-500" value={globalStyles.shadowOpacity ?? 0.5} onChange={(e) => updateGlobalImageStyles({ shadowOpacity: parseFloat(e.target.value) })}/>
+                  <input type="number" step="0.05" className="w-16 bg-neutral-100 dark:bg-neutral-800 text-xs px-1 rounded border border-neutral-200 dark:border-neutral-800 text-center outline-none" value={globalStyles.shadowOpacity ?? 0.5} onChange={(e) => updateGlobalImageStyles({ shadowOpacity: parseFloat(e.target.value) || 0 })}/>
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400 mb-1">
-                  <label>Blur</label>
+                  <label className="flex items-center gap-1.5">
+                    Blur
+                    <button onClick={() => updateGlobalImageStyles({ shadowBlur: 15 })} className="text-neutral-400 hover:text-teal-500 transition-colors bg-neutral-100 dark:bg-neutral-800 rounded p-0.5" title="Reset"><RotateCcw className="w-2.5 h-2.5" /></button>
+                  </label>
                   <span>{globalStyles.shadowBlur || 0}</span>
                 </div>
                 <div className="flex gap-2">
-                  <input type="range" min="0" max="100" step="1" className="w-full accent-teal-500" value={globalStyles.shadowBlur || 0} onChange={(e) => updateGlobalImageStyles({ shadowBlur: parseInt(e.target.value, 10) })}/>
-                  <input type="number" className="w-12 bg-neutral-100 dark:bg-neutral-800 text-xs px-1 rounded border-none text-center outline-none" value={globalStyles.shadowBlur || 0} onChange={(e) => updateGlobalImageStyles({ shadowBlur: parseInt(e.target.value, 10) || 0 })}/>
+                  <input type="range" min="0" max="100" step="0.5" className="w-full accent-teal-500" value={globalStyles.shadowBlur || 0} onChange={(e) => updateGlobalImageStyles({ shadowBlur: parseFloat(e.target.value) })}/>
+                  <input type="number" step="0.5" className="w-16 bg-neutral-100 dark:bg-neutral-800 text-xs px-1 rounded border border-neutral-200 dark:border-neutral-800 text-center outline-none" value={globalStyles.shadowBlur || 0} onChange={(e) => updateGlobalImageStyles({ shadowBlur: parseFloat(e.target.value) || 0 })}/>
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400 mb-1">
-                  <label>Distance X</label>
+                  <label className="flex items-center gap-1.5">
+                    Distance X
+                    <button onClick={() => updateGlobalImageStyles({ shadowOffsetX: 0 })} className="text-neutral-400 hover:text-teal-500 transition-colors bg-neutral-100 dark:bg-neutral-800 rounded p-0.5" title="Reset"><RotateCcw className="w-2.5 h-2.5" /></button>
+                  </label>
                   <span>{globalStyles.shadowOffsetX || 0}</span>
                 </div>
                 <div className="flex gap-2">
-                  <input type="range" min="-100" max="100" step="1" className="w-full accent-teal-500" value={globalStyles.shadowOffsetX || 0} onChange={(e) => updateGlobalImageStyles({ shadowOffsetX: parseInt(e.target.value, 10) })}/>
-                  <input type="number" className="w-16 bg-neutral-100 dark:bg-neutral-800 text-xs px-1 rounded border-none text-center outline-none" value={globalStyles.shadowOffsetX || 0} onChange={(e) => updateGlobalImageStyles({ shadowOffsetX: parseInt(e.target.value, 10) || 0 })}/>
+                  <input type="range" min="-100" max="100" step="0.5" className="w-full accent-teal-500" value={globalStyles.shadowOffsetX || 0} onChange={(e) => updateGlobalImageStyles({ shadowOffsetX: parseFloat(e.target.value) })}/>
+                  <input type="number" step="0.5" className="w-16 bg-neutral-100 dark:bg-neutral-800 text-xs px-1 rounded border border-neutral-200 dark:border-neutral-800 text-center outline-none" value={globalStyles.shadowOffsetX || 0} onChange={(e) => updateGlobalImageStyles({ shadowOffsetX: parseFloat(e.target.value) || 0 })}/>
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400 mb-1">
-                  <label>Distance Y</label>
+                  <label className="flex items-center gap-1.5">
+                    Distance Y
+                    <button onClick={() => updateGlobalImageStyles({ shadowOffsetY: 10 })} className="text-neutral-400 hover:text-teal-500 transition-colors bg-neutral-100 dark:bg-neutral-800 rounded p-0.5" title="Reset"><RotateCcw className="w-2.5 h-2.5" /></button>
+                  </label>
                   <span>{globalStyles.shadowOffsetY || 0}</span>
                 </div>
                 <div className="flex gap-2">
-                  <input type="range" min="-100" max="100" step="1" className="w-full accent-teal-500" value={globalStyles.shadowOffsetY || 0} onChange={(e) => updateGlobalImageStyles({ shadowOffsetY: parseInt(e.target.value, 10) })}/>
-                  <input type="number" className="w-16 bg-neutral-100 dark:bg-neutral-800 text-xs px-1 rounded border-none text-center outline-none" value={globalStyles.shadowOffsetY || 0} onChange={(e) => updateGlobalImageStyles({ shadowOffsetY: parseInt(e.target.value, 10) || 0 })}/>
+                  <input type="range" min="-100" max="100" step="0.5" className="w-full accent-teal-500" value={globalStyles.shadowOffsetY || 0} onChange={(e) => updateGlobalImageStyles({ shadowOffsetY: parseFloat(e.target.value) })}/>
+                  <input type="number" step="0.5" className="w-16 bg-neutral-100 dark:bg-neutral-800 text-xs px-1 rounded border border-neutral-200 dark:border-neutral-800 text-center outline-none" value={globalStyles.shadowOffsetY || 0} onChange={(e) => updateGlobalImageStyles({ shadowOffsetY: parseFloat(e.target.value) || 0 })}/>
                 </div>
               </div>
             </div>

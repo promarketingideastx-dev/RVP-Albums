@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useEditorStore } from '@/store/useEditorStore';
 import { LUT_LIBRARY } from '@/lib/lut-presets';
 import TypographyPresetSelector from './editor/TypographyPresetSelector';
-import { AlignLeft, AlignCenter, AlignRight, Baseline, LetterText, Type, PaintBucket, TypeOutline, TextSelect, Layers, SlidersHorizontal, Globe } from 'lucide-react';
+import { AlignLeft, AlignCenter, AlignRight, Baseline, LetterText, Type, PaintBucket, TypeOutline, TextSelect, Layers, SlidersHorizontal, Globe, RotateCcw } from 'lucide-react';
 import LayersPanel from './editor/LayersPanel';
 import GlobalStylesPanel from './editor/GlobalStylesPanel';
 
@@ -43,45 +43,57 @@ const LocalShadowPanel = ({ element, activeSpreadId, updateElement }: any) => {
 
           <div>
             <div className="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400 mb-1">
-              <label>Opacity</label>
+              <label className="flex items-center gap-1.5">
+                Opacity
+                <button onClick={() => updateElement(activeSpreadId, element.id, { shadowOpacity: 0.5 })} className="text-neutral-400 hover:text-teal-500 transition-colors bg-neutral-100 dark:bg-neutral-800 rounded p-0.5" title="Reset"><RotateCcw className="w-2.5 h-2.5" /></button>
+              </label>
               <span>{Math.round((element.shadowOpacity ?? 0.5) * 100)}%</span>
             </div>
             <div className="flex gap-2">
-              <input type="range" min="0" max="1" step="0.1" className="w-full accent-teal-500" value={element.shadowOpacity ?? 0.5} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOpacity: parseFloat(e.target.value) })}/>
-              <input type="number" step="0.1" className="w-12 bg-white dark:bg-neutral-950 text-xs px-1 rounded border border-neutral-200 dark:border-neutral-800 text-center outline-none" value={element.shadowOpacity ?? 0.5} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOpacity: parseFloat(e.target.value) || 0 })}/>
+              <input type="range" min="0" max="1" step="0.05" className="w-full accent-teal-500" value={element.shadowOpacity ?? 0.5} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOpacity: parseFloat(e.target.value) })}/>
+              <input type="number" step="0.05" className="w-12 bg-white dark:bg-neutral-950 text-xs px-1 rounded border border-neutral-200 dark:border-neutral-800 text-center outline-none" value={element.shadowOpacity ?? 0.5} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOpacity: parseFloat(e.target.value) || 0 })}/>
             </div>
           </div>
 
           <div>
             <div className="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400 mb-1">
-              <label>Blur</label>
+              <label className="flex items-center gap-1.5">
+                Blur
+                <button onClick={() => updateElement(activeSpreadId, element.id, { shadowBlur: 15 })} className="text-neutral-400 hover:text-teal-500 transition-colors bg-neutral-100 dark:bg-neutral-800 rounded p-0.5" title="Reset"><RotateCcw className="w-2.5 h-2.5" /></button>
+              </label>
               <span>{element.shadowBlur || 0}</span>
             </div>
             <div className="flex gap-2">
-              <input type="range" min="0" max="100" step="1" className="w-full accent-teal-500" value={element.shadowBlur || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowBlur: parseInt(e.target.value, 10) })}/>
-              <input type="number" className="w-12 bg-white dark:bg-neutral-950 text-xs px-1 rounded border border-neutral-200 dark:border-neutral-800 text-center outline-none" value={element.shadowBlur || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowBlur: parseInt(e.target.value, 10) || 0 })}/>
+              <input type="range" min="0" max="100" step="0.5" className="w-full accent-teal-500" value={element.shadowBlur || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowBlur: parseFloat(e.target.value) })}/>
+              <input type="number" className="w-12 bg-white dark:bg-neutral-950 text-xs px-1 rounded border border-neutral-200 dark:border-neutral-800 text-center outline-none" value={element.shadowBlur || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowBlur: parseFloat(e.target.value) || 0 })}/>
             </div>
           </div>
 
           <div>
             <div className="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400 mb-1">
-              <label>Distance X</label>
+              <label className="flex items-center gap-1.5">
+                Distance X
+                <button onClick={() => updateElement(activeSpreadId, element.id, { shadowOffsetX: 0 })} className="text-neutral-400 hover:text-teal-500 transition-colors bg-neutral-100 dark:bg-neutral-800 rounded p-0.5" title="Reset"><RotateCcw className="w-2.5 h-2.5" /></button>
+              </label>
               <span>{element.shadowOffsetX || 0}</span>
             </div>
             <div className="flex gap-2">
-              <input type="range" min="-100" max="100" step="1" className="w-full accent-teal-500" value={element.shadowOffsetX || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOffsetX: parseInt(e.target.value, 10) })}/>
-              <input type="number" className="w-16 bg-white dark:bg-neutral-950 text-xs px-1 rounded border border-neutral-200 dark:border-neutral-800 text-center outline-none" value={element.shadowOffsetX || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOffsetX: parseInt(e.target.value, 10) || 0 })}/>
+              <input type="range" min="-100" max="100" step="0.5" className="w-full accent-teal-500" value={element.shadowOffsetX || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOffsetX: parseFloat(e.target.value) })}/>
+              <input type="number" className="w-16 bg-white dark:bg-neutral-950 text-xs px-1 rounded border border-neutral-200 dark:border-neutral-800 text-center outline-none" value={element.shadowOffsetX || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOffsetX: parseFloat(e.target.value) || 0 })}/>
             </div>
           </div>
 
           <div>
             <div className="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400 mb-1">
-              <label>Distance Y</label>
+              <label className="flex items-center gap-1.5">
+                Distance Y
+                <button onClick={() => updateElement(activeSpreadId, element.id, { shadowOffsetY: 10 })} className="text-neutral-400 hover:text-teal-500 transition-colors bg-neutral-100 dark:bg-neutral-800 rounded p-0.5" title="Reset"><RotateCcw className="w-2.5 h-2.5" /></button>
+              </label>
               <span>{element.shadowOffsetY || 0}</span>
             </div>
             <div className="flex gap-2">
-              <input type="range" min="-100" max="100" step="1" className="w-full accent-teal-500" value={element.shadowOffsetY || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOffsetY: parseInt(e.target.value, 10) })}/>
-              <input type="number" className="w-16 bg-white dark:bg-neutral-950 text-xs px-1 rounded border border-neutral-200 dark:border-neutral-800 text-center outline-none" value={element.shadowOffsetY || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOffsetY: parseInt(e.target.value, 10) || 0 })}/>
+              <input type="range" min="-100" max="100" step="0.5" className="w-full accent-teal-500" value={element.shadowOffsetY || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOffsetY: parseFloat(e.target.value) })}/>
+              <input type="number" className="w-16 bg-white dark:bg-neutral-950 text-xs px-1 rounded border border-neutral-200 dark:border-neutral-800 text-center outline-none" value={element.shadowOffsetY || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOffsetY: parseFloat(e.target.value) || 0 })}/>
             </div>
           </div>
 
@@ -208,10 +220,21 @@ export default function Inspector() {
     });
   };
 
-  const InputField = ({ label, value, setter, min, max, step }: { label: string, value: string, setter: (val: string) => void, min?: number, max?: number, step?: string }) => (
+  const InputField = ({ label, value, setter, min, max, step, onReset }: { label: string, value: string, setter: (val: string) => void, min?: number, max?: number, step?: string, onReset?: () => void }) => (
     <div className="flex flex-col gap-1 mb-3">
       <div className="flex justify-between items-center px-1 mb-0.5">
-        <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">{label}</label>
+        <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
+          {label}
+          {onReset && (
+            <button 
+              onClick={(e) => { e.preventDefault(); onReset(); }}
+              className="text-neutral-400 hover:text-blue-500 transition-colors bg-neutral-100 dark:bg-neutral-800 rounded p-0.5" 
+              title="Reset"
+            >
+              <RotateCcw className="w-2 h-2" />
+            </button>
+          )}
+        </label>
         <span className="text-[10px] font-mono text-blue-500 font-medium bg-blue-500/10 px-1.5 py-0.5 rounded">{value}</span>
       </div>
       {(min !== undefined && max !== undefined) ? (
@@ -259,22 +282,24 @@ export default function Inspector() {
       
       <div className="flex-1 p-4 overflow-y-auto">
         <h2 className="text-sm font-semibold tracking-wider text-neutral-800 dark:text-neutral-200 mb-6 uppercase">{t('properties')}</h2>
-      <InputField label={t('x_pos')} value={localX} setter={setLocalX} min={-500} max={1500} step="1" />
-      <InputField label={t('y_pos')} value={localY} setter={setLocalY} min={-500} max={1500} step="1" />
-      <InputField label={t('width')} value={localW} setter={setLocalW} min={1} max={1500} step="1" />
-      <InputField label={t('height')} value={localH} setter={setLocalH} min={1} max={1500} step="1" />
-      <InputField label={t('rotation')} value={localRot} setter={setLocalRot} min={0} max={360} step="1" />
+      <InputField label={t('x_pos')} value={localX} setter={setLocalX} min={-200} max={600} step="0.1" onReset={() => updateElement(activeSpreadId, element.id, { x_mm: 50 })} />
+      <InputField label={t('y_pos')} value={localY} setter={setLocalY} min={-200} max={600} step="0.1" onReset={() => updateElement(activeSpreadId, element.id, { y_mm: 50 })} />
+      <InputField label={t('width')} value={localW} setter={setLocalW} min={1} max={600} step="0.1" onReset={() => updateElement(activeSpreadId, element.id, { w_mm: 50 })} />
+      <InputField label={t('height')} value={localH} setter={setLocalH} min={1} max={600} step="0.1" onReset={() => updateElement(activeSpreadId, element.id, { h_mm: 50 })} />
+      <InputField label={t('rotation')} value={localRot} setter={setLocalRot} min={0} max={360} step="1" onReset={() => updateElement(activeSpreadId, element.id, { rotation_deg: 0 })} />
       <InputField 
         label={"Opacidad Global"} 
         value={element.opacity !== undefined ? (element.opacity * 100).toFixed(0) : '100'} 
         setter={(val) => updateElement(activeSpreadId, element.id, { opacity: parseFloat(val) / 100 })} 
         min={0} max={100} step="1" 
+        onReset={() => updateElement(activeSpreadId, element.id, { opacity: 1 })}
       />
       <InputField 
         label={"Escalar (Proporcional)"} 
         value={element.scale !== undefined ? element.scale.toString() : '1'} 
         setter={(val) => updateElement(activeSpreadId, element.id, { scale: parseFloat(val) })} 
         min={0.1} max={5} step="0.05" 
+        onReset={() => updateElement(activeSpreadId, element.id, { scale: 1 })}
       />
 
       {/* Global Style Isolation */}
