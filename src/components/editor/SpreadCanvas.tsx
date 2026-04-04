@@ -66,13 +66,13 @@ export function buildSmartSnapBoundFunc(
 ) {
   return (pos: { x: number, y: number }) => {
     // We are returning the theoretical {x, y} which is the top-left of the Group dragging!
-    const SNAP_THRESHOLD_PX = 8; // Sensitive magnetic pull
+    const SNAP_THRESHOLD_MM = 2; // ~8 pixels mathematically 
     
     const dragBox = {
        x: pos.x,
        y: pos.y,
-       w: element.w_mm * mmToPx * (element.scale || 1),
-       h: element.h_mm * mmToPx * (element.scale || 1)
+       w: element.w_mm * (element.scale || 1),
+       h: element.h_mm * (element.scale || 1)
     };
     
     const dragEdges = {
@@ -98,10 +98,10 @@ export function buildSmartSnapBoundFunc(
       if (sib.type === 'group') return;
       
       const sibBox = {
-         x: sib.x_mm * mmToPx,
-         y: sib.y_mm * mmToPx,
-         w: sib.w_mm * mmToPx * (sib.scale || 1),
-         h: sib.h_mm * mmToPx * (sib.scale || 1)
+         x: sib.x_mm,
+         y: sib.y_mm,
+         w: sib.w_mm * (sib.scale || 1),
+         h: sib.h_mm * (sib.scale || 1)
       };
       
       const sibEdges = {
@@ -115,19 +115,19 @@ export function buildSmartSnapBoundFunc(
 
       // X Edge Alignments
       if (!snappedX) {
-        if (Math.abs(dragEdges.left - sibEdges.left) < SNAP_THRESHOLD_PX) {
+        if (Math.abs(dragEdges.left - sibEdges.left) < SNAP_THRESHOLD_MM) {
            newX = sibEdges.left; snappedX = true;
            activeGuides.push({ points: [sibEdges.left, -8000, sibEdges.left, 8000], orientation: 'v' });
-        } else if (Math.abs(dragEdges.right - sibEdges.right) < SNAP_THRESHOLD_PX) {
+        } else if (Math.abs(dragEdges.right - sibEdges.right) < SNAP_THRESHOLD_MM) {
            newX = sibEdges.right - dragBox.w; snappedX = true;
            activeGuides.push({ points: [sibEdges.right, -8000, sibEdges.right, 8000], orientation: 'v' });
-        } else if (Math.abs(dragEdges.centerX - sibEdges.centerX) < SNAP_THRESHOLD_PX) {
+        } else if (Math.abs(dragEdges.centerX - sibEdges.centerX) < SNAP_THRESHOLD_MM) {
            newX = sibEdges.centerX - dragBox.w / 2; snappedX = true;
            activeGuides.push({ points: [sibEdges.centerX, -8000, sibEdges.centerX, 8000], orientation: 'v' });
-        } else if (Math.abs(dragEdges.left - sibEdges.right) < SNAP_THRESHOLD_PX) { // Snap Left to Right
+        } else if (Math.abs(dragEdges.left - sibEdges.right) < SNAP_THRESHOLD_MM) { // Snap Left to Right
            newX = sibEdges.right; snappedX = true;
            activeGuides.push({ points: [sibEdges.right, -8000, sibEdges.right, 8000], orientation: 'v' });
-        } else if (Math.abs(dragEdges.right - sibEdges.left) < SNAP_THRESHOLD_PX) { // Snap Right to Left
+        } else if (Math.abs(dragEdges.right - sibEdges.left) < SNAP_THRESHOLD_MM) { // Snap Right to Left
            newX = sibEdges.left - dragBox.w; snappedX = true;
            activeGuides.push({ points: [sibEdges.left, -8000, sibEdges.left, 8000], orientation: 'v' });
         }
@@ -135,19 +135,19 @@ export function buildSmartSnapBoundFunc(
 
       // Y Edge Alignments
       if (!snappedY) {
-        if (Math.abs(dragEdges.top - sibEdges.top) < SNAP_THRESHOLD_PX) {
+        if (Math.abs(dragEdges.top - sibEdges.top) < SNAP_THRESHOLD_MM) {
            newY = sibEdges.top; snappedY = true;
            activeGuides.push({ points: [-8000, sibEdges.top, 8000, sibEdges.top], orientation: 'h' });
-        } else if (Math.abs(dragEdges.bottom - sibEdges.bottom) < SNAP_THRESHOLD_PX) {
+        } else if (Math.abs(dragEdges.bottom - sibEdges.bottom) < SNAP_THRESHOLD_MM) {
            newY = sibEdges.bottom - dragBox.h; snappedY = true;
            activeGuides.push({ points: [-8000, sibEdges.bottom, 8000, sibEdges.bottom], orientation: 'h' });
-        } else if (Math.abs(dragEdges.centerY - sibEdges.centerY) < SNAP_THRESHOLD_PX) {
+        } else if (Math.abs(dragEdges.centerY - sibEdges.centerY) < SNAP_THRESHOLD_MM) {
            newY = sibEdges.centerY - dragBox.h / 2; snappedY = true;
            activeGuides.push({ points: [-8000, sibEdges.centerY, 8000, sibEdges.centerY], orientation: 'h' });
-        } else if (Math.abs(dragEdges.top - sibEdges.bottom) < SNAP_THRESHOLD_PX) { // Snap Top to Bottom
+        } else if (Math.abs(dragEdges.top - sibEdges.bottom) < SNAP_THRESHOLD_MM) { // Snap Top to Bottom
            newY = sibEdges.bottom; snappedY = true;
            activeGuides.push({ points: [-8000, sibEdges.bottom, 8000, sibEdges.bottom], orientation: 'h' });
-        } else if (Math.abs(dragEdges.bottom - sibEdges.top) < SNAP_THRESHOLD_PX) { // Snap Bottom to Top
+        } else if (Math.abs(dragEdges.bottom - sibEdges.top) < SNAP_THRESHOLD_MM) { // Snap Bottom to Top
            newY = sibEdges.top - dragBox.h; snappedY = true;
            activeGuides.push({ points: [-8000, sibEdges.top, 8000, sibEdges.top], orientation: 'h' });
         }
