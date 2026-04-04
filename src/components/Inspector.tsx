@@ -282,10 +282,10 @@ export default function Inspector() {
       
       <div className="flex-1 p-4 overflow-y-auto">
         <h2 className="text-sm font-semibold tracking-wider text-neutral-800 dark:text-neutral-200 mb-6 uppercase">{t('properties')}</h2>
-      <InputField label={t('x_pos')} value={localX} setter={setLocalX} min={-200} max={600} step="0.1" onReset={() => updateElement(activeSpreadId, element.id, { x_mm: 50 })} />
-      <InputField label={t('y_pos')} value={localY} setter={setLocalY} min={-200} max={600} step="0.1" onReset={() => updateElement(activeSpreadId, element.id, { y_mm: 50 })} />
-      <InputField label={t('width')} value={localW} setter={setLocalW} min={1} max={600} step="0.1" onReset={() => updateElement(activeSpreadId, element.id, { w_mm: 50 })} />
-      <InputField label={t('height')} value={localH} setter={setLocalH} min={1} max={600} step="0.1" onReset={() => updateElement(activeSpreadId, element.id, { h_mm: 50 })} />
+      <InputField label={t('x_pos')} value={localX} setter={setLocalX} step="0.1" onReset={() => updateElement(activeSpreadId, element.id, { x_mm: 50 })} />
+      <InputField label={t('y_pos')} value={localY} setter={setLocalY} step="0.1" onReset={() => updateElement(activeSpreadId, element.id, { y_mm: 50 })} />
+      <InputField label={t('width')} value={localW} setter={setLocalW} step="0.1" onReset={() => updateElement(activeSpreadId, element.id, { w_mm: 50 })} />
+      <InputField label={t('height')} value={localH} setter={setLocalH} step="0.1" onReset={() => updateElement(activeSpreadId, element.id, { h_mm: 50 })} />
       <InputField label={t('rotation')} value={localRot} setter={setLocalRot} min={0} max={360} step="1" onReset={() => updateElement(activeSpreadId, element.id, { rotation_deg: 0 })} />
       <InputField 
         label={"Opacidad Global"} 
