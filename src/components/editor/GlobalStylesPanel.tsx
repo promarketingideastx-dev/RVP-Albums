@@ -27,12 +27,12 @@ export default function GlobalStylesPanel() {
       
       {/* BACKGROUND SETTINGS */}
       <div className="p-4 border-b border-neutral-200 dark:border-neutral-800">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 tracking-wider uppercase">
-            {t('page_background') || 'Page Background'}
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <h3 className="text-[11px] font-semibold text-neutral-800 dark:text-neutral-200 tracking-wider uppercase truncate flex-1" title="Background">
+            {t('page_background').includes('.') ? 'Fondo de Página' : t('page_background')}
           </h3>
           {bgConfig.type !== 'none' && (
-             <button onClick={() => resetSpreadBackground(activeSpreadId)} className="text-xs text-red-500 hover:underline">
+             <button onClick={() => resetSpreadBackground(activeSpreadId)} className="text-[10px] uppercase font-bold text-red-500 hover:text-red-600 transition-colors shrink-0 whitespace-nowrap px-2 py-1 bg-red-500/10 rounded-md">
                Reset
              </button>
           )}
@@ -178,12 +178,12 @@ export default function GlobalStylesPanel() {
 
       {/* GLOBAL IMAGE STYLES */}
       <div className="p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 tracking-wider uppercase">
-            {t('global_image_styles') || 'Global Image Styles'}
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <h3 className="text-[11px] font-semibold text-neutral-800 dark:text-neutral-200 tracking-wider uppercase truncate flex-1" title="Global Styles">
+            {t('global_image_styles').includes('.') ? 'Estilos Globales' : t('global_image_styles')}
           </h3>
           {(globalStyles.strokeEnabled || globalStyles.shadowEnabled || globalStyles.borderRadiusEnabled) && (
-             <button onClick={resetGlobalImageStyles} className="text-xs text-red-500 hover:underline">
+             <button onClick={resetGlobalImageStyles} className="text-[10px] uppercase font-bold text-red-500 hover:text-red-600 transition-colors shrink-0 whitespace-nowrap px-2 py-1 bg-red-500/10 rounded-md">
                Reset All
              </button>
           )}
