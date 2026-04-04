@@ -18,6 +18,127 @@ interface SpreadCanvasProps {
   panY: number;
 }
 
+const mmToPx = 3.779527559;
+
+export function buildSmartSnapBoundFunc(
+  element: EditorElement,
+  elements: EditorElement[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  smartLayerRef: React.MutableRefObject<any>
+) {
+  return (pos: { x: number, y: number }) => {
+    // We are returning the theoretical {x, y} which is the top-left of the Group dragging!
+    const SNAP_THRESHOLD_PX = 8; // Sensitive magnetic pull
+    
+    const dragBox = {
+       x: pos.x,
+       y: pos.y,
+       w: element.w_mm * mmToPx * (element.scale || 1),
+       h: element.h_mm * mmToPx * (element.scale || 1)
+    };
+    
+    const dragEdges = {
+       top: dragBox.y,
+       centerY: dragBox.y + dragBox.h / 2,
+       bottom: dragBox.y + dragBox.h,
+       left: dragBox.x,
+       centerX: dragBox.x + dragBox.w / 2,
+       right: dragBox.x + dragBox.w
+    };
+
+    let newX = pos.x;
+    let newY = pos.y;
+    let snappedX = false;
+    let snappedY = false;
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const activeGuides: any[] = [];
+
+    // Check all siblings across theoretical viewport space
+    elements.forEach(sib => {
+      if (sib.id === element.id) return;
+      if (sib.type === 'group') return;
+      
+      const sibBox = {
+         x: sib.x_mm * mmToPx,
+         y: sib.y_mm * mmToPx,
+         w: sib.w_mm * mmToPx * (sib.scale || 1),
+         h: sib.h_mm * mmToPx * (sib.scale || 1)
+      };
+      
+      const sibEdges = {
+         top: sibBox.y,
+         centerY: sibBox.y + sibBox.h / 2,
+         bottom: sibBox.y + sibBox.h,
+         left: sibBox.x,
+         centerX: sibBox.x + sibBox.w / 2,
+         right: sibBox.x + sibBox.w
+      };
+
+      // X Edge Alignments
+      if (!snappedX) {
+        if (Math.abs(dragEdges.left - sibEdges.left) < SNAP_THRESHOLD_PX) {
+           newX = sibEdges.left; snappedX = true;
+           activeGuides.push({ points: [sibEdges.left, -8000, sibEdges.left, 8000], orientation: 'v' });
+        } else if (Math.abs(dragEdges.right - sibEdges.right) < SNAP_THRESHOLD_PX) {
+           newX = sibEdges.right - dragBox.w; snappedX = true;
+           activeGuides.push({ points: [sibEdges.right, -8000, sibEdges.right, 8000], orientation: 'v' });
+        } else if (Math.abs(dragEdges.centerX - sibEdges.centerX) < SNAP_THRESHOLD_PX) {
+           newX = sibEdges.centerX - dragBox.w / 2; snappedX = true;
+           activeGuides.push({ points: [sibEdges.centerX, -8000, sibEdges.centerX, 8000], orientation: 'v' });
+        } else if (Math.abs(dragEdges.left - sibEdges.right) < SNAP_THRESHOLD_PX) { // Snap Left to Right
+           newX = sibEdges.right; snappedX = true;
+           activeGuides.push({ points: [sibEdges.right, -8000, sibEdges.right, 8000], orientation: 'v' });
+        } else if (Math.abs(dragEdges.right - sibEdges.left) < SNAP_THRESHOLD_PX) { // Snap Right to Left
+           newX = sibEdges.left - dragBox.w; snappedX = true;
+           activeGuides.push({ points: [sibEdges.left, -8000, sibEdges.left, 8000], orientation: 'v' });
+        }
+      }
+
+      // Y Edge Alignments
+      if (!snappedY) {
+        if (Math.abs(dragEdges.top - sibEdges.top) < SNAP_THRESHOLD_PX) {
+           newY = sibEdges.top; snappedY = true;
+           activeGuides.push({ points: [-8000, sibEdges.top, 8000, sibEdges.top], orientation: 'h' });
+        } else if (Math.abs(dragEdges.bottom - sibEdges.bottom) < SNAP_THRESHOLD_PX) {
+           newY = sibEdges.bottom - dragBox.h; snappedY = true;
+           activeGuides.push({ points: [-8000, sibEdges.bottom, 8000, sibEdges.bottom], orientation: 'h' });
+        } else if (Math.abs(dragEdges.centerY - sibEdges.centerY) < SNAP_THRESHOLD_PX) {
+           newY = sibEdges.centerY - dragBox.h / 2; snappedY = true;
+           activeGuides.push({ points: [-8000, sibEdges.centerY, 8000, sibEdges.centerY], orientation: 'h' });
+        } else if (Math.abs(dragEdges.top - sibEdges.bottom) < SNAP_THRESHOLD_PX) { // Snap Top to Bottom
+           newY = sibEdges.bottom; snappedY = true;
+           activeGuides.push({ points: [-8000, sibEdges.bottom, 8000, sibEdges.bottom], orientation: 'h' });
+        } else if (Math.abs(dragEdges.bottom - sibEdges.top) < SNAP_THRESHOLD_PX) { // Snap Bottom to Top
+           newY = sibEdges.top - dragBox.h; snappedY = true;
+           activeGuides.push({ points: [-8000, sibEdges.top, 8000, sibEdges.top], orientation: 'h' });
+        }
+      }
+    });
+
+    // Native Konva Bypassing React Reconciliation to draw tracking lines at 144Hz limit 
+    const layer = smartLayerRef.current;
+    if (layer) {
+       layer.destroyChildren(); // Clear frame natively
+       if (activeGuides.length > 0) {
+          activeGuides.forEach(g => {
+             layer.add(new Konva.Line({
+                points: g.points,
+                stroke: '#00ffff',
+                strokeWidth: 1.5,
+                // Do not scale the stroke width! Since the whole group scales, dividing by the inverse prevents it internally, but wait the guides live on the same matrix!
+                dash: [6, 4],
+                transformsEnabled: 'position' 
+             }));
+          });
+       }
+       layer.batchDraw();
+    }
+
+    return { x: newX, y: newY };
+  };
+}
+
 const ShadowDragAnchor = ({ element, spreadId, isSelected }: { element: EditorElement, spreadId: string, isSelected: boolean }) => {
   const updateElement = useEditorStore((state) => state.updateElement);
   const globalStyles = useEditorStore((state) => state.project?.globalImageStyles);
@@ -70,16 +191,21 @@ const ShadowDragAnchor = ({ element, spreadId, isSelected }: { element: EditorEl
 
 const EditorImage = ({ 
   element, 
+  elements,
   spreadId, 
   isSelected, 
   onSelect,
-  onContextMenu
+  onContextMenu,
+  smartLayerRef
 }: { 
   element: EditorElement, 
+  elements: EditorElement[],
   spreadId: string, 
   isSelected: boolean, 
   onSelect: () => void,
-  onContextMenu: (x: number, y: number, id: string) => void
+  onContextMenu: (x: number, y: number, id: string) => void,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  smartLayerRef: React.MutableRefObject<any>
 }) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const groupRef = useRef<any>(null);
@@ -162,8 +288,6 @@ const EditorImage = ({
     }
   }, [element.photoFilter, image, element.filterIntensity, previewOriginalPhotoId, element.w_mm, element.h_mm, element.scale]);
 
-  const mmToPx = 3.779527559;
-
   const appliedShadowColor = element.shadowColor || (!element.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowColor || '#000000') : 'transparent');
   const appliedShadowBlur = element.shadowBlur ?? (!element.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowBlur ?? 0) : 0);
   const appliedShadowOffsetX = element.shadowOffsetX ?? (!element.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetX ?? 0) : 0);
@@ -219,11 +343,13 @@ const EditorImage = ({
         }}
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         onDragEnd={(e) => {
+          if (smartLayerRef.current) { smartLayerRef.current.destroyChildren(); smartLayerRef.current.batchDraw(); }
           updateElement(spreadId, element.id, {
             x_mm: e.target.x() / mmToPx,
             y_mm: e.target.y() / mmToPx,
           });
         }}
+        dragBoundFunc={buildSmartSnapBoundFunc(element, elements, smartLayerRef)}
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         onTransformEnd={(e) => {
           const node = groupRef.current;
@@ -286,16 +412,21 @@ const EditorImage = ({
 
 const EditorShape = ({ 
   element, 
+  elements,
   spreadId, 
   isSelected, 
   onSelect,
-  onContextMenu
+  onContextMenu,
+  smartLayerRef
 }: { 
   element: EditorElement, 
+  elements: EditorElement[],
   spreadId: string, 
   isSelected: boolean, 
   onSelect: () => void,
-  onContextMenu: (x: number, y: number, id: string) => void
+  onContextMenu: (x: number, y: number, id: string) => void,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  smartLayerRef: React.MutableRefObject<any>
 }) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const shapeRef = useRef<any>(null);
@@ -334,11 +465,13 @@ const EditorShape = ({
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onDragEnd: (e: any) => {
+      if (smartLayerRef.current) { smartLayerRef.current.destroyChildren(); smartLayerRef.current.batchDraw(); }
       updateElement(spreadId, element.id, {
         x_mm: e.target.x(),
         y_mm: e.target.y(),
       });
     },
+    dragBoundFunc: buildSmartSnapBoundFunc(element, elements, smartLayerRef),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onTransformEnd: () => {
       const node = shapeRef.current;
@@ -392,7 +525,7 @@ const EditorShape = ({
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const EditorText = ({ element, spreadId, isSelected, onSelect, onContextMenu }: any) => {
+const EditorText = ({ element, elements, spreadId, isSelected, onSelect, onContextMenu, smartLayerRef }: any) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const shapeRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -463,11 +596,13 @@ const EditorText = ({ element, spreadId, isSelected, onSelect, onContextMenu }: 
         onTap={onSelect}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onDragEnd={(e: any) => {
+          if (smartLayerRef.current) { smartLayerRef.current.destroyChildren(); smartLayerRef.current.batchDraw(); }
           updateElement(spreadId, element.id, {
             x_mm: e.target.x(),
             y_mm: e.target.y(),
           });
         }}
+        dragBoundFunc={buildSmartSnapBoundFunc(element, elements, smartLayerRef)}
         onTransformEnd={onTransformEnd}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onContextMenu={(e: any) => {
@@ -505,6 +640,8 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
   const t = useTranslations('Editor');
 
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, elementId: string } | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const smartLayerRef = useRef<any>(null);
 
   useEffect(() => {
     const handleGlobalClick = () => { if (contextMenu) setContextMenu(null); };
@@ -746,10 +883,12 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
               <EditorShape
                 key={el.id}
                 element={el}
+                elements={elements}
                 spreadId={activeSpreadId}
                 isSelected={selectedElementId === el.id}
                 onSelect={() => setSelectedElement(el.id)}
                 onContextMenu={(x: number, y: number, id: string) => setContextMenu({ x, y, elementId: id })}
+                smartLayerRef={smartLayerRef}
               />
             );
           }
@@ -758,10 +897,12 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
               <EditorText
                 key={el.id}
                 element={el}
+                elements={elements}
                 spreadId={activeSpreadId}
                 isSelected={selectedElementId === el.id}
                 onSelect={() => setSelectedElement(el.id)}
                 onContextMenu={(x: number, y: number, id: string) => setContextMenu({ x, y, elementId: id })}
+                smartLayerRef={smartLayerRef}
               />
             );
           }
@@ -769,10 +910,12 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
             <EditorImage
               key={el.id}
               element={el}
+              elements={elements}
               spreadId={activeSpreadId}
               isSelected={selectedElementId === el.id}
               onSelect={() => setSelectedElement(el.id)}
               onContextMenu={(x: number, y: number, id: string) => setContextMenu({ x, y, elementId: id })}
+              smartLayerRef={smartLayerRef}
             />
           );
         })}
@@ -868,6 +1011,9 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
             }}
           />
         ))}
+
+        {/* Global Hardware Accelerated Smart Guides Drawing Matrix */}
+        <Group ref={smartLayerRef} listening={false} />
       </Group>
       </Layer>
       </Stage>
