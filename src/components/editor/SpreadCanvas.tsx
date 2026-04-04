@@ -20,11 +20,49 @@ interface SpreadCanvasProps {
 
 const mmToPx = 3.779527559;
 
+export const smartGuidesEmitter = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  listeners: [] as any[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setGuides: function(guides: any[]) {
+    this.listeners.forEach(l => l(guides));
+  },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  subscribe: function(l: any) { this.listeners.push(l); },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  unsubscribe: function(l: any) { this.listeners = this.listeners.filter(cb => cb !== l); }
+};
+
+const SmartGuidesRenderer = () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [guides, setGuides] = useState<any[]>([]);
+  
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handler = (g: any[]) => setGuides(g);
+    smartGuidesEmitter.subscribe(handler);
+    return () => smartGuidesEmitter.unsubscribe(handler);
+  }, []);
+
+  return (
+    <Group listening={false}>
+       {guides.map((g, i) => (
+         <Line 
+           key={i} 
+           points={g.points} 
+           stroke="#00ffff" 
+           strokeWidth={1.5} 
+           dash={[6, 4]} 
+           transformsEnabled="position" 
+         />
+       ))}
+    </Group>
+  );
+};
+
 export function buildSmartSnapBoundFunc(
   element: EditorElement,
-  elements: EditorElement[],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  smartLayerRef: React.MutableRefObject<any>
+  elements: EditorElement[]
 ) {
   return (pos: { x: number, y: number }) => {
     // We are returning the theoretical {x, y} which is the top-left of the Group dragging!
@@ -116,33 +154,8 @@ export function buildSmartSnapBoundFunc(
       }
     });
 
-    // Native Konva Bypassing React Reconciliation to draw tracking lines at 144Hz limit 
-    const layer = smartLayerRef.current;
-    if (layer) {
-       // Object Recycling Pool - Do NOT destroy children to prevent Konva frame collisions
-       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-       const existingLines = layer.getChildren();
-       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-       existingLines.forEach((line: any) => line.visible(false));
-       
-       if (activeGuides.length > 0) {
-          activeGuides.forEach((g, i) => {
-             if (i < existingLines.length) {
-                existingLines[i].points(g.points);
-                existingLines[i].visible(true);
-             } else {
-                layer.add(new Konva.Line({
-                   points: g.points,
-                   stroke: '#00ffff',
-                   strokeWidth: 1.5,
-                   dash: [6, 4],
-                   transformsEnabled: 'position' 
-                }));
-             }
-          });
-       }
-       layer.batchDraw();
-    }
+    // Sub-emit to the isolated HUD renderer bypassing the AST reconciler
+    smartGuidesEmitter.setGuides(activeGuides);
 
     return { x: newX, y: newY };
   };
@@ -204,17 +217,14 @@ const EditorImage = ({
   spreadId, 
   isSelected, 
   onSelect,
-  onContextMenu,
-  smartLayerRef
+  onContextMenu
 }: { 
   element: EditorElement, 
   elements: EditorElement[],
   spreadId: string, 
   isSelected: boolean, 
   onSelect: () => void,
-  onContextMenu: (x: number, y: number, id: string) => void,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  smartLayerRef: React.MutableRefObject<any>
+  onContextMenu: (x: number, y: number, id: string) => void
 }) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const groupRef = useRef<any>(null);
@@ -351,17 +361,13 @@ const EditorImage = ({
           onContextMenu(e.evt.clientX, e.evt.clientY, element.id);
         }}
         onDragEnd={(e) => {
-          if (smartLayerRef.current) { 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            smartLayerRef.current.getChildren().forEach((line: any) => line.visible(false)); 
-            smartLayerRef.current.batchDraw(); 
-          }
+          smartGuidesEmitter.setGuides([]);
           updateElement(spreadId, element.id, {
             x_mm: e.target.x() / mmToPx,
             y_mm: e.target.y() / mmToPx,
           });
         }}
-        dragBoundFunc={buildSmartSnapBoundFunc(element, elements, smartLayerRef)}
+        dragBoundFunc={buildSmartSnapBoundFunc(element, elements)}
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         onTransformEnd={(e) => {
           const node = groupRef.current;
@@ -428,17 +434,14 @@ const EditorShape = ({
   spreadId, 
   isSelected, 
   onSelect,
-  onContextMenu,
-  smartLayerRef
+  onContextMenu
 }: { 
   element: EditorElement, 
   elements: EditorElement[],
   spreadId: string, 
   isSelected: boolean, 
   onSelect: () => void,
-  onContextMenu: (x: number, y: number, id: string) => void,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  smartLayerRef: React.MutableRefObject<any>
+  onContextMenu: (x: number, y: number, id: string) => void
 }) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const shapeRef = useRef<any>(null);
@@ -477,17 +480,13 @@ const EditorShape = ({
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onDragEnd: (e: any) => {
-      if (smartLayerRef.current) { 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        smartLayerRef.current.getChildren().forEach((line: any) => line.visible(false)); 
-        smartLayerRef.current.batchDraw(); 
-      }
+      smartGuidesEmitter.setGuides([]);
       updateElement(spreadId, element.id, {
         x_mm: e.target.x(),
         y_mm: e.target.y(),
       });
     },
-    dragBoundFunc: buildSmartSnapBoundFunc(element, elements, smartLayerRef),
+    dragBoundFunc: buildSmartSnapBoundFunc(element, elements),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onTransformEnd: () => {
       const node = shapeRef.current;
@@ -541,7 +540,7 @@ const EditorShape = ({
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const EditorText = ({ element, elements, spreadId, isSelected, onSelect, onContextMenu, smartLayerRef }: any) => {
+const EditorText = ({ element, elements, spreadId, isSelected, onSelect, onContextMenu }: any) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const shapeRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -612,17 +611,13 @@ const EditorText = ({ element, elements, spreadId, isSelected, onSelect, onConte
         onTap={onSelect}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onDragEnd={(e: any) => {
-          if (smartLayerRef.current) { 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            smartLayerRef.current.getChildren().forEach((line: any) => line.visible(false)); 
-            smartLayerRef.current.batchDraw(); 
-          }
+          smartGuidesEmitter.setGuides([]);
           updateElement(spreadId, element.id, {
             x_mm: e.target.x(),
             y_mm: e.target.y(),
           });
         }}
-        dragBoundFunc={buildSmartSnapBoundFunc(element, elements, smartLayerRef)}
+        dragBoundFunc={buildSmartSnapBoundFunc(element, elements)}
         onTransformEnd={onTransformEnd}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onContextMenu={(e: any) => {
@@ -660,8 +655,6 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
   const t = useTranslations('Editor');
 
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, elementId: string } | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const smartLayerRef = useRef<any>(null);
 
   useEffect(() => {
     const handleGlobalClick = () => { if (contextMenu) setContextMenu(null); };
@@ -908,7 +901,6 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
                 isSelected={selectedElementId === el.id}
                 onSelect={() => setSelectedElement(el.id)}
                 onContextMenu={(x: number, y: number, id: string) => setContextMenu({ x, y, elementId: id })}
-                smartLayerRef={smartLayerRef}
               />
             );
           }
@@ -922,7 +914,6 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
                 isSelected={selectedElementId === el.id}
                 onSelect={() => setSelectedElement(el.id)}
                 onContextMenu={(x: number, y: number, id: string) => setContextMenu({ x, y, elementId: id })}
-                smartLayerRef={smartLayerRef}
               />
             );
           }
@@ -935,7 +926,6 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
               isSelected={selectedElementId === el.id}
               onSelect={() => setSelectedElement(el.id)}
               onContextMenu={(x: number, y: number, id: string) => setContextMenu({ x, y, elementId: id })}
-              smartLayerRef={smartLayerRef}
             />
           );
         })}
@@ -1033,7 +1023,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
         ))}
 
         {/* Global Hardware Accelerated Smart Guides Drawing Matrix */}
-        <Group ref={smartLayerRef} listening={false} />
+        <SmartGuidesRenderer />
       </Group>
       </Layer>
       </Stage>
