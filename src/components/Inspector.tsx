@@ -25,9 +25,7 @@ export default function Inspector() {
   const [localW, setLocalW] = useState('');
   const [localH, setLocalH] = useState('');
   const [localRot, setLocalRot] = useState('');
-  const [localFill, setLocalFill] = useState('');
-  const [localOpacity, setLocalOpacity] = useState('');
-  const [localScale, setLocalScale] = useState('');
+  const [localFill, setLocalFill] = useState('#000000');
 
   const x_mm = element?.x_mm;
   const y_mm = element?.y_mm;
@@ -35,8 +33,6 @@ export default function Inspector() {
   const h_mm = element?.h_mm;
   const rotation_deg = element?.rotation_deg;
   const fillColor = element?.fillColor || element?.color;
-  const opacity = element?.opacity !== undefined ? element.opacity : 1;
-  const scale = element?.scale !== undefined ? element.scale : 1;
 
   // Sink memory values downward if they are legitimately updated by the canvas/store
   useEffect(() => {
@@ -46,11 +42,9 @@ export default function Inspector() {
       setLocalW(w_mm.toFixed(2));
       setLocalH(h_mm.toFixed(2));
       setLocalRot(rotation_deg.toFixed(2));
-      setLocalOpacity((opacity * 100).toFixed(0));
-      setLocalScale((scale).toFixed(2));
       if (fillColor) setLocalFill(fillColor);
     }
-  }, [x_mm, y_mm, w_mm, h_mm, rotation_deg, opacity, scale, fillColor, selectedElementId]);
+  }, [x_mm, y_mm, w_mm, h_mm, rotation_deg, fillColor, selectedElementId]);
 
   if (!element || !activeSpreadId) {
     return (
@@ -71,8 +65,6 @@ export default function Inspector() {
       rotation_deg: parseFloat(localRot) || 0,
       fillColor: localFill || '#000000',
       color: localFill || '#000000',
-      opacity: (parseFloat(localOpacity) || 100) / 100,
-      scale: parseFloat(localScale) || 1,
     });
   };
 
@@ -90,7 +82,21 @@ export default function Inspector() {
           step={step || "1"}
           className="w-full h-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
           value={value}
+          onPointerDown={() => useEditorStore.temporal.getState().pause()}
+          onTouchStart={() => useEditorStore.temporal.getState().pause()}
           onChange={(e) => setter(e.target.value)}
+          onPointerUp={(e) => {
+            useEditorStore.temporal.getState().resume();
+            setter(e.currentTarget.value);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            handleBlurOrEnter(e as any);
+          }}
+          onTouchEnd={(e) => {
+            useEditorStore.temporal.getState().resume();
+            setter(e.currentTarget.value);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            handleBlurOrEnter(e as any);
+          }}
           onBlur={handleBlurOrEnter}
         />
       ) : (
@@ -115,8 +121,18 @@ export default function Inspector() {
       <InputField label={t('width')} value={localW} setter={setLocalW} min={1} max={1500} step="1" />
       <InputField label={t('height')} value={localH} setter={setLocalH} min={1} max={1500} step="1" />
       <InputField label={t('rotation')} value={localRot} setter={setLocalRot} min={0} max={360} step="1" />
-      <InputField label={"Opacidad Global"} value={localOpacity} setter={setLocalOpacity} min={0} max={100} step="1" />
-      <InputField label={"Escalar (Proporcional)"} value={localScale} setter={setLocalScale} min={0.1} max={5} step="0.05" />
+      <InputField 
+        label={"Opacidad Global"} 
+        value={element.opacity !== undefined ? (element.opacity * 100).toFixed(0) : '100'} 
+        setter={(val) => updateElement(activeSpreadId, element.id, { opacity: parseFloat(val) / 100 })} 
+        min={0} max={100} step="1" 
+      />
+      <InputField 
+        label={"Escalar (Proporcional)"} 
+        value={element.scale !== undefined ? element.scale.toString() : '1'} 
+        setter={(val) => updateElement(activeSpreadId, element.id, { scale: parseFloat(val) })} 
+        min={0.1} max={5} step="0.05" 
+      />
       
       {element.type === 'decoration' && element.sourceType === 'default' && (
         <>
