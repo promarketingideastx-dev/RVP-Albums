@@ -15,6 +15,9 @@ interface EditorState {
   previewOriginalPhotoId: string | null;
   setPreviewOriginalPhotoId: (elementId: string | null) => void;
 
+  workspaceZoom: number | null; // null = dynamic auto-fit. number = user override scale.
+  setWorkspaceZoom: (zoom: number | null) => void;
+
   loadProject: (project: EditorProject) => void;
   unloadProject: () => void;
   setActiveSpread: (spreadId: string) => void;
@@ -57,9 +60,11 @@ export const useEditorStore = create<EditorState>()(
   selectedElementId: null,
   measurementUnit: 'in',
   previewOriginalPhotoId: null,
+  workspaceZoom: null,
 
   toggleMeasurementUnit: () => set((state) => ({ measurementUnit: state.measurementUnit === 'in' ? 'cm' : 'in' })),
   setPreviewOriginalPhotoId: (id) => set({ previewOriginalPhotoId: id }),
+  setWorkspaceZoom: (zoom) => set({ workspaceZoom: zoom }),
 
   loadProject: (project) => set({ project, activeSpreadId: project.spreads[0]?.id || null }),
   unloadProject: () => set({ project: null, activeSpreadId: null, selectedElementId: null, previewOriginalPhotoId: null }),

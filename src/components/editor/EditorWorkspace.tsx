@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useEditorStore } from '@/store/useEditorStore';
 import { RulerGuides } from './RulerGuides';
+import { NavigatorWidget } from './NavigatorWidget';
 import { TYPOGRAPHY_PRESETS } from '@/lib/typography-presets';
 
 const SpreadCanvas = dynamic(() => import('./SpreadCanvas'), {
@@ -16,6 +17,7 @@ export default function EditorWorkspace() {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const project = useEditorStore((state) => state.project);
   const measurementUnit = useEditorStore((state) => state.measurementUnit);
+  const workspaceZoom = useEditorStore((state) => state.workspaceZoom);
 
   // Auto-inject Google Fonts globally so preset fonts don't break when sidebar unmounts
   const fontLinks = React.useMemo(() => {
@@ -76,34 +78,54 @@ export default function EditorWorkspace() {
   
   const scaleX = availableWidth / project.size.w_mm;
   const scaleY = availableHeight / project.size.h_mm;
-  const scale = Math.min(scaleX, scaleY);
+  const autoScale = Math.min(scaleX, scaleY);
+  
+  // Apply manual zoom override if interacting with the Navigator!
+  const scale = workspaceZoom !== null ? autoScale * workspaceZoom : autoScale;
   
   const isReady = scale > 0 && dimensions.width > 0;
   const stageWidth = isReady ? project.size.w_mm * scale : 0;
   const stageHeight = isReady ? project.size.h_mm * scale : 0;
 
   return (
-    <div ref={containerRef} className="flex-1 overflow-hidden bg-neutral-200 dark:bg-neutral-900 flex items-center justify-center relative w-full h-full">
+    <div 
+      ref={containerRef} 
+      id="workspace-scroll-container"
+      className="flex-1 overflow-auto scroll-smooth bg-neutral-200 dark:bg-neutral-900 relative w-full h-full custom-scrollbar"
+    >
        <style dangerouslySetInnerHTML={{ __html: fontLinks }} />
        {!isReady ? (
-         <div className="text-xs text-neutral-400">Loading Canvas...</div>
+         <div className="absolute inset-0 flex items-center justify-center text-xs text-neutral-400">Loading Canvas...</div>
        ) : (
          <div 
-           className="absolute transition-all duration-200" 
-           style={{ width: stageWidth, height: stageHeight }}
+           className="relative flex items-center justify-center"
+           style={{ 
+             minWidth: '100%', 
+             minHeight: '100%', 
+             width: Math.max(dimensions.width, stageWidth + padding),
+             height: Math.max(dimensions.height, stageHeight + padding)
+           }}
          >
-           <SpreadCanvas 
-             stageWidth={stageWidth} 
-             stageHeight={stageHeight} 
-             scale={scale} 
-           />
-           <RulerGuides 
-             scale={scale} 
-             project={project} 
-             unit={measurementUnit} 
-           />
+           <div 
+             className="absolute transition-all duration-200" 
+             style={{ width: stageWidth, height: stageHeight }}
+           >
+             <SpreadCanvas 
+               stageWidth={stageWidth} 
+               stageHeight={stageHeight} 
+               scale={scale} 
+             />
+             <RulerGuides 
+               scale={scale} 
+               project={project} 
+               unit={measurementUnit} 
+             />
+           </div>
          </div>
        )}
+       
+       {/* The standalone Navigator overlay widget */}
+       {isReady && <NavigatorWidget scale={scale} autoScale={autoScale} />}
     </div>
   );
 }
