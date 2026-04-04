@@ -5,7 +5,8 @@ import { useTranslations } from 'next-intl';
 import { useEditorStore } from '@/store/useEditorStore';
 import { LUT_LIBRARY } from '@/lib/lut-presets';
 import TypographyPresetSelector from './editor/TypographyPresetSelector';
-import { AlignLeft, AlignCenter, AlignRight, Baseline, LetterText, Type, PaintBucket, TypeOutline, Baseline as ShadowIcon, TextSelect } from 'lucide-react';
+import { AlignLeft, AlignCenter, AlignRight, Baseline, LetterText, Type, PaintBucket, TypeOutline, Baseline as ShadowIcon, TextSelect, Layers, SlidersHorizontal } from 'lucide-react';
+import LayersPanel from './editor/LayersPanel';
 
 export default function Inspector() {
   const t = useTranslations('Editor');
@@ -28,6 +29,7 @@ export default function Inspector() {
   const [localH, setLocalH] = useState('');
   const [localRot, setLocalRot] = useState('');
   const [localFill, setLocalFill] = useState('#000000');
+  const [activeTab, setActiveTab] = useState<'properties' | 'layers'>('properties');
 
   const x_mm = element?.x_mm;
   const y_mm = element?.y_mm;
@@ -48,10 +50,44 @@ export default function Inspector() {
     }
   }, [x_mm, y_mm, w_mm, h_mm, rotation_deg, fillColor, selectedElementId]);
 
-  if (!element || !activeSpreadId) {
+  if (!activeSpreadId) {
     return (
-      <aside className="w-64 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 p-4 flex items-center justify-center text-sm text-neutral-400">
-        {t('no_selection')}
+      <aside className="w-64 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 p-4 flex flex-col h-full items-center justify-center text-sm text-neutral-400">
+        Waiting for spread...
+      </aside>
+    );
+  }
+
+  if (activeTab === 'layers') {
+    return (
+      <aside className="w-64 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full overflow-hidden">
+        <div className="flex border-b border-neutral-200 dark:border-neutral-800 shrink-0">
+          <button onClick={() => setActiveTab('properties')} className="flex-1 py-3 text-[11px] font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300">
+            <SlidersHorizontal className="w-3.5 h-3.5" /> Propiedades
+          </button>
+          <button onClick={() => setActiveTab('layers')} className="flex-1 py-3 text-[11px] font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors text-blue-500 border-b-2 border-blue-500">
+            <Layers className="w-3.5 h-3.5" /> Capas
+          </button>
+        </div>
+        <LayersPanel />
+      </aside>
+    );
+  }
+
+  if (!element) {
+    return (
+      <aside className="w-64 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full overflow-hidden">
+        <div className="flex border-b border-neutral-200 dark:border-neutral-800 shrink-0">
+          <button onClick={() => setActiveTab('properties')} className="flex-1 py-3 text-[11px] font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors text-blue-500 border-b-2 border-blue-500">
+            <SlidersHorizontal className="w-3.5 h-3.5" /> Propiedades
+          </button>
+          <button onClick={() => setActiveTab('layers')} className="flex-1 py-3 text-[11px] font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300">
+            <Layers className="w-3.5 h-3.5" /> Capas
+          </button>
+        </div>
+        <div className="flex-1 p-4 flex items-center justify-center text-sm text-neutral-400">
+          {t('no_selection')}
+        </div>
       </aside>
     );
   }
@@ -116,8 +152,18 @@ export default function Inspector() {
   );
 
   return (
-    <aside className="w-64 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 p-4 flex flex-col overflow-y-auto">
-      <h2 className="text-sm font-semibold tracking-wider text-neutral-800 dark:text-neutral-200 mb-6 uppercase">{t('properties')}</h2>
+    <aside className="w-64 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full overflow-hidden">
+      <div className="flex border-b border-neutral-200 dark:border-neutral-800 shrink-0">
+        <button onClick={() => setActiveTab('properties')} className="flex-1 py-3 text-[11px] font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors text-blue-500 border-b-2 border-blue-500">
+          <SlidersHorizontal className="w-3.5 h-3.5" /> Propiedades
+        </button>
+        <button onClick={() => setActiveTab('layers')} className="flex-1 py-3 text-[11px] font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300">
+          <Layers className="w-3.5 h-3.5" /> Capas
+        </button>
+      </div>
+      
+      <div className="flex-1 p-4 overflow-y-auto">
+        <h2 className="text-sm font-semibold tracking-wider text-neutral-800 dark:text-neutral-200 mb-6 uppercase">{t('properties')}</h2>
       <InputField label={t('x_pos')} value={localX} setter={setLocalX} min={-500} max={1500} step="1" />
       <InputField label={t('y_pos')} value={localY} setter={setLocalY} min={-500} max={1500} step="1" />
       <InputField label={t('width')} value={localW} setter={setLocalW} min={1} max={1500} step="1" />
@@ -550,6 +596,7 @@ export default function Inspector() {
         >
           ✕
         </button>
+      </div>
       </div>
     </aside>
   );

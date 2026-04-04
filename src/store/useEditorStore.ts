@@ -30,6 +30,7 @@ interface EditorState {
 
   bringForward: (spreadId: string, elementId: string) => void;
   sendBackward: (spreadId: string, elementId: string) => void;
+  reorderElementsList: (spreadId: string, oldIndex: number, newIndex: number) => void;
   bringToFront: (spreadId: string, elementId: string) => void;
   sendToBack: (spreadId: string, elementId: string) => void;
   applyTypographyPreset: (presetId: string) => void;
@@ -202,6 +203,21 @@ export const useEditorStore = create<EditorState>()(
       const target = elements.splice(idx, 1)[0];
       elements.splice(idx - 1, 0, target);
 
+      const immutableElements = elements.map((el, index) => ({ ...el, zIndex: index }));
+      return { ...spread, elements: immutableElements };
+    });
+    return { project: { ...state.project, spreads: newSpreads } };
+  }),
+
+  reorderElementsList: (spreadId, oldIndex, newIndex) => set((state) => {
+    if (!state.project) return state;
+    const newSpreads = state.project.spreads.map((spread) => {
+      if (spread.id !== spreadId) return spread;
+      const elements = [...spread.elements].sort((a, b) => a.zIndex - b.zIndex);
+      
+      const target = elements.splice(oldIndex, 1)[0];
+      elements.splice(newIndex, 0, target);
+      
       const immutableElements = elements.map((el, index) => ({ ...el, zIndex: index }));
       return { ...spread, elements: immutableElements };
     });
