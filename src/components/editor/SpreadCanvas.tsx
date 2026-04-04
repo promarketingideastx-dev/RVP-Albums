@@ -5,6 +5,7 @@ import { Stage, Layer, Rect, Ellipse, Transformer, Image as KonvaImage, Text, Gr
 import Konva from 'konva';
 import { useTranslations } from 'next-intl';
 import { LUT_LIBRARY } from '@/lib/lut-presets';
+import { TYPOGRAPHY_PRESETS } from '@/lib/typography-presets';
 import { useEditorStore } from '@/store/useEditorStore';
 import { EditorElement } from '@/types/editor';
 import useImage from 'use-image';
@@ -336,10 +337,14 @@ const EditorText = ({ element, spreadId, isSelected, onSelect, onContextMenu }: 
         y={element.y_mm}
         width={element.w_mm}
         height={element.h_mm}
-        text={element.text || 'Doble clic para editar...'}
+        text={element.textTransform === 'uppercase' ? (element.text || 'Doble clic para editar...').toUpperCase() : element.textTransform === 'lowercase' ? (element.text || 'Doble clic para editar...').toLowerCase() : (element.text || 'Doble clic para editar...')}
         fontFamily={element.fontFamily || 'Inter'}
         fontSize={element.fontSize || 32}
         fill={element.textColor || '#000000'}
+        letterSpacing={element.letterSpacing || 0}
+        lineHeight={element.lineHeight || 1}
+        stroke={element.strokeColor || undefined}
+        strokeWidth={element.strokeWidth || 0}
         rotation={element.rotation_deg}
         opacity={element.opacity !== undefined ? element.opacity : 1}
         shadowColor={element.shadowColor || 'black'}
@@ -347,8 +352,6 @@ const EditorText = ({ element, spreadId, isSelected, onSelect, onContextMenu }: 
         shadowOffsetX={element.shadowOffsetX || 0}
         shadowOffsetY={element.shadowOffsetY || 0}
         shadowOpacity={element.shadowOpacity !== undefined ? element.shadowOpacity : 0.5}
-        stroke={element.strokeColor || undefined}
-        strokeWidth={element.strokeWidth || 0}
         draggable
         onClick={onSelect}
         onTap={onSelect}
@@ -400,6 +403,19 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
     return () => window.removeEventListener('click', handleGlobalClick);
   }, [contextMenu]);
 
+  const fontLinks = React.useMemo(() => {
+    const activePreset = TYPOGRAPHY_PRESETS.find(p => p.id === project?.typographyPresetId);
+    if (!activePreset) return null;
+    const fontsSet = new Set<string>();
+    fontsSet.add(activePreset.fonts.h1);
+    fontsSet.add(activePreset.fonts.h2);
+    fontsSet.add(activePreset.fonts.body);
+    fontsSet.add(activePreset.fonts.small);
+    return Array.from(fontsSet).map(font => 
+      `@import url('https://fonts.googleapis.com/css2?family=${font.replace(/ /g, '+')}:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap');`
+    ).join('\n');
+  }, [project?.typographyPresetId]);
+
   if (!project || !activeSpreadId) return null;
 
   const spread = project.spreads.find((s) => s.id === activeSpreadId);
@@ -407,6 +423,8 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
 
   // Sorting elements by zIndex to render properly
   const elements = [...spread.elements].sort((a, b) => a.zIndex - b.zIndex);
+
+
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const checkDeselect = (e: any) => {
@@ -418,7 +436,12 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
 
   return (
     <div 
-      className="flex-1 w-full h-full relative"
+      className="flex-1 w-full h-full p-8 relative"
+      onClick={checkDeselect}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        setContextMenu(null);
+      }}
       onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }}
       onDrop={(e) => {
         e.preventDefault();
@@ -494,11 +517,14 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
             img.src = payload.type === 'decoration' ? payload.src : payload.previewUrl;
             }
           }
-        } catch {
-          // Ignore invalid drags
+        } catch (err) {
+          console.error("Drop parsing error", err);
         }
       }}
     >
+      <div style={{ display: 'none' }}>
+        {fontLinks && <style dangerouslySetInnerHTML={{ __html: fontLinks }} />}
+      </div>
       <Stage
         width={stageWidth}
         height={stageHeight}

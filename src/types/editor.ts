@@ -35,6 +35,11 @@ export interface EditorElement {
   isItalic?: boolean;
   strokeColor?: string;
   strokeWidth?: number;
+  textRole?: 'h1' | 'h2' | 'body' | 'small'; // Phase 7.I: Typography Hierarchy Mapping
+  lockedFonts?: boolean; // Phase 7.I: Binding localized overrides matching presets
+  letterSpacing?: number;
+  lineHeight?: number;
+  textTransform?: 'uppercase' | 'lowercase' | 'none';
   x_mm: number;
   y_mm: number;
   w_mm: number;
@@ -78,6 +83,7 @@ export interface EditorProject {
   size: Size; // Total size (e.g. 500x250)
   bleed_mm: number;
   safe_zone_mm: number;
+  typographyPresetId?: string; // Phase 7.I: Document-scope active typography pattern
   spreads: Spread[];
   assets?: ProjectAsset[];
 }

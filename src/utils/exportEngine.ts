@@ -205,9 +205,11 @@ export async function exportSpreadToJPG(spread: Spread, meta: ExportMeta): Promi
         layer.add(new Konva.Text({
             x: el.x_mm * mmToPx,
             y: el.y_mm * mmToPx,
-            text: el.text || '',
+            text: el.textTransform === 'uppercase' ? (el.text || '').toUpperCase() : el.textTransform === 'lowercase' ? (el.text || '').toLowerCase() : (el.text || ''),
             fontSize: (el.fontSize || 32) * mmToPx,
             fontFamily: el.fontFamily || 'Inter',
+            letterSpacing: el.letterSpacing || 0,
+            lineHeight: el.lineHeight || 1,
             fill: el.textColor || el.fillColor || el.color || '#000000',
             align: el.textAlign || 'left',
             fontStyle: (el.isBold ? 'bold ' : '') + (el.isItalic ? 'italic' : ''),

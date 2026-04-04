@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { temporal } from 'zundo';
 import { EditorProject, EditorElement, ProjectAsset } from '@/types/editor';
 import { storage } from '@/storage';
+import { TYPOGRAPHY_PRESETS } from '@/lib/typography-presets';
 
 interface EditorState {
   project: EditorProject | null;
@@ -31,6 +32,7 @@ interface EditorState {
   sendBackward: (spreadId: string, elementId: string) => void;
   bringToFront: (spreadId: string, elementId: string) => void;
   sendToBack: (spreadId: string, elementId: string) => void;
+  applyTypographyPreset: (presetId: string) => void;
 }
 
 export const useEditorStore = create<EditorState>()(
@@ -65,6 +67,42 @@ export const useEditorStore = create<EditorState>()(
     });
 
     return { project: { ...state.project, spreads: newSpreads } };
+  }),
+
+  applyTypographyPreset: (presetId) => set((state) => {
+    if (!state.project) return state;
+    
+    const preset = TYPOGRAPHY_PRESETS.find(p => p.id === presetId);
+    if (!preset) return state;
+
+    const newSpreads = state.project.spreads.map((spread) => {
+      const newElements = spread.elements.map((el) => {
+        if (el.type !== 'text') return el;
+        if (el.lockedFonts === false) return el; // Manual override protection
+        
+        const role = el.textRole || 'body'; // Default fallback
+        const fontStr = preset.fonts[role] || preset.fonts.body;
+        const fontStyle = preset.styles?.[role] || { letterSpacing: 0, lineHeight: 1.2, textTransform: 'none' };
+
+        return { 
+          ...el, 
+          fontFamily: fontStr,
+          textRole: role,
+          letterSpacing: fontStyle.letterSpacing || 0,
+          lineHeight: fontStyle.lineHeight || 1.2,
+          textTransform: fontStyle.textTransform || 'none'
+        };
+      });
+      return { ...spread, elements: newElements };
+    });
+
+    return { 
+      project: { 
+        ...state.project, 
+        typographyPresetId: presetId, 
+        spreads: newSpreads 
+      } 
+    };
   }),
 
   addElement: (spreadId, element) => set((state) => {

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useEditorStore } from '@/store/useEditorStore';
 import { LUT_LIBRARY } from '@/lib/lut-presets';
+import TypographyPresetSelector from './editor/TypographyPresetSelector';
 
 export default function Inspector() {
   const t = useTranslations('Editor');
@@ -278,7 +279,7 @@ export default function Inspector() {
 
       {element.type === 'text' && (
         <div className="mb-4 bg-neutral-50 dark:bg-neutral-900/50 p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-800 dark:text-neutral-200 mb-3 border-b border-neutral-200 dark:border-neutral-800 pb-2">Typography</h3>
+          <TypographyPresetSelector />
           <div className="flex flex-col gap-1 mb-3">
             <label className="text-xs font-semibold text-neutral-500 uppercase">Text Source</label>
             <textarea
@@ -290,8 +291,10 @@ export default function Inspector() {
           <div className="flex flex-col gap-1 mb-3">
             <label className="text-xs font-semibold text-neutral-500 uppercase">Font Family</label>
             <select
-              className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-700 rounded px-2 py-1.5 text-sm focus:outline-none"
+              className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-700 rounded px-2 py-1.5 text-sm focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
               value={element.fontFamily || 'Inter'}
+              disabled={element.lockedFonts !== false && !!project?.typographyPresetId}
+              title={element.lockedFonts !== false && !!project?.typographyPresetId ? "Locked by active Typography Preset" : ""}
               onChange={(e) => updateElement(activeSpreadId, element.id, { fontFamily: e.target.value })}
             >
               <option value="Inter">Inter (Sans Serif)</option>
@@ -306,12 +309,14 @@ export default function Inspector() {
               <option value="Playfair Display">Playfair Display</option>
             </select>
           </div>
-          <InputField 
-            label={"Font Size"} 
-            value={element.fontSize !== undefined ? element.fontSize.toString() : "32"} 
-            setter={(val) => updateElement(activeSpreadId, element.id, { fontSize: parseFloat(val) })} 
-            min={8} max={250} step="1"
-          />
+          <div className={element.lockedFonts !== false && !!project?.typographyPresetId ? 'opacity-50 pointer-events-none grayscale' : ''} title={element.lockedFonts !== false && !!project?.typographyPresetId ? "Layout controlled by active Typography Preset" : ""}>
+            <InputField 
+              label={"Font Size"} 
+              value={element.fontSize !== undefined ? element.fontSize.toString() : "32"} 
+              setter={(val) => updateElement(activeSpreadId, element.id, { fontSize: parseFloat(val) })} 
+              min={8} max={250} step="1"
+            />
+          </div>
           <div className="flex flex-col gap-1 mb-3">
             <label className="text-xs font-semibold text-neutral-500 uppercase">Text Fill Color</label>
             <input
