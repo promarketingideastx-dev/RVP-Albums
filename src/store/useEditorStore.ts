@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { temporal } from 'zundo';
 import { EditorProject, EditorElement, ProjectAsset } from '@/types/editor';
 import { storage } from '@/storage';
 
@@ -9,6 +10,9 @@ interface EditorState {
 
   measurementUnit: 'in' | 'cm';
   toggleMeasurementUnit: () => void;
+
+  previewOriginalPhotoId: string | null;
+  setPreviewOriginalPhotoId: (elementId: string | null) => void;
 
   loadProject: (project: EditorProject) => void;
   unloadProject: () => void;
@@ -29,16 +33,20 @@ interface EditorState {
   sendToBack: (spreadId: string, elementId: string) => void;
 }
 
-export const useEditorStore = create<EditorState>((set) => ({
+export const useEditorStore = create<EditorState>()(
+  temporal(
+    (set) => ({
   project: null,
   activeSpreadId: null,
   selectedElementId: null,
   measurementUnit: 'in',
+  previewOriginalPhotoId: null,
 
   toggleMeasurementUnit: () => set((state) => ({ measurementUnit: state.measurementUnit === 'in' ? 'cm' : 'in' })),
+  setPreviewOriginalPhotoId: (id) => set({ previewOriginalPhotoId: id }),
 
   loadProject: (project) => set({ project, activeSpreadId: project.spreads[0]?.id || null }),
-  unloadProject: () => set({ project: null, activeSpreadId: null, selectedElementId: null }),
+  unloadProject: () => set({ project: null, activeSpreadId: null, selectedElementId: null, previewOriginalPhotoId: null }),
   setActiveSpread: (id) => set({ activeSpreadId: id }),
   setSelectedElement: (id) => set({ selectedElementId: id }),
 
@@ -189,4 +197,9 @@ export const useEditorStore = create<EditorState>((set) => ({
     });
     return { project: { ...state.project, spreads: newSpreads } };
   }),
-}));
+    }),
+    {
+       partialize: (state) => ({ project: state.project })
+    }
+  )
+);

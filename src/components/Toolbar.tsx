@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 import { useEditorStore } from '@/store/useEditorStore';
+import { useStore } from 'zustand';
 import { usePathname } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import { exportSpreadToJPG } from '@/utils/exportEngine';
@@ -26,6 +27,10 @@ export default function Toolbar() {
   const unloadProject = useEditorStore((state) => state.unloadProject);
   const measurementUnit = useEditorStore((state) => state.measurementUnit);
   const toggleMeasurementUnit = useEditorStore((state) => state.toggleMeasurementUnit);
+  
+  // Zundo Undo/Redo Temporal State Engine
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { undo, redo, pastStates, futureStates } = useStore(useEditorStore.temporal as any) as any;
   
   const [isExporting, setIsExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -312,6 +317,28 @@ export default function Toolbar() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
               </svg>
            </button>
+           <div className="flex items-center gap-1 border-l border-neutral-200 dark:border-neutral-800 pl-3 ml-2">
+              <button 
+                onClick={() => undo()}
+                disabled={!pastStates || pastStates.length === 0}
+                className="w-8 h-8 flex items-center justify-center text-neutral-600 dark:text-neutral-400 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded transition"
+                title={"Deshacer (Ctrl+Z)"}
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                </svg>
+              </button>
+              <button 
+                onClick={() => redo()}
+                disabled={!futureStates || futureStates.length === 0}
+                className="w-8 h-8 flex items-center justify-center text-neutral-600 dark:text-neutral-400 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded transition"
+                title={"Rehacer (Ctrl+Y)"}
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10H11a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
+                </svg>
+              </button>
+           </div>
         </div>
         </div>
         

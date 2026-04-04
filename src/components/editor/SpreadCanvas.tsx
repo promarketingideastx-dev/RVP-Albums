@@ -35,6 +35,7 @@ const EditorImage = ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const trRef = useRef<any>(null);
   const updateElement = useEditorStore((state) => state.updateElement);
+  const previewOriginalPhotoId = useEditorStore((state) => state.previewOriginalPhotoId);
   
   const [image] = useImage(element.previewUrl || element.src || 'https://via.placeholder.com/150');
 
@@ -165,7 +166,7 @@ const EditorImage = ({
           width={element.w_mm * mmToPx} 
           height={element.h_mm * mmToPx} 
         />
-        {element.photoFilter && element.photoFilter !== 'none' && (
+        {element.photoFilter && element.photoFilter !== 'none' && element.id !== previewOriginalPhotoId && (
           <KonvaImage 
             ref={filterLayerRef}
             image={image} 
