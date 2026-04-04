@@ -35,24 +35,42 @@ export const smartGuidesEmitter = {
 
 const SmartGuidesRenderer = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [guides, setGuides] = useState<any[]>([]);
+  const groupRef = useRef<any>(null);
   
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handler = (g: any[]) => setGuides(g);
+    const handler = (g: any[]) => {
+       const group = groupRef.current;
+       if (!group) return;
+       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       const lines = group.getChildren();
+       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       lines.forEach((line: any) => line.visible(false));
+       
+       g.forEach((guide, i) => {
+          if (i < lines.length) {
+             lines[i].points(guide.points);
+             lines[i].visible(true);
+          }
+       });
+       // Direct draw on parent layer ensuring 144Hz commit!
+       const layer = group.getLayer();
+       if (layer) layer.batchDraw();
+    };
     smartGuidesEmitter.subscribe(handler);
     return () => smartGuidesEmitter.unsubscribe(handler);
   }, []);
 
   return (
-    <Group listening={false}>
-       {guides.map((g, i) => (
+    <Group ref={groupRef} listening={false}>
+       {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
          <Line 
            key={i} 
-           points={g.points} 
+           points={[]} 
            stroke="#00ffff" 
            strokeWidth={1.5} 
            dash={[6, 4]} 
+           visible={false}
            transformsEnabled="position" 
          />
        ))}
