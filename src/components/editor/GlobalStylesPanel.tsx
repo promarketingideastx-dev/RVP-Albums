@@ -295,6 +295,28 @@ export default function GlobalStylesPanel() {
                   <input type="number" className="w-12 bg-neutral-100 dark:bg-neutral-800 text-xs px-1 rounded border-none text-center outline-none" value={globalStyles.shadowBlur || 0} onChange={(e) => updateGlobalImageStyles({ shadowBlur: parseInt(e.target.value, 10) || 0 })}/>
                 </div>
               </div>
+
+              <div>
+                <div className="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                  <label>Distance X</label>
+                  <span>{globalStyles.shadowOffsetX || 0}</span>
+                </div>
+                <div className="flex gap-2">
+                  <input type="range" min="-100" max="100" step="1" className="w-full accent-teal-500" value={globalStyles.shadowOffsetX || 0} onChange={(e) => updateGlobalImageStyles({ shadowOffsetX: parseInt(e.target.value, 10) })}/>
+                  <input type="number" className="w-16 bg-neutral-100 dark:bg-neutral-800 text-xs px-1 rounded border-none text-center outline-none" value={globalStyles.shadowOffsetX || 0} onChange={(e) => updateGlobalImageStyles({ shadowOffsetX: parseInt(e.target.value, 10) || 0 })}/>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                  <label>Distance Y</label>
+                  <span>{globalStyles.shadowOffsetY || 0}</span>
+                </div>
+                <div className="flex gap-2">
+                  <input type="range" min="-100" max="100" step="1" className="w-full accent-teal-500" value={globalStyles.shadowOffsetY || 0} onChange={(e) => updateGlobalImageStyles({ shadowOffsetY: parseInt(e.target.value, 10) })}/>
+                  <input type="number" className="w-16 bg-neutral-100 dark:bg-neutral-800 text-xs px-1 rounded border-none text-center outline-none" value={globalStyles.shadowOffsetY || 0} onChange={(e) => updateGlobalImageStyles({ shadowOffsetY: parseInt(e.target.value, 10) || 0 })}/>
+                </div>
+              </div>
             </div>
           )}
         </div>
