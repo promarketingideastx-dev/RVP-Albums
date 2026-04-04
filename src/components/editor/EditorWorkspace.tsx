@@ -92,8 +92,6 @@ export default function EditorWorkspace() {
   const currentPanY = workspaceZoom === null ? defaultPanY : workspacePan.y;
   
   const isReady = scale > 0 && dimensions.width > 0;
-  const stageWidth = isReady ? project.size.w_mm * scale : 0;
-  const stageHeight = isReady ? project.size.h_mm * scale : 0;
 
   return (
     <div 
