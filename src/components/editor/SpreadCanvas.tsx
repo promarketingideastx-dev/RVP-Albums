@@ -592,9 +592,20 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
           const payload = JSON.parse(e.dataTransfer.getData('application/json'));
           
           if (payload) {
+            let dropX = 20;
+            let dropY = 20;
+            
+            if (e.target && (e.target as HTMLElement).tagName === 'CANVAS') {
+                const rect = (e.target as HTMLElement).getBoundingClientRect();
+                dropX = (e.clientX - rect.left) / scale;
+                dropY = (e.clientY - rect.top) / scale;
+            }
+
             // Text payloads bypass image loading entirely!
             if (payload.type === 'text') {
               const role = payload.sourceId === 'txt-heading' ? 'h1' : payload.sourceId === 'txt-subheading' ? 'h2' : 'body';
+              const textW = role === 'h1' ? 250 : role === 'h2' ? 200 : 150;
+              const textH = role === 'h1' ? 80 : role === 'h2' ? 60 : 40;
               
               useEditorStore.getState().addElement(activeSpreadId, {
                 id: `el_${Date.now()}`,
@@ -604,10 +615,10 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
                 fontFamily: 'Inter',
                 fontSize: role === 'h1' ? 72 : role === 'h2' ? 48 : 24,
                 textColor: '#000000',
-                x_mm: 30, // Default coordinate 
-                y_mm: 30,
-                w_mm: role === 'h1' ? 250 : role === 'h2' ? 200 : 150,
-                h_mm: role === 'h1' ? 80 : role === 'h2' ? 60 : 40,
+                x_mm: dropX - (textW / 2),
+                y_mm: dropY - (textH / 2),
+                w_mm: textW,
+                h_mm: textH,
                 rotation_deg: 0,
                 zIndex: 0
               });
@@ -642,8 +653,8 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
                   originalUrl: payload.originalUrl,
                   previewBlobId: payload.previewBlobId,
                   originalBlobId: payload.originalBlobId,
-                  x_mm: 20, // default injection x
-                  y_mm: 20, // default injection y
+                  x_mm: dropX - (w / 2),
+                  y_mm: dropY - (h / 2),
                   w_mm: w,
                   h_mm: h,
                   rotation_deg: 0,
@@ -658,8 +669,8 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
                   sourceType: payload.sourceType || 'default',
                   blendMode: payload.libraryCategory === 'cinematic' ? 'multiply' : payload.libraryCategory === 'overlays' ? 'screen' : 'source-over',
                   sourceId: payload.sourceId,
-                  x_mm: payload.libraryCategory === 'cinematic' ? 0 : 20,
-                  y_mm: payload.libraryCategory === 'cinematic' ? 0 : 20,
+                  x_mm: payload.libraryCategory === 'cinematic' ? 0 : dropX - (w / 2),
+                  y_mm: payload.libraryCategory === 'cinematic' ? 0 : dropY - (h / 2),
                   w_mm: payload.libraryCategory === 'cinematic' ? 900 : w,
                   h_mm: payload.libraryCategory === 'cinematic' ? 900 : h,
                   opacity: payload.libraryCategory === 'cinematic' ? 0.35 : 1,
