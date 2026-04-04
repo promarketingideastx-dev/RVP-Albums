@@ -601,8 +601,10 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
             let dropX = 20;
             let dropY = 20;
             
-            if (e.target && (e.target as HTMLElement).tagName === 'CANVAS') {
-                const rect = (e.target as HTMLElement).getBoundingClientRect();
+            // Konva wraps the <canvas> inside a div with class "konvajs-content"
+            const canvasWrapper = document.querySelector('.konvajs-content');
+            if (canvasWrapper) {
+                const rect = canvasWrapper.getBoundingClientRect();
                 dropX = (e.clientX - rect.left) / scale;
                 dropY = (e.clientY - rect.top) / scale;
             }
