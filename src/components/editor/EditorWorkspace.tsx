@@ -26,10 +26,22 @@ export default function EditorWorkspace() {
       fontsSet.add(p.fonts.body);
       fontsSet.add(p.fonts.small);
     });
+
+    // Also inject any custom fonts currently active anywhere across the spreads
+    if (project && project.spreads) {
+      project.spreads.forEach(spread => {
+        spread.elements.forEach(element => {
+          if (element.type === 'text' && element.fontFamily) {
+            fontsSet.add(element.fontFamily);
+          }
+        });
+      });
+    }
+
     return Array.from(fontsSet).map(font => 
       `@import url('https://fonts.googleapis.com/css2?family=${font.replace(/ /g, '+')}&display=swap');`
     ).join('\n');
-  }, []);
+  }, [project]);
 
   useEffect(() => {
     if (!containerRef.current) return;

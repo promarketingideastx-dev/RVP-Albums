@@ -301,28 +301,88 @@ export default function Inspector() {
             </div>
 
             {/* Font Typography Bar */}
-            <div className={element.lockedFonts !== false && !!project?.typographyPresetId ? 'opacity-50 pointer-events-none grayscale' : ''} title={element.lockedFonts !== false && !!project?.typographyPresetId ? "Layout controlled by active Typography Preset" : ""}>
+            <div className="">
               <div className="flex items-center gap-1.5 mb-2">
                 <Type className="w-3.5 h-3.5 text-neutral-500" />
                 <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Typography</label>
               </div>
               <div className="grid grid-cols-[1fr_auto] gap-2 items-center">
                 <select
-                  className="w-full h-8 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-700 rounded px-2 text-sm focus:outline-none disabled:opacity-50"
+                  className="w-full h-8 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-700 rounded px-2 text-sm focus:outline-none"
                   value={element.fontFamily || 'Inter'}
-                  disabled={element.lockedFonts !== false && !!project?.typographyPresetId}
                   onChange={(e) => updateElement(activeSpreadId, element.id, { fontFamily: e.target.value })}
                 >
-                  <option value="Inter">Inter (Sans Serif)</option>
-                  <option value="Playfair Display">Playfair Display</option>
-                  <option value="Bodoni Moda">Bodoni Moda</option>
-                  <option value="Cormorant Garamond">Cormorant Garamond</option>
-                  <option value="Great Vibes">Great Vibes</option>
-                  <option value="Outfit">Outfit</option>
-                  <option value="Cinzel">Cinzel</option>
-                  <option value="Montserrat">Montserrat</option>
-                  <option value="Oswald">Oswald</option>
-                  <option value="Arial">Arial</option>
+                  <optgroup label="Scripts & Calligraphy">
+                    <option value="Great Vibes">Great Vibes</option>
+                    <option value="Alex Brush">Alex Brush</option>
+                    <option value="Allura">Allura</option>
+                    <option value="Parisienne">Parisienne (Adorn)</option>
+                    <option value="Qwigley">Qwigley (Burgues)</option>
+                    <option value="Grand Hotel">Grand Hotel (Lavanderia)</option>
+                    <option value="Cedarville Cursive">Cedarville (Snell)</option>
+                    <option value="Herr Von Muellerhoff">Herr Von Muellerhoff (Zapfino)</option>
+                    <option value="Tangerine">Tangerine (Shelley)</option>
+                    <option value="Sacramento">Sacramento (Affair)</option>
+                    <option value="Pinyon Script">Pinyon Script</option>
+                    <option value="Caveat">Caveat (Playlist)</option>
+                    <option value="Satisfy">Satisfy (Beloved)</option>
+                    <option value="Dancing Script">Dancing Script</option>
+                    <option value="Pacifico">Pacifico</option>
+                    <option value="Cookie">Cookie</option>
+                    <option value="Rochester">Rochester</option>
+                    <option value="Montez">Montez</option>
+                    <option value="Norican">Norican</option>
+                    <option value="Mrs Saint Delafield">Mrs Saint Delafield</option>
+                    <option value="La Belle Aurore">La Belle Aurore</option>
+                  </optgroup>
+                  <optgroup label="Serif & Editorial">
+                    <option value="Playfair Display">Playfair Display</option>
+                    <option value="Libre Baskerville">Libre Baskerville</option>
+                    <option value="Bodoni Moda">Bodoni Moda</option>
+                    <option value="EB Garamond">EB Garamond</option>
+                    <option value="Libre Caslon Text">Libre Caslon Text</option>
+                    <option value="Cormorant Garamond">Cormorant Garamond</option>
+                    <option value="Lora">Lora (Sabon)</option>
+                    <option value="Crimson Text">Crimson Text (Minion)</option>
+                    <option value="Cinzel">Cinzel (Trajan)</option>
+                    <option value="Neuton">Neuton (Mrs Eaves)</option>
+                    <option value="Prata">Prata (Chronicle)</option>
+                    <option value="Gloock">Gloock (Canela)</option>
+                    <option value="Abril Fatface">Abril Fatface (Butler)</option>
+                    <option value="Vidaloka">Vidaloka (Noe)</option>
+                    <option value="Frank Ruhl Libre">Frank Ruhl Libre</option>
+                    <option value="Yeseva One">Yeseva One</option>
+                    <option value="Zilla Slab">Zilla Slab (Editorial)</option>
+                    <option value="Cinzel Decorative">Cinzel Decorative</option>
+                    <option value="Marcellus">Marcellus</option>
+                    <option value="Forum">Forum</option>
+                    <option value="Spectral">Spectral</option>
+                    <option value="Fraunces">Fraunces (Orpheus)</option>
+                    <option value="Cardo">Cardo</option>
+                    <option value="Alegreya">Alegreya</option>
+                    <option value="Vollkorn">Vollkorn</option>
+                    <option value="Arapey">Arapey</option>
+                    <option value="Old Standard TT">Old Standard TT</option>
+                    <option value="Sorts Mill Goudy">Sorts Mill Goudy</option>
+                  </optgroup>
+                  <optgroup label="Sans Serif & Modern">
+                    <option value="Inter">Inter (Helvetica)</option>
+                    <option value="Jost">Jost (Futura)</option>
+                    <option value="Nunito Sans">Nunito Sans (Avenir)</option>
+                    <option value="Montserrat">Montserrat</option>
+                    <option value="Raleway">Raleway</option>
+                    <option value="DM Sans">DM Sans (Proxima)</option>
+                    <option value="Prompt">Prompt (Gotham)</option>
+                    <option value="Lato">Lato</option>
+                    <option value="Open Sans">Open Sans</option>
+                    <option value="Poppins">Poppins</option>
+                    <option value="Josefin Sans">Josefin Sans</option>
+                    <option value="Work Sans">Work Sans</option>
+                    <option value="Nunito">Nunito</option>
+                    <option value="Outfit">Outfit</option>
+                    <option value="Oswald">Oswald</option>
+                    <option value="Arial">Arial</option>
+                  </optgroup>
                 </select>
                 <div className="flex items-center bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-700 rounded h-8 px-1">
                    <input type="number" value={element.fontSize || 32} onChange={(e) => updateElement(activeSpreadId, element.id, { fontSize: parseFloat(e.target.value) || 32 })} className="w-10 text-center bg-transparent border-none text-sm outline-none" min={8} max={500} />
@@ -360,7 +420,7 @@ export default function Inspector() {
             </div>
 
             {/* Metrics */}
-            <div className={`grid grid-cols-2 gap-3 ${element.lockedFonts !== false && !!project?.typographyPresetId ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
+            <div className={`grid grid-cols-2 gap-3`}>
               <div className="flex items-center gap-2">
                 <LetterText className="w-4 h-4 text-neutral-400 shrink-0" />
                 <input type="range" min="-10" max="100" step="1" value={element.letterSpacing || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { letterSpacing: parseFloat(e.target.value) })} className="w-full accent-blue-500 h-1 bg-neutral-200 rounded-lg appearance-none cursor-pointer" />
