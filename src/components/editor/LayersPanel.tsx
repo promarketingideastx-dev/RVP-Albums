@@ -96,11 +96,11 @@ export default function LayersPanel() {
          const selEl = selectedElementId ? spread.elements.find(e => e.id === selectedElementId) : null;
          return (
            <div className="flex flex-col gap-2 px-4 py-3 bg-neutral-50/80 dark:bg-neutral-900/80 border-b border-neutral-200 dark:border-neutral-800 text-[12px] font-medium transition-colors">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center justify-between gap-2 overflow-hidden">
                 <select 
                   value={selEl?.blendMode || 'source-over'} 
                   onChange={(e) => { if(selEl) updateElement(spread.id, selEl.id, { blendMode: e.target.value })}}
-                  className="bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-neutral-300 dark:border-neutral-700 rounded-md outline-none px-2 py-1 cursor-pointer w-24 shrink-0 shadow-sm disabled:opacity-50"
+                  className="bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-neutral-300 dark:border-neutral-700 rounded-md outline-none px-2 py-1 cursor-pointer w-full max-w-[85px] shrink text-[11px] shadow-sm disabled:opacity-50"
                   disabled={!selEl || selEl.type === 'text' || selEl.type === 'group'}
                 >
                   <option value="source-over">Normal</option>
@@ -117,7 +117,7 @@ export default function LayersPanel() {
                   <option value="exclusion">Exclusion</option>
                 </select>
                 
-                <div className="flex items-center gap-1.5 opacity-90 flex-1 justify-end">
+                <div className="flex items-center gap-1 opacity-90 flex-shrink-0">
                    <span className="text-[10px] uppercase font-bold text-neutral-500">{t('op').includes('.') ? 'Op' : t('op')}</span>
                    <input 
                      disabled={!selEl}
@@ -125,7 +125,7 @@ export default function LayersPanel() {
                      min="0" max="100" 
                      value={Math.round(((selEl && selEl.opacity !== undefined) ? selEl.opacity : 1) * 100)} 
                      onChange={(e) => { if(selEl) updateElement(spread.id, selEl.id, { opacity: Number(e.target.value) / 100 })}}
-                     className="w-full max-w-[60px] accent-blue-500 disabled:opacity-50 cursor-pointer shrink-0"
+                     className="w-[45px] accent-blue-500 disabled:opacity-50 cursor-pointer shrink-0"
                    />
                    <div className="flex items-center border border-neutral-300 dark:border-neutral-700 rounded bg-white dark:bg-neutral-800 px-1 py-0.5 shrink-0">
                      <input 
@@ -134,10 +134,10 @@ export default function LayersPanel() {
                        min="0" max="100" 
                        value={Math.round(((selEl && selEl.opacity !== undefined) ? selEl.opacity : 1) * 100)} 
                        onChange={(e) => { if(selEl) updateElement(spread.id, selEl.id, { opacity: Number(e.target.value) / 100 })}}
-                       className="w-6 bg-transparent text-neutral-800 dark:text-neutral-200 text-right outline-none ring-0 p-0 m-0 text-[11px]"
+                       className="w-7 bg-transparent text-neutral-800 dark:text-neutral-200 text-center outline-none ring-0 p-0 m-0 text-[11px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                        onClick={(e) => { (e.target as HTMLInputElement).select() }}
                      />
-                     <span className="text-neutral-500 font-normal ml-0.5">%</span>
+                     <span className="text-neutral-500 font-normal ml-0.5 mr-0.5 text-[10px]">%</span>
                    </div>
                 </div>
              </div>
