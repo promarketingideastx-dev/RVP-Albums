@@ -476,12 +476,34 @@ export default function Inspector() {
                    <input type="range" min="0" max="1" step="0.05" value={element.shadowOpacity !== undefined ? element.shadowOpacity : 0.5} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOpacity: parseFloat(e.target.value) })} className="w-full accent-blue-500 h-1 bg-neutral-200 rounded-lg appearance-none cursor-pointer" />
                  </div>
                  <div className="flex flex-col gap-1">
-                   <label className="text-[10px] text-neutral-400 uppercase">Offset X ({element.shadowOffsetX || 0})</label>
-                   <input type="range" min="-100" max="100" value={element.shadowOffsetX || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOffsetX: parseFloat(e.target.value) })} className="w-full accent-blue-500 h-1 bg-neutral-200 rounded-lg appearance-none cursor-pointer" />
+                   <label className="text-[10px] text-neutral-400 uppercase flex justify-between">
+                     <span>Distance</span>
+                     <span>{Math.round(Math.sqrt((element.shadowOffsetX || 0)**2 + (element.shadowOffsetY || 0)**2))}</span>
+                   </label>
+                   <input type="range" min="0" max="200" value={Math.round(Math.sqrt((element.shadowOffsetX || 0)**2 + (element.shadowOffsetY || 0)**2))} 
+                      onChange={(e) => {
+                         const dist = parseFloat(e.target.value);
+                         const ang = Math.round((Math.atan2(element.shadowOffsetY || 0, element.shadowOffsetX || 0) * 180 / Math.PI + 360) % 360);
+                         updateElement(activeSpreadId, element.id, { 
+                           shadowOffsetX: Math.round(dist * Math.cos(ang * Math.PI / 180)), 
+                           shadowOffsetY: Math.round(dist * Math.sin(ang * Math.PI / 180)) 
+                         });
+                      }} className="w-full accent-blue-500 h-1 bg-neutral-200 rounded-lg appearance-none cursor-pointer" />
                  </div>
                  <div className="flex flex-col gap-1">
-                   <label className="text-[10px] text-neutral-400 uppercase">Offset Y ({element.shadowOffsetY || 0})</label>
-                   <input type="range" min="-100" max="100" value={element.shadowOffsetY || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOffsetY: parseFloat(e.target.value) })} className="w-full accent-blue-500 h-1 bg-neutral-200 rounded-lg appearance-none cursor-pointer" />
+                   <label className="text-[10px] text-neutral-400 uppercase flex justify-between">
+                     <span>Angle</span>
+                     <span>{Math.round((Math.atan2(element.shadowOffsetY || 0, element.shadowOffsetX || 0) * 180 / Math.PI + 360) % 360)}°</span>
+                   </label>
+                   <input type="range" min="0" max="360" value={Math.round((Math.atan2(element.shadowOffsetY || 0, element.shadowOffsetX || 0) * 180 / Math.PI + 360) % 360)} 
+                      onChange={(e) => {
+                         const ang = parseFloat(e.target.value);
+                         const dist = Math.round(Math.sqrt((element.shadowOffsetX || 0)**2 + (element.shadowOffsetY || 0)**2));
+                         updateElement(activeSpreadId, element.id, { 
+                           shadowOffsetX: Math.round(dist * Math.cos(ang * Math.PI / 180)), 
+                           shadowOffsetY: Math.round(dist * Math.sin(ang * Math.PI / 180)) 
+                         });
+                      }} className="w-full accent-blue-500 h-1 bg-neutral-200 rounded-lg appearance-none cursor-pointer" />
                  </div>
                  <div className="col-span-2 flex items-center justify-between border-t border-neutral-100 dark:border-neutral-800 pt-2 mt-1">
                    <label className="text-[10px] text-neutral-400 uppercase">Shadow Color</label>

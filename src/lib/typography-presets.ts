@@ -1,3831 +1,3472 @@
-export type TextHierarchy = 'h1' | 'h2' | 'body' | 'small';
-export type PresetCategory = 'wedding' | 'quinceanera' | 'modern' | 'minimal' | 'formal' | 'editorial' | 'classic';
+export type PresetCategory = 'wedding' | 'quinceanera' | 'modern' | 'editorial' | 'classic';
 
 export interface TypographyPreset {
   id: string;
   name: string;
   category: PresetCategory;
   lockedFonts: boolean;
+  alignment: 'left' | 'center' | 'right';
   fonts: {
     h1: string;
     h2: string;
     body: string;
     small: string;
   };
-  styles?: {
-    h1: { letterSpacing?: number; lineHeight?: number; textTransform?: 'uppercase' | 'lowercase' | 'none' };
-    h2: { letterSpacing?: number; lineHeight?: number; textTransform?: 'uppercase' | 'lowercase' | 'none' };
-    body: { letterSpacing?: number; lineHeight?: number; textTransform?: 'uppercase' | 'lowercase' | 'none' };
-    small: { letterSpacing?: number; lineHeight?: number; textTransform?: 'uppercase' | 'lowercase' | 'none' };
-  };
-  alignment: 'center' | 'left' | 'right' | 'justify';
-  colorPalette: {
-    primary: string;
-    secondary: string;
-    accent: string;
+  styles: {
+    h1: { fontSize: number; letterSpacing: number; lineHeight: number; textTransform?: 'none' | 'uppercase' | 'lowercase'; color: string };
+    h2: { fontSize: number; letterSpacing: number; lineHeight: number; textTransform?: 'none' | 'uppercase' | 'lowercase'; color: string };
+    body: { fontSize: number; letterSpacing: number; lineHeight: number; textTransform?: 'none' | 'uppercase' | 'lowercase'; color: string };
+    small: { fontSize: number; letterSpacing: number; lineHeight: number; textTransform?: 'none' | 'uppercase' | 'lowercase'; color: string };
   };
 }
 
+export const TYPOGRAPHY_CATEGORIES: { id: PresetCategory; label: string }[] = [
+  { id: 'wedding', label: 'Wedding' },
+  { id: 'quinceanera', label: 'Quinceañera' },
+  { id: 'modern', label: 'Modern' },
+  { id: 'editorial', label: 'Editorial' },
+  { id: 'classic', label: 'Classic' }
+];
+
 export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
   {
-    id: 'luxury_wedding_classic',
-    name: 'Luxury Wedding Classic',
-    category: 'wedding',
-    lockedFonts: true,
-    fonts: {
-      h1: 'Great Vibes',
-      h2: 'Cormorant Garamond',
-      body: 'Cormorant Garamond',
-      small: 'Cormorant Garamond'
+    "id": "TP-PRO-001",
+    "name": "Great Vibes + Playfair Display (Onyx Monochrome)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Great Vibes",
+      "h2": "Playfair Display",
+      "body": "Inter",
+      "small": "Inter"
     },
-    styles: {
-      h1: { letterSpacing: 0, lineHeight: 1.2, textTransform: 'none' },
-      h2: { letterSpacing: 2, lineHeight: 1.4, textTransform: 'uppercase' },
-      body: { letterSpacing: 0, lineHeight: 1.5, textTransform: 'none' },
-      small: { letterSpacing: 1, lineHeight: 1.5, textTransform: 'uppercase' }
-    },
-    alignment: 'center',
-    colorPalette: { primary: '#2C3E50', secondary: '#7F8C8D', accent: '#D4AF37' }
+    "styles": {
+      "h1": {
+        "fontSize": 82,
+        "letterSpacing": -2,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#111111"
+      },
+      "h2": {
+        "fontSize": 28,
+        "letterSpacing": 20,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#222222"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#444444"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#666666"
+      }
+    }
   },
   {
-    id: 'modern_elegant',
-    name: 'Modern Elegant',
-    category: 'modern',
-    lockedFonts: true,
-    fonts: {
-      h1: 'Playfair Display',
-      h2: 'Montserrat',
-      body: 'Montserrat',
-      small: 'Montserrat'
+    "id": "TP-PRO-002",
+    "name": "Great Vibes + Playfair Display (Champagne Gold)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Great Vibes",
+      "h2": "Playfair Display",
+      "body": "Inter",
+      "small": "Inter"
     },
-    styles: {
-      h1: { letterSpacing: 0, lineHeight: 1.1, textTransform: 'none' },
-      h2: { letterSpacing: 3, lineHeight: 1.3, textTransform: 'uppercase' },
-      body: { letterSpacing: 0.5, lineHeight: 1.6, textTransform: 'none' },
-      small: { letterSpacing: 1.5, lineHeight: 1.6, textTransform: 'uppercase' }
-    },
-    alignment: 'center',
-    colorPalette: { primary: '#000000', secondary: '#555555', accent: '#B76E79' }
+    "styles": {
+      "h1": {
+        "fontSize": 82,
+        "letterSpacing": -2,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#b8945a"
+      },
+      "h2": {
+        "fontSize": 28,
+        "letterSpacing": 20,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#b8945a"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#808080"
+      }
+    }
   },
   {
-    id: 'romantic_script',
-    name: 'Romantic Script',
-    category: 'wedding',
-    lockedFonts: true,
-    fonts: {
-      h1: 'Alex Brush',
-      h2: 'EB Garamond',
-      body: 'EB Garamond',
-      small: 'EB Garamond'
+    "id": "TP-PRO-003",
+    "name": "Great Vibes + Playfair Display (Navy Royal)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Great Vibes",
+      "h2": "Playfair Display",
+      "body": "Inter",
+      "small": "Inter"
     },
-    styles: {
-      h1: { letterSpacing: 0, lineHeight: 1.3, textTransform: 'none' },
-      h2: { letterSpacing: 1.5, lineHeight: 1.4, textTransform: 'none' },
-      body: { letterSpacing: 0, lineHeight: 1.5, textTransform: 'none' },
-      small: { letterSpacing: 1, lineHeight: 1.5, textTransform: 'uppercase' }
-    },
-    alignment: 'center',
-    colorPalette: { primary: '#4A4A4A', secondary: '#8A8A8A', accent: '#FADADD' }
+    "styles": {
+      "h1": {
+        "fontSize": 82,
+        "letterSpacing": -2,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#1c2e4a"
+      },
+      "h2": {
+        "fontSize": 28,
+        "letterSpacing": 20,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#3b5998"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#333333"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#555555"
+      }
+    }
   },
   {
-    id: 'minimal_clean',
-    name: 'Minimal Clean',
-    category: 'minimal',
-    lockedFonts: true,
-    fonts: {
-      h1: 'Inter',
-      h2: 'Inter',
-      body: 'Inter',
-      small: 'Inter'
+    "id": "TP-PRO-004",
+    "name": "Great Vibes + Playfair Display (Sage Botanical)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Great Vibes",
+      "h2": "Playfair Display",
+      "body": "Inter",
+      "small": "Inter"
     },
-    styles: {
-      h1: { letterSpacing: -1, lineHeight: 1.0, textTransform: 'none' },
-      h2: { letterSpacing: 2, lineHeight: 1.2, textTransform: 'uppercase' },
-      body: { letterSpacing: 0, lineHeight: 1.5, textTransform: 'none' },
-      small: { letterSpacing: 1, lineHeight: 1.5, textTransform: 'uppercase' }
-    },
-    alignment: 'left',
-    colorPalette: { primary: '#111111', secondary: '#666666', accent: '#EEEEEE' }
+    "styles": {
+      "h1": {
+        "fontSize": 82,
+        "letterSpacing": -2,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#6e7a63"
+      },
+      "h2": {
+        "fontSize": 28,
+        "letterSpacing": 20,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#8b9680"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#757575"
+      }
+    }
   },
   {
-    id: 'editorial_vogue',
-    name: 'Editorial Vogue',
-    category: 'formal',
-    lockedFonts: true,
-    fonts: {
-      h1: 'Bodoni Moda',
-      h2: 'Lato',
-      body: 'Lato',
-      small: 'Lato'
+    "id": "TP-PRO-005",
+    "name": "Pinyon Script + Cormorant Garamond (Onyx Monochrome)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Pinyon Script",
+      "h2": "Cormorant Garamond",
+      "body": "Cormorant Garamond",
+      "small": "Inter"
     },
-    styles: {
-      h1: { letterSpacing: -0.5, lineHeight: 1.0, textTransform: 'uppercase' },
-      h2: { letterSpacing: 4, lineHeight: 1.4, textTransform: 'uppercase' },
-      body: { letterSpacing: 0, lineHeight: 1.6, textTransform: 'none' },
-      small: { letterSpacing: 2, lineHeight: 1.6, textTransform: 'uppercase' }
-    },
-    alignment: 'center',
-    colorPalette: { primary: '#000000', secondary: '#333333', accent: '#C0C0C0' }
+    "styles": {
+      "h1": {
+        "fontSize": 90,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#111111"
+      },
+      "h2": {
+        "fontSize": 32,
+        "letterSpacing": 15,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#222222"
+      },
+      "body": {
+        "fontSize": 18,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#444444"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 20,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#666666"
+      }
+    }
   },
   {
-    id: 'quinceanera_princess',
-    name: 'Quinceañera Princess',
-    category: 'quinceanera',
-    lockedFonts: true,
-    fonts: {
-      h1: 'Pinyon Script',
-      h2: 'Lora',
-      body: 'Lora',
-      small: 'Lora'
+    "id": "TP-PRO-006",
+    "name": "Pinyon Script + Cormorant Garamond (Champagne Gold)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Pinyon Script",
+      "h2": "Cormorant Garamond",
+      "body": "Cormorant Garamond",
+      "small": "Inter"
     },
-    styles: {
-      h1: { letterSpacing: 0, lineHeight: 1.2, textTransform: 'none' },
-      h2: { letterSpacing: 1.5, lineHeight: 1.4, textTransform: 'uppercase' },
-      body: { letterSpacing: 0, lineHeight: 1.6, textTransform: 'none' },
-      small: { letterSpacing: 0.5, lineHeight: 1.6, textTransform: 'uppercase' }
-    },
-    alignment: 'center',
-    colorPalette: { primary: '#D81B60', secondary: '#F48FB1', accent: '#FFDF00' }
+    "styles": {
+      "h1": {
+        "fontSize": 90,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#b8945a"
+      },
+      "h2": {
+        "fontSize": 32,
+        "letterSpacing": 15,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#b8945a"
+      },
+      "body": {
+        "fontSize": 18,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 20,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#808080"
+      }
+    }
   },
   {
-    id: 'golden_luxury',
-    name: 'Golden Luxury',
-    category: 'formal',
-    lockedFonts: true,
-    fonts: {
-      h1: 'Cinzel Decorative',
-      h2: 'Cinzel',
-      body: 'Cardo',
-      small: 'Cinzel'
+    "id": "TP-PRO-007",
+    "name": "Pinyon Script + Cormorant Garamond (Navy Royal)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Pinyon Script",
+      "h2": "Cormorant Garamond",
+      "body": "Cormorant Garamond",
+      "small": "Inter"
     },
-    styles: {
-      h1: { letterSpacing: 1, lineHeight: 1.1, textTransform: 'uppercase' },
-      h2: { letterSpacing: 3, lineHeight: 1.3, textTransform: 'uppercase' },
-      body: { letterSpacing: 0, lineHeight: 1.5, textTransform: 'none' },
-      small: { letterSpacing: 2, lineHeight: 1.5, textTransform: 'uppercase' }
-    },
-    alignment: 'center',
-    colorPalette: { primary: '#D4AF37', secondary: '#996515', accent: '#000000' }
+    "styles": {
+      "h1": {
+        "fontSize": 90,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#1c2e4a"
+      },
+      "h2": {
+        "fontSize": 32,
+        "letterSpacing": 15,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#3b5998"
+      },
+      "body": {
+        "fontSize": 18,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#333333"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 20,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#555555"
+      }
+    }
   },
   {
-    id: 'soft_pastel',
-    name: 'Soft Pastel',
-    category: 'quinceanera',
-    lockedFonts: true,
-    fonts: {
-      h1: 'Dancing Script',
-      h2: 'Merriweather',
-      body: 'Merriweather',
-      small: 'Merriweather'
+    "id": "TP-PRO-008",
+    "name": "Pinyon Script + Cormorant Garamond (Sage Botanical)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Pinyon Script",
+      "h2": "Cormorant Garamond",
+      "body": "Cormorant Garamond",
+      "small": "Inter"
     },
-    styles: {
-      h1: { letterSpacing: 0, lineHeight: 1.3, textTransform: 'none' },
-      h2: { letterSpacing: 1, lineHeight: 1.4, textTransform: 'none' },
-      body: { letterSpacing: 0, lineHeight: 1.6, textTransform: 'none' },
-      small: { letterSpacing: 1, lineHeight: 1.6, textTransform: 'uppercase' }
-    },
-    alignment: 'center',
-    colorPalette: { primary: '#98FF98', secondary: '#AEC6CF', accent: '#FFB7B2' }
+    "styles": {
+      "h1": {
+        "fontSize": 90,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#6e7a63"
+      },
+      "h2": {
+        "fontSize": 32,
+        "letterSpacing": 15,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#8b9680"
+      },
+      "body": {
+        "fontSize": 18,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 20,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#757575"
+      }
+    }
   },
   {
-    id: 'classic_formal',
-    name: 'Classic Formal',
-    category: 'formal',
-    lockedFonts: true,
-    fonts: {
-      h1: 'Tangerine',
-      h2: 'Crimson Text',
-      body: 'Crimson Text',
-      small: 'Crimson Text'
+    "id": "TP-PRO-009",
+    "name": "Alex Brush + Cinzel (Onyx Monochrome)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Alex Brush",
+      "h2": "Cinzel",
+      "body": "Lora",
+      "small": "Cinzel"
     },
-    styles: {
-      h1: { letterSpacing: 0, lineHeight: 1.1, textTransform: 'none' },
-      h2: { letterSpacing: 1.5, lineHeight: 1.3, textTransform: 'uppercase' },
-      body: { letterSpacing: 0, lineHeight: 1.5, textTransform: 'none' },
-      small: { letterSpacing: 1, lineHeight: 1.5, textTransform: 'uppercase' }
-    },
-    alignment: 'center',
-    colorPalette: { primary: '#000080', secondary: '#4169E1', accent: '#FFFFFF' }
+    "styles": {
+      "h1": {
+        "fontSize": 85,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#111111"
+      },
+      "h2": {
+        "fontSize": 24,
+        "letterSpacing": 30,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#222222"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#444444"
+      },
+      "small": {
+        "fontSize": 12,
+        "letterSpacing": 25,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#666666"
+      }
+    }
   },
   {
-    id: 'modern_minimal_black',
-    name: 'Modern Minimal Black',
-    category: 'minimal',
-    lockedFonts: true,
-    fonts: {
-      h1: 'Outfit',
-      h2: 'Outfit',
-      body: 'Outfit',
-      small: 'Outfit'
-    },
-    styles: {
-      h1: { letterSpacing: -2, lineHeight: 1.0, textTransform: 'uppercase' },
-      h2: { letterSpacing: 5, lineHeight: 1.2, textTransform: 'uppercase' },
-      body: { letterSpacing: 0, lineHeight: 1.5, textTransform: 'none' },
-      small: { letterSpacing: 2, lineHeight: 1.5, textTransform: 'uppercase' }
-    },
-    alignment: 'left',
-    colorPalette: { primary: '#000000', secondary: '#333333', accent: '#CCCCCC' }
-  }
-,
-{
-  "id": "preset-011",
-  "name": "Luxury preset-011",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "modern",
-  "fonts": {
-    "h1": "Lato",
-    "h2": "Poppins",
-    "body": "Oswald",
-    "small": "Oswald"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 1,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 3,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1a1a1a",
-    "secondary": "#4a4a4a",
-    "accent": "#d4af37"
-  }
-},
-{
-  "id": "preset-012",
-  "name": "Luxury preset-012",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "minimal",
-  "fonts": {
-    "h1": "Poppins",
-    "h2": "Raleway",
-    "body": "Poppins",
-    "small": "Poppins"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 4,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 9,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#222f3e",
-    "secondary": "#576574",
-    "accent": "#ee5253"
-  }
-},
-{
-  "id": "preset-013",
-  "name": "Luxury preset-013",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "editorial",
-  "fonts": {
-    "h1": "Cormorant Garamond",
-    "h2": "Cormorant Garamond",
-    "body": "Raleway",
-    "small": "Raleway"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 1,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 1,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#4b4b4b",
-    "secondary": "#7d7d7d",
-    "accent": "#c0392b"
-  }
-},
-{
-  "id": "preset-014",
-  "name": "Luxury preset-014",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "classic",
-  "fonts": {
-    "h1": "Merriweather",
-    "h2": "PT Serif",
-    "body": "Lato",
-    "small": "Lato"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 3,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 3,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2d3436",
-    "secondary": "#636e72",
-    "accent": "#00b894"
-  }
-},
-{
-  "id": "preset-015",
-  "name": "Luxury preset-015",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "editorial",
-  "fonts": {
-    "h1": "Lora",
-    "h2": "Bodoni Moda",
-    "body": "Oswald",
-    "small": "Oswald"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 2,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 2,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#000000",
-    "secondary": "#666666",
-    "accent": "#ff9f43"
-  }
-},
-{
-  "id": "preset-016",
-  "name": "Luxury preset-016",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "editorial",
-  "fonts": {
-    "h1": "Merriweather",
-    "h2": "Bodoni Moda",
-    "body": "Montserrat",
-    "small": "Montserrat"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 1,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 7,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1a1a1a",
-    "secondary": "#4a4a4a",
-    "accent": "#d4af37"
-  }
-},
-{
-  "id": "preset-017",
-  "name": "Luxury preset-017",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "classic",
-  "fonts": {
-    "h1": "Cormorant Garamond",
-    "h2": "Cinzel",
-    "body": "Outfit",
-    "small": "Outfit"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 3,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 8,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2c3e50",
-    "secondary": "#34495e",
-    "accent": "#e74c3c"
-  }
-},
-{
-  "id": "preset-018",
-  "name": "Luxury preset-018",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "wedding",
-  "fonts": {
-    "h1": "Great Vibes",
-    "h2": "Roboto",
-    "body": "Cormorant Garamond",
-    "small": "Cormorant Garamond"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 2,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 0,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2c3e50",
-    "secondary": "#34495e",
-    "accent": "#e74c3c"
-  }
-},
-{
-  "id": "preset-019",
-  "name": "Luxury preset-019",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "minimal",
-  "fonts": {
-    "h1": "Montserrat",
-    "h2": "Outfit",
-    "body": "Lato",
-    "small": "Lato"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 0,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 5,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#111111",
-    "secondary": "#555555",
-    "accent": "#8e44ad"
-  }
-},
-{
-  "id": "preset-020",
-  "name": "Luxury preset-020",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "minimal",
-  "fonts": {
-    "h1": "Lato",
-    "h2": "Raleway",
-    "body": "Oswald",
-    "small": "Oswald"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 1,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 9,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2c3e50",
-    "secondary": "#34495e",
-    "accent": "#e74c3c"
-  }
-},
-{
-  "id": "preset-021",
-  "name": "Luxury preset-021",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "modern",
-  "fonts": {
-    "h1": "Lato",
-    "h2": "Lato",
-    "body": "Outfit",
-    "small": "Outfit"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 2,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 5,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2c3e50",
-    "secondary": "#34495e",
-    "accent": "#e74c3c"
-  }
-},
-{
-  "id": "preset-022",
-  "name": "Luxury preset-022",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "editorial",
-  "fonts": {
-    "h1": "Cinzel",
-    "h2": "Cinzel",
-    "body": "Poppins",
-    "small": "Poppins"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 1,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 3,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#4b4b4b",
-    "secondary": "#7d7d7d",
-    "accent": "#c0392b"
-  }
-},
-{
-  "id": "preset-023",
-  "name": "Luxury preset-023",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "classic",
-  "fonts": {
-    "h1": "Cormorant Garamond",
-    "h2": "Merriweather",
-    "body": "Poppins",
-    "small": "Poppins"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 0,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 0,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1e272e",
-    "secondary": "#485460",
-    "accent": "#ffdd59"
-  }
-},
-{
-  "id": "preset-024",
-  "name": "Luxury preset-024",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "editorial",
-  "fonts": {
-    "h1": "Playfair Display",
-    "h2": "PT Serif",
-    "body": "Montserrat",
-    "small": "Montserrat"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 1,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 0,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#111111",
-    "secondary": "#555555",
-    "accent": "#8e44ad"
-  }
-},
-{
-  "id": "preset-025",
-  "name": "Luxury preset-025",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "classic",
-  "fonts": {
-    "h1": "Playfair Display",
-    "h2": "Playfair Display",
-    "body": "Lato",
-    "small": "Lato"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 2,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 1,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#4b4b4b",
-    "secondary": "#7d7d7d",
-    "accent": "#c0392b"
-  }
-},
-{
-  "id": "preset-026",
-  "name": "Luxury preset-026",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "modern",
-  "fonts": {
-    "h1": "Raleway",
-    "h2": "Roboto",
-    "body": "Lato",
-    "small": "Lato"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 1,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 5,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1e272e",
-    "secondary": "#485460",
-    "accent": "#ffdd59"
-  }
-},
-{
-  "id": "preset-027",
-  "name": "Luxury preset-027",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "quinceanera",
-  "fonts": {
-    "h1": "Pinyon Script",
-    "h2": "Raleway",
-    "body": "Bodoni Moda",
-    "small": "Bodoni Moda"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 1,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 1,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#222f3e",
-    "secondary": "#576574",
-    "accent": "#ee5253"
-  }
-},
-{
-  "id": "preset-028",
-  "name": "Luxury preset-028",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "wedding",
-  "fonts": {
-    "h1": "Allura",
-    "h2": "Inter",
-    "body": "Lora",
-    "small": "Lora"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 4,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 1,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#222f3e",
-    "secondary": "#576574",
-    "accent": "#ee5253"
-  }
-},
-{
-  "id": "preset-029",
-  "name": "Luxury preset-029",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "editorial",
-  "fonts": {
-    "h1": "Playfair Display",
-    "h2": "Cinzel",
-    "body": "Roboto",
-    "small": "Roboto"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 2,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 9,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#222f3e",
-    "secondary": "#576574",
-    "accent": "#ee5253"
-  }
-},
-{
-  "id": "preset-030",
-  "name": "Luxury preset-030",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "editorial",
-  "fonts": {
-    "h1": "Playfair Display",
-    "h2": "Lora",
-    "body": "Roboto",
-    "small": "Roboto"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 4,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 2,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#111111",
-    "secondary": "#555555",
-    "accent": "#8e44ad"
-  }
-},
-{
-  "id": "preset-031",
-  "name": "Luxury preset-031",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "editorial",
-  "fonts": {
-    "h1": "Cinzel",
-    "h2": "Playfair Display",
-    "body": "Outfit",
-    "small": "Outfit"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 2,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 5,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2c3e50",
-    "secondary": "#34495e",
-    "accent": "#e74c3c"
-  }
-},
-{
-  "id": "preset-032",
-  "name": "Luxury preset-032",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "minimal",
-  "fonts": {
-    "h1": "Poppins",
-    "h2": "Montserrat",
-    "body": "Outfit",
-    "small": "Outfit"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 3,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 1,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#111111",
-    "secondary": "#555555",
-    "accent": "#8e44ad"
-  }
-},
-{
-  "id": "preset-033",
-  "name": "Luxury preset-033",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "quinceanera",
-  "fonts": {
-    "h1": "Allura",
-    "h2": "Inter",
-    "body": "Bodoni Moda",
-    "small": "Bodoni Moda"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 4,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 7,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1a1a1a",
-    "secondary": "#4a4a4a",
-    "accent": "#d4af37"
-  }
-},
-{
-  "id": "preset-034",
-  "name": "Luxury preset-034",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "wedding",
-  "fonts": {
-    "h1": "Dancing Script",
-    "h2": "Inter",
-    "body": "Cormorant Garamond",
-    "small": "Cormorant Garamond"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 1,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 9,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2c3e50",
-    "secondary": "#34495e",
-    "accent": "#e74c3c"
-  }
-},
-{
-  "id": "preset-035",
-  "name": "Luxury preset-035",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "classic",
-  "fonts": {
-    "h1": "Cormorant Garamond",
-    "h2": "Cinzel",
-    "body": "Inter",
-    "small": "Inter"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 4,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 2,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1a1a1a",
-    "secondary": "#4a4a4a",
-    "accent": "#d4af37"
-  }
-},
-{
-  "id": "preset-036",
-  "name": "Luxury preset-036",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "wedding",
-  "fonts": {
-    "h1": "Alex Brush",
-    "h2": "Poppins",
-    "body": "PT Serif",
-    "small": "PT Serif"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 2,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 9,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#4b4b4b",
-    "secondary": "#7d7d7d",
-    "accent": "#c0392b"
-  }
-},
-{
-  "id": "preset-037",
-  "name": "Luxury preset-037",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "wedding",
-  "fonts": {
-    "h1": "Allura",
-    "h2": "Lato",
-    "body": "Playfair Display",
-    "small": "Playfair Display"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 2,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 2,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1a1a1a",
-    "secondary": "#4a4a4a",
-    "accent": "#d4af37"
-  }
-},
-{
-  "id": "preset-038",
-  "name": "Luxury preset-038",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "editorial",
-  "fonts": {
-    "h1": "Bodoni Moda",
-    "h2": "Playfair Display",
-    "body": "Oswald",
-    "small": "Oswald"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 3,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 8,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1e272e",
-    "secondary": "#485460",
-    "accent": "#ffdd59"
-  }
-},
-{
-  "id": "preset-039",
-  "name": "Luxury preset-039",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "minimal",
-  "fonts": {
-    "h1": "Inter",
-    "h2": "Raleway",
-    "body": "Raleway",
-    "small": "Raleway"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 0,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 6,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#4b4b4b",
-    "secondary": "#7d7d7d",
-    "accent": "#c0392b"
-  }
-},
-{
-  "id": "preset-040",
-  "name": "Luxury preset-040",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "quinceanera",
-  "fonts": {
-    "h1": "Allura",
-    "h2": "Outfit",
-    "body": "PT Serif",
-    "small": "PT Serif"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 4,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 1,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1e272e",
-    "secondary": "#485460",
-    "accent": "#ffdd59"
-  }
-},
-{
-  "id": "preset-041",
-  "name": "Luxury preset-041",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "modern",
-  "fonts": {
-    "h1": "Outfit",
-    "h2": "Oswald",
-    "body": "Inter",
-    "small": "Inter"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 4,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 7,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2c3e50",
-    "secondary": "#34495e",
-    "accent": "#e74c3c"
-  }
-},
-{
-  "id": "preset-042",
-  "name": "Luxury preset-042",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "classic",
-  "fonts": {
-    "h1": "Cormorant Garamond",
-    "h2": "Cormorant Garamond",
-    "body": "Inter",
-    "small": "Inter"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 0,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 1,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1e272e",
-    "secondary": "#485460",
-    "accent": "#ffdd59"
-  }
-},
-{
-  "id": "preset-043",
-  "name": "Luxury preset-043",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "quinceanera",
-  "fonts": {
-    "h1": "Pinyon Script",
-    "h2": "Poppins",
-    "body": "Cormorant Garamond",
-    "small": "Cormorant Garamond"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 1,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 4,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#000000",
-    "secondary": "#666666",
-    "accent": "#ff9f43"
-  }
-},
-{
-  "id": "preset-044",
-  "name": "Luxury preset-044",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "quinceanera",
-  "fonts": {
-    "h1": "Great Vibes",
-    "h2": "Roboto",
-    "body": "Cormorant Garamond",
-    "small": "Cormorant Garamond"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 3,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 7,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#4b4b4b",
-    "secondary": "#7d7d7d",
-    "accent": "#c0392b"
-  }
-},
-{
-  "id": "preset-045",
-  "name": "Luxury preset-045",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "wedding",
-  "fonts": {
-    "h1": "Allura",
-    "h2": "Poppins",
-    "body": "Playfair Display",
-    "small": "Playfair Display"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 4,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 1,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#111111",
-    "secondary": "#555555",
-    "accent": "#8e44ad"
-  }
-},
-{
-  "id": "preset-046",
-  "name": "Luxury preset-046",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "minimal",
-  "fonts": {
-    "h1": "Poppins",
-    "h2": "Raleway",
-    "body": "Montserrat",
-    "small": "Montserrat"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 3,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 6,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#222f3e",
-    "secondary": "#576574",
-    "accent": "#ee5253"
-  }
-},
-{
-  "id": "preset-047",
-  "name": "Luxury preset-047",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "minimal",
-  "fonts": {
-    "h1": "Outfit",
-    "h2": "Inter",
-    "body": "Outfit",
-    "small": "Outfit"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 4,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 2,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2c3e50",
-    "secondary": "#34495e",
-    "accent": "#e74c3c"
-  }
-},
-{
-  "id": "preset-048",
-  "name": "Luxury preset-048",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "quinceanera",
-  "fonts": {
-    "h1": "Allura",
-    "h2": "Roboto",
-    "body": "Lora",
-    "small": "Lora"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 2,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 5,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#222f3e",
-    "secondary": "#576574",
-    "accent": "#ee5253"
-  }
-},
-{
-  "id": "preset-049",
-  "name": "Luxury preset-049",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "minimal",
-  "fonts": {
-    "h1": "Poppins",
-    "h2": "Outfit",
-    "body": "Oswald",
-    "small": "Oswald"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 0,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 0,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#4b4b4b",
-    "secondary": "#7d7d7d",
-    "accent": "#c0392b"
-  }
-},
-{
-  "id": "preset-050",
-  "name": "Luxury preset-050",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "wedding",
-  "fonts": {
-    "h1": "Tangerine",
-    "h2": "Inter",
-    "body": "Merriweather",
-    "small": "Merriweather"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 3,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 8,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#111111",
-    "secondary": "#555555",
-    "accent": "#8e44ad"
-  }
-},
-{
-  "id": "preset-051",
-  "name": "Luxury preset-051",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "quinceanera",
-  "fonts": {
-    "h1": "Great Vibes",
-    "h2": "Outfit",
-    "body": "Playfair Display",
-    "small": "Playfair Display"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 0,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 4,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#4b4b4b",
-    "secondary": "#7d7d7d",
-    "accent": "#c0392b"
-  }
-},
-{
-  "id": "preset-052",
-  "name": "Luxury preset-052",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "editorial",
-  "fonts": {
-    "h1": "Cinzel",
-    "h2": "PT Serif",
-    "body": "Raleway",
-    "small": "Raleway"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 1,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 0,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#222f3e",
-    "secondary": "#576574",
-    "accent": "#ee5253"
-  }
-},
-{
-  "id": "preset-053",
-  "name": "Luxury preset-053",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "editorial",
-  "fonts": {
-    "h1": "Cormorant Garamond",
-    "h2": "Merriweather",
-    "body": "Roboto",
-    "small": "Roboto"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 3,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 4,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#111111",
-    "secondary": "#555555",
-    "accent": "#8e44ad"
-  }
-},
-{
-  "id": "preset-054",
-  "name": "Luxury preset-054",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "minimal",
-  "fonts": {
-    "h1": "Inter",
-    "h2": "Outfit",
-    "body": "Oswald",
-    "small": "Oswald"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 2,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 0,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2d3436",
-    "secondary": "#636e72",
-    "accent": "#00b894"
-  }
-},
-{
-  "id": "preset-055",
-  "name": "Luxury preset-055",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "editorial",
-  "fonts": {
-    "h1": "PT Serif",
-    "h2": "Cormorant Garamond",
-    "body": "Outfit",
-    "small": "Outfit"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 1,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 4,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#000000",
-    "secondary": "#666666",
-    "accent": "#ff9f43"
-  }
-},
-{
-  "id": "preset-056",
-  "name": "Luxury preset-056",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "wedding",
-  "fonts": {
-    "h1": "Tangerine",
-    "h2": "Roboto",
-    "body": "PT Serif",
-    "small": "PT Serif"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 1,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 2,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#111111",
-    "secondary": "#555555",
-    "accent": "#8e44ad"
-  }
-},
-{
-  "id": "preset-057",
-  "name": "Luxury preset-057",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "classic",
-  "fonts": {
-    "h1": "Cormorant Garamond",
-    "h2": "Lora",
-    "body": "Lato",
-    "small": "Lato"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 1,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 3,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2c3e50",
-    "secondary": "#34495e",
-    "accent": "#e74c3c"
-  }
-},
-{
-  "id": "preset-058",
-  "name": "Luxury preset-058",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "quinceanera",
-  "fonts": {
-    "h1": "Pinyon Script",
-    "h2": "Roboto",
-    "body": "Cinzel",
-    "small": "Cinzel"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 2,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 6,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1e272e",
-    "secondary": "#485460",
-    "accent": "#ffdd59"
-  }
-},
-{
-  "id": "preset-059",
-  "name": "Luxury preset-059",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "minimal",
-  "fonts": {
-    "h1": "Outfit",
-    "h2": "Roboto",
-    "body": "Oswald",
-    "small": "Oswald"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 0,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 7,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2d3436",
-    "secondary": "#636e72",
-    "accent": "#00b894"
-  }
-},
-{
-  "id": "preset-060",
-  "name": "Luxury preset-060",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "quinceanera",
-  "fonts": {
-    "h1": "Great Vibes",
-    "h2": "Inter",
-    "body": "Cormorant Garamond",
-    "small": "Cormorant Garamond"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 4,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 2,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1e272e",
-    "secondary": "#485460",
-    "accent": "#ffdd59"
-  }
-},
-{
-  "id": "preset-061",
-  "name": "Luxury preset-061",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "editorial",
-  "fonts": {
-    "h1": "Cormorant Garamond",
-    "h2": "Cormorant Garamond",
-    "body": "Oswald",
-    "small": "Oswald"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 3,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 3,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1a1a1a",
-    "secondary": "#4a4a4a",
-    "accent": "#d4af37"
-  }
-},
-{
-  "id": "preset-062",
-  "name": "Luxury preset-062",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "minimal",
-  "fonts": {
-    "h1": "Raleway",
-    "h2": "Montserrat",
-    "body": "Montserrat",
-    "small": "Montserrat"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 0,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 1,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1a1a1a",
-    "secondary": "#4a4a4a",
-    "accent": "#d4af37"
-  }
-},
-{
-  "id": "preset-063",
-  "name": "Luxury preset-063",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "editorial",
-  "fonts": {
-    "h1": "Merriweather",
-    "h2": "PT Serif",
-    "body": "Montserrat",
-    "small": "Montserrat"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 1,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 2,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2d3436",
-    "secondary": "#636e72",
-    "accent": "#00b894"
-  }
-},
-{
-  "id": "preset-064",
-  "name": "Luxury preset-064",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "wedding",
-  "fonts": {
-    "h1": "Dancing Script",
-    "h2": "Roboto",
-    "body": "Cormorant Garamond",
-    "small": "Cormorant Garamond"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 1,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 4,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#111111",
-    "secondary": "#555555",
-    "accent": "#8e44ad"
-  }
-},
-{
-  "id": "preset-065",
-  "name": "Luxury preset-065",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "wedding",
-  "fonts": {
-    "h1": "Tangerine",
-    "h2": "Lato",
-    "body": "Lora",
-    "small": "Lora"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 3,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 1,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#4b4b4b",
-    "secondary": "#7d7d7d",
-    "accent": "#c0392b"
-  }
-},
-{
-  "id": "preset-066",
-  "name": "Luxury preset-066",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "quinceanera",
-  "fonts": {
-    "h1": "Allura",
-    "h2": "Montserrat",
-    "body": "Playfair Display",
-    "small": "Playfair Display"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 4,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 5,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2c3e50",
-    "secondary": "#34495e",
-    "accent": "#e74c3c"
-  }
-},
-{
-  "id": "preset-067",
-  "name": "Luxury preset-067",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "modern",
-  "fonts": {
-    "h1": "Outfit",
-    "h2": "Lato",
-    "body": "Roboto",
-    "small": "Roboto"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 4,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 7,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1e272e",
-    "secondary": "#485460",
-    "accent": "#ffdd59"
-  }
-},
-{
-  "id": "preset-068",
-  "name": "Luxury preset-068",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "minimal",
-  "fonts": {
-    "h1": "Raleway",
-    "h2": "Poppins",
-    "body": "Poppins",
-    "small": "Poppins"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 1,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 5,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1e272e",
-    "secondary": "#485460",
-    "accent": "#ffdd59"
-  }
-},
-{
-  "id": "preset-069",
-  "name": "Luxury preset-069",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "wedding",
-  "fonts": {
-    "h1": "Dancing Script",
-    "h2": "Poppins",
-    "body": "Lora",
-    "small": "Lora"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 2,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 1,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1e272e",
-    "secondary": "#485460",
-    "accent": "#ffdd59"
-  }
-},
-{
-  "id": "preset-070",
-  "name": "Luxury preset-070",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "modern",
-  "fonts": {
-    "h1": "Oswald",
-    "h2": "Poppins",
-    "body": "Inter",
-    "small": "Inter"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 4,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 2,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1e272e",
-    "secondary": "#485460",
-    "accent": "#ffdd59"
-  }
-},
-{
-  "id": "preset-071",
-  "name": "Luxury preset-071",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "wedding",
-  "fonts": {
-    "h1": "Alex Brush",
-    "h2": "Outfit",
-    "body": "Merriweather",
-    "small": "Merriweather"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 4,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 9,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2d3436",
-    "secondary": "#636e72",
-    "accent": "#00b894"
-  }
-},
-{
-  "id": "preset-072",
-  "name": "Luxury preset-072",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "wedding",
-  "fonts": {
-    "h1": "Pinyon Script",
-    "h2": "Outfit",
-    "body": "Bodoni Moda",
-    "small": "Bodoni Moda"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 1,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 2,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#222f3e",
-    "secondary": "#576574",
-    "accent": "#ee5253"
-  }
-},
-{
-  "id": "preset-073",
-  "name": "Luxury preset-073",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "modern",
-  "fonts": {
-    "h1": "Oswald",
-    "h2": "Outfit",
-    "body": "Outfit",
-    "small": "Outfit"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 2,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 6,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2d3436",
-    "secondary": "#636e72",
-    "accent": "#00b894"
-  }
-},
-{
-  "id": "preset-074",
-  "name": "Luxury preset-074",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "modern",
-  "fonts": {
-    "h1": "Montserrat",
-    "h2": "Poppins",
-    "body": "Raleway",
-    "small": "Raleway"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 2,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 8,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#222f3e",
-    "secondary": "#576574",
-    "accent": "#ee5253"
-  }
-},
-{
-  "id": "preset-075",
-  "name": "Luxury preset-075",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "quinceanera",
-  "fonts": {
-    "h1": "Tangerine",
-    "h2": "Lato",
-    "body": "Bodoni Moda",
-    "small": "Bodoni Moda"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 2,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 0,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2d3436",
-    "secondary": "#636e72",
-    "accent": "#00b894"
-  }
-},
-{
-  "id": "preset-076",
-  "name": "Luxury preset-076",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "wedding",
-  "fonts": {
-    "h1": "Allura",
-    "h2": "Inter",
-    "body": "Cormorant Garamond",
-    "small": "Cormorant Garamond"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 4,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 2,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1e272e",
-    "secondary": "#485460",
-    "accent": "#ffdd59"
-  }
-},
-{
-  "id": "preset-077",
-  "name": "Luxury preset-077",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "wedding",
-  "fonts": {
-    "h1": "Alex Brush",
-    "h2": "Lato",
-    "body": "Cormorant Garamond",
-    "small": "Cormorant Garamond"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 3,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 6,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#000000",
-    "secondary": "#666666",
-    "accent": "#ff9f43"
-  }
-},
-{
-  "id": "preset-078",
-  "name": "Luxury preset-078",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "classic",
-  "fonts": {
-    "h1": "Lora",
-    "h2": "Bodoni Moda",
-    "body": "Raleway",
-    "small": "Raleway"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 2,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 1,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2c3e50",
-    "secondary": "#34495e",
-    "accent": "#e74c3c"
-  }
-},
-{
-  "id": "preset-079",
-  "name": "Luxury preset-079",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "wedding",
-  "fonts": {
-    "h1": "Allura",
-    "h2": "Lato",
-    "body": "Bodoni Moda",
-    "small": "Bodoni Moda"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 3,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 7,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#222f3e",
-    "secondary": "#576574",
-    "accent": "#ee5253"
-  }
-},
-{
-  "id": "preset-080",
-  "name": "Luxury preset-080",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "quinceanera",
-  "fonts": {
-    "h1": "Great Vibes",
-    "h2": "Roboto",
-    "body": "PT Serif",
-    "small": "PT Serif"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 4,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 9,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#000000",
-    "secondary": "#666666",
-    "accent": "#ff9f43"
-  }
-},
-{
-  "id": "preset-081",
-  "name": "Luxury preset-081",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "quinceanera",
-  "fonts": {
-    "h1": "Great Vibes",
-    "h2": "Raleway",
-    "body": "Playfair Display",
-    "small": "Playfair Display"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 3,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 8,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#4b4b4b",
-    "secondary": "#7d7d7d",
-    "accent": "#c0392b"
-  }
-},
-{
-  "id": "preset-082",
-  "name": "Luxury preset-082",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "wedding",
-  "fonts": {
-    "h1": "Dancing Script",
-    "h2": "Oswald",
-    "body": "Playfair Display",
-    "small": "Playfair Display"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 1,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 6,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#222f3e",
-    "secondary": "#576574",
-    "accent": "#ee5253"
-  }
-},
-{
-  "id": "preset-083",
-  "name": "Luxury preset-083",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "classic",
-  "fonts": {
-    "h1": "Bodoni Moda",
-    "h2": "Playfair Display",
-    "body": "Montserrat",
-    "small": "Montserrat"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 3,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 0,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2d3436",
-    "secondary": "#636e72",
-    "accent": "#00b894"
-  }
-},
-{
-  "id": "preset-084",
-  "name": "Luxury preset-084",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "classic",
-  "fonts": {
-    "h1": "Cinzel",
-    "h2": "Cormorant Garamond",
-    "body": "Inter",
-    "small": "Inter"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 3,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 7,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#222f3e",
-    "secondary": "#576574",
-    "accent": "#ee5253"
-  }
-},
-{
-  "id": "preset-085",
-  "name": "Luxury preset-085",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "modern",
-  "fonts": {
-    "h1": "Roboto",
-    "h2": "Lato",
-    "body": "Raleway",
-    "small": "Raleway"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 4,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 3,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#000000",
-    "secondary": "#666666",
-    "accent": "#ff9f43"
-  }
-},
-{
-  "id": "preset-086",
-  "name": "Luxury preset-086",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "minimal",
-  "fonts": {
-    "h1": "Poppins",
-    "h2": "Oswald",
-    "body": "Oswald",
-    "small": "Oswald"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 4,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 9,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1a1a1a",
-    "secondary": "#4a4a4a",
-    "accent": "#d4af37"
-  }
-},
-{
-  "id": "preset-087",
-  "name": "Luxury preset-087",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "editorial",
-  "fonts": {
-    "h1": "Cinzel",
-    "h2": "Bodoni Moda",
-    "body": "Oswald",
-    "small": "Oswald"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 2,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 5,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1a1a1a",
-    "secondary": "#4a4a4a",
-    "accent": "#d4af37"
-  }
-},
-{
-  "id": "preset-088",
-  "name": "Luxury preset-088",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "wedding",
-  "fonts": {
-    "h1": "Pinyon Script",
-    "h2": "Poppins",
-    "body": "Cinzel",
-    "small": "Cinzel"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 2,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 5,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#4b4b4b",
-    "secondary": "#7d7d7d",
-    "accent": "#c0392b"
-  }
-},
-{
-  "id": "preset-089",
-  "name": "Luxury preset-089",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "classic",
-  "fonts": {
-    "h1": "Cormorant Garamond",
-    "h2": "Bodoni Moda",
-    "body": "Lato",
-    "small": "Lato"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 0,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 5,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#222f3e",
-    "secondary": "#576574",
-    "accent": "#ee5253"
-  }
-},
-{
-  "id": "preset-090",
-  "name": "Luxury preset-090",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "quinceanera",
-  "fonts": {
-    "h1": "Allura",
-    "h2": "Outfit",
-    "body": "Cinzel",
-    "small": "Cinzel"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 4,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 2,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#000000",
-    "secondary": "#666666",
-    "accent": "#ff9f43"
-  }
-},
-{
-  "id": "preset-091",
-  "name": "Luxury preset-091",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "editorial",
-  "fonts": {
-    "h1": "Merriweather",
-    "h2": "Cormorant Garamond",
-    "body": "Poppins",
-    "small": "Poppins"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 4,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 7,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#000000",
-    "secondary": "#666666",
-    "accent": "#ff9f43"
-  }
-},
-{
-  "id": "preset-092",
-  "name": "Luxury preset-092",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "wedding",
-  "fonts": {
-    "h1": "Tangerine",
-    "h2": "Poppins",
-    "body": "Playfair Display",
-    "small": "Playfair Display"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 1,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 7,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2c3e50",
-    "secondary": "#34495e",
-    "accent": "#e74c3c"
-  }
-},
-{
-  "id": "preset-093",
-  "name": "Luxury preset-093",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "editorial",
-  "fonts": {
-    "h1": "Bodoni Moda",
-    "h2": "Bodoni Moda",
-    "body": "Roboto",
-    "small": "Roboto"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 0,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 0,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1e272e",
-    "secondary": "#485460",
-    "accent": "#ffdd59"
-  }
-},
-{
-  "id": "preset-094",
-  "name": "Luxury preset-094",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "quinceanera",
-  "fonts": {
-    "h1": "Pinyon Script",
-    "h2": "Poppins",
-    "body": "Merriweather",
-    "small": "Merriweather"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 0,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 1,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#000000",
-    "secondary": "#666666",
-    "accent": "#ff9f43"
-  }
-},
-{
-  "id": "preset-095",
-  "name": "Luxury preset-095",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "minimal",
-  "fonts": {
-    "h1": "Oswald",
-    "h2": "Lato",
-    "body": "Lato",
-    "small": "Lato"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 2,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 1,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2d3436",
-    "secondary": "#636e72",
-    "accent": "#00b894"
-  }
-},
-{
-  "id": "preset-096",
-  "name": "Luxury preset-096",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "editorial",
-  "fonts": {
-    "h1": "Cormorant Garamond",
-    "h2": "Merriweather",
-    "body": "Montserrat",
-    "small": "Montserrat"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 2,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 9,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2d3436",
-    "secondary": "#636e72",
-    "accent": "#00b894"
-  }
-},
-{
-  "id": "preset-097",
-  "name": "Luxury preset-097",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "editorial",
-  "fonts": {
-    "h1": "Merriweather",
-    "h2": "PT Serif",
-    "body": "Raleway",
-    "small": "Raleway"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 4,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 4,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1a1a1a",
-    "secondary": "#4a4a4a",
-    "accent": "#d4af37"
-  }
-},
-{
-  "id": "preset-098",
-  "name": "Luxury preset-098",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "modern",
-  "fonts": {
-    "h1": "Poppins",
-    "h2": "Roboto",
-    "body": "Raleway",
-    "small": "Raleway"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 3,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 5,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#1a1a1a",
-    "secondary": "#4a4a4a",
-    "accent": "#d4af37"
-  }
-},
-{
-  "id": "preset-099",
-  "name": "Luxury preset-099",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "wedding",
-  "fonts": {
-    "h1": "Great Vibes",
-    "h2": "Oswald",
-    "body": "Merriweather",
-    "small": "Merriweather"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 4,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 5,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#4b4b4b",
-    "secondary": "#7d7d7d",
-    "accent": "#c0392b"
-  }
-},
-{
-  "id": "preset-100",
-  "name": "Luxury preset-100",
-  "lockedFonts": true,
-  "alignment": "center",
-  "category": "editorial",
-  "fonts": {
-    "h1": "Merriweather",
-    "h2": "Cinzel",
-    "body": "Oswald",
-    "small": "Oswald"
-  },
-  "styles": {
-    "h1": {
-      "letterSpacing": 1,
-      "lineHeight": 1.1,
-      "textTransform": "none"
-    },
-    "h2": {
-      "letterSpacing": 6,
-      "lineHeight": 1.2,
-      "textTransform": "uppercase"
-    },
-    "body": {
-      "letterSpacing": 0,
-      "lineHeight": 1.5,
-      "textTransform": "none"
-    },
-    "small": {
-      "letterSpacing": 1,
-      "lineHeight": 1.4,
-      "textTransform": "uppercase"
-    }
-  },
-  "colorPalette": {
-    "primary": "#2c3e50",
-    "secondary": "#34495e",
-    "accent": "#e74c3c"
+    "id": "TP-PRO-010",
+    "name": "Alex Brush + Cinzel (Champagne Gold)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Alex Brush",
+      "h2": "Cinzel",
+      "body": "Lora",
+      "small": "Cinzel"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 85,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#b8945a"
+      },
+      "h2": {
+        "fontSize": 24,
+        "letterSpacing": 30,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#b8945a"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 12,
+        "letterSpacing": 25,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#808080"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-011",
+    "name": "Alex Brush + Cinzel (Navy Royal)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Alex Brush",
+      "h2": "Cinzel",
+      "body": "Lora",
+      "small": "Cinzel"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 85,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#1c2e4a"
+      },
+      "h2": {
+        "fontSize": 24,
+        "letterSpacing": 30,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#3b5998"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#333333"
+      },
+      "small": {
+        "fontSize": 12,
+        "letterSpacing": 25,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#555555"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-012",
+    "name": "Alex Brush + Cinzel (Sage Botanical)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Alex Brush",
+      "h2": "Cinzel",
+      "body": "Lora",
+      "small": "Cinzel"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 85,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#6e7a63"
+      },
+      "h2": {
+        "fontSize": 24,
+        "letterSpacing": 30,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#8b9680"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 12,
+        "letterSpacing": 25,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#757575"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-013",
+    "name": "Parisienne + Bodoni Moda (Onyx Monochrome)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Parisienne",
+      "h2": "Bodoni Moda",
+      "body": "Bodoni Moda",
+      "small": "Inter"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 88,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#111111"
+      },
+      "h2": {
+        "fontSize": 30,
+        "letterSpacing": 10,
+        "lineHeight": 1.3,
+        "textTransform": "none",
+        "color": "#222222"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#444444"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 5,
+        "lineHeight": 1.4,
+        "textTransform": "none",
+        "color": "#666666"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-014",
+    "name": "Parisienne + Bodoni Moda (Champagne Gold)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Parisienne",
+      "h2": "Bodoni Moda",
+      "body": "Bodoni Moda",
+      "small": "Inter"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 88,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#b8945a"
+      },
+      "h2": {
+        "fontSize": 30,
+        "letterSpacing": 10,
+        "lineHeight": 1.3,
+        "textTransform": "none",
+        "color": "#b8945a"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 5,
+        "lineHeight": 1.4,
+        "textTransform": "none",
+        "color": "#808080"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-015",
+    "name": "Parisienne + Bodoni Moda (Navy Royal)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Parisienne",
+      "h2": "Bodoni Moda",
+      "body": "Bodoni Moda",
+      "small": "Inter"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 88,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#1c2e4a"
+      },
+      "h2": {
+        "fontSize": 30,
+        "letterSpacing": 10,
+        "lineHeight": 1.3,
+        "textTransform": "none",
+        "color": "#3b5998"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#333333"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 5,
+        "lineHeight": 1.4,
+        "textTransform": "none",
+        "color": "#555555"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-016",
+    "name": "Parisienne + Bodoni Moda (Sage Botanical)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Parisienne",
+      "h2": "Bodoni Moda",
+      "body": "Bodoni Moda",
+      "small": "Inter"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 88,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#6e7a63"
+      },
+      "h2": {
+        "fontSize": 30,
+        "letterSpacing": 10,
+        "lineHeight": 1.3,
+        "textTransform": "none",
+        "color": "#8b9680"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 5,
+        "lineHeight": 1.4,
+        "textTransform": "none",
+        "color": "#757575"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-017",
+    "name": "Tangerine + Montserrat (Onyx Monochrome)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Tangerine",
+      "h2": "Montserrat",
+      "body": "Montserrat",
+      "small": "Montserrat"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 100,
+        "letterSpacing": 5,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#111111"
+      },
+      "h2": {
+        "fontSize": 22,
+        "letterSpacing": 35,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#222222"
+      },
+      "body": {
+        "fontSize": 14,
+        "letterSpacing": 2,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#444444"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 20,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#666666"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-018",
+    "name": "Tangerine + Montserrat (Champagne Gold)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Tangerine",
+      "h2": "Montserrat",
+      "body": "Montserrat",
+      "small": "Montserrat"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 100,
+        "letterSpacing": 5,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#b8945a"
+      },
+      "h2": {
+        "fontSize": 22,
+        "letterSpacing": 35,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#b8945a"
+      },
+      "body": {
+        "fontSize": 14,
+        "letterSpacing": 2,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 20,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#808080"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-019",
+    "name": "Tangerine + Montserrat (Navy Royal)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Tangerine",
+      "h2": "Montserrat",
+      "body": "Montserrat",
+      "small": "Montserrat"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 100,
+        "letterSpacing": 5,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#1c2e4a"
+      },
+      "h2": {
+        "fontSize": 22,
+        "letterSpacing": 35,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#3b5998"
+      },
+      "body": {
+        "fontSize": 14,
+        "letterSpacing": 2,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#333333"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 20,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#555555"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-020",
+    "name": "Tangerine + Montserrat (Sage Botanical)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Tangerine",
+      "h2": "Montserrat",
+      "body": "Montserrat",
+      "small": "Montserrat"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 100,
+        "letterSpacing": 5,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#6e7a63"
+      },
+      "h2": {
+        "fontSize": 22,
+        "letterSpacing": 35,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#8b9680"
+      },
+      "body": {
+        "fontSize": 14,
+        "letterSpacing": 2,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 20,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#757575"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-021",
+    "name": "Allura + Libre Baskerville (Onyx Monochrome)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Allura",
+      "h2": "Libre Baskerville",
+      "body": "Libre Baskerville",
+      "small": "Nunito Sans"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 86,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#111111"
+      },
+      "h2": {
+        "fontSize": 26,
+        "letterSpacing": 15,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#222222"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#444444"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#666666"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-022",
+    "name": "Allura + Libre Baskerville (Champagne Gold)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Allura",
+      "h2": "Libre Baskerville",
+      "body": "Libre Baskerville",
+      "small": "Nunito Sans"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 86,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#b8945a"
+      },
+      "h2": {
+        "fontSize": 26,
+        "letterSpacing": 15,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#b8945a"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#808080"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-023",
+    "name": "Allura + Libre Baskerville (Navy Royal)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Allura",
+      "h2": "Libre Baskerville",
+      "body": "Libre Baskerville",
+      "small": "Nunito Sans"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 86,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#1c2e4a"
+      },
+      "h2": {
+        "fontSize": 26,
+        "letterSpacing": 15,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#3b5998"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#333333"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#555555"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-024",
+    "name": "Allura + Libre Baskerville (Sage Botanical)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Allura",
+      "h2": "Libre Baskerville",
+      "body": "Libre Baskerville",
+      "small": "Nunito Sans"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 86,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#6e7a63"
+      },
+      "h2": {
+        "fontSize": 26,
+        "letterSpacing": 15,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#8b9680"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#757575"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-025",
+    "name": "Sacramento + Gloock (Onyx Monochrome)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Sacramento",
+      "h2": "Gloock",
+      "body": "Inter",
+      "small": "Inter"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 92,
+        "letterSpacing": 2,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#111111"
+      },
+      "h2": {
+        "fontSize": 34,
+        "letterSpacing": 5,
+        "lineHeight": 1.3,
+        "textTransform": "none",
+        "color": "#222222"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#444444"
+      },
+      "small": {
+        "fontSize": 12,
+        "letterSpacing": 10,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#666666"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-026",
+    "name": "Sacramento + Gloock (Champagne Gold)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Sacramento",
+      "h2": "Gloock",
+      "body": "Inter",
+      "small": "Inter"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 92,
+        "letterSpacing": 2,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#b8945a"
+      },
+      "h2": {
+        "fontSize": 34,
+        "letterSpacing": 5,
+        "lineHeight": 1.3,
+        "textTransform": "none",
+        "color": "#b8945a"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 12,
+        "letterSpacing": 10,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#808080"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-027",
+    "name": "Sacramento + Gloock (Navy Royal)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Sacramento",
+      "h2": "Gloock",
+      "body": "Inter",
+      "small": "Inter"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 92,
+        "letterSpacing": 2,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#1c2e4a"
+      },
+      "h2": {
+        "fontSize": 34,
+        "letterSpacing": 5,
+        "lineHeight": 1.3,
+        "textTransform": "none",
+        "color": "#3b5998"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#333333"
+      },
+      "small": {
+        "fontSize": 12,
+        "letterSpacing": 10,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#555555"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-028",
+    "name": "Sacramento + Gloock (Sage Botanical)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Sacramento",
+      "h2": "Gloock",
+      "body": "Inter",
+      "small": "Inter"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 92,
+        "letterSpacing": 2,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#6e7a63"
+      },
+      "h2": {
+        "fontSize": 34,
+        "letterSpacing": 5,
+        "lineHeight": 1.3,
+        "textTransform": "none",
+        "color": "#8b9680"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 12,
+        "letterSpacing": 10,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#757575"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-029",
+    "name": "Herr Von Muellerhoff + Prata (Onyx Monochrome)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Herr Von Muellerhoff",
+      "h2": "Prata",
+      "body": "Prata",
+      "small": "Arial"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 96,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#111111"
+      },
+      "h2": {
+        "fontSize": 32,
+        "letterSpacing": 8,
+        "lineHeight": 1.3,
+        "textTransform": "none",
+        "color": "#222222"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#444444"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#666666"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-030",
+    "name": "Herr Von Muellerhoff + Prata (Champagne Gold)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Herr Von Muellerhoff",
+      "h2": "Prata",
+      "body": "Prata",
+      "small": "Arial"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 96,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#b8945a"
+      },
+      "h2": {
+        "fontSize": 32,
+        "letterSpacing": 8,
+        "lineHeight": 1.3,
+        "textTransform": "none",
+        "color": "#b8945a"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#808080"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-031",
+    "name": "Herr Von Muellerhoff + Prata (Navy Royal)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Herr Von Muellerhoff",
+      "h2": "Prata",
+      "body": "Prata",
+      "small": "Arial"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 96,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#1c2e4a"
+      },
+      "h2": {
+        "fontSize": 32,
+        "letterSpacing": 8,
+        "lineHeight": 1.3,
+        "textTransform": "none",
+        "color": "#3b5998"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#333333"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#555555"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-032",
+    "name": "Herr Von Muellerhoff + Prata (Sage Botanical)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Herr Von Muellerhoff",
+      "h2": "Prata",
+      "body": "Prata",
+      "small": "Arial"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 96,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#6e7a63"
+      },
+      "h2": {
+        "fontSize": 32,
+        "letterSpacing": 8,
+        "lineHeight": 1.3,
+        "textTransform": "none",
+        "color": "#8b9680"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#757575"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-033",
+    "name": "Qwigley + EB Garamond (Onyx Monochrome)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Qwigley",
+      "h2": "EB Garamond",
+      "body": "EB Garamond",
+      "small": "Lato"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 110,
+        "letterSpacing": -5,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#111111"
+      },
+      "h2": {
+        "fontSize": 30,
+        "letterSpacing": 18,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#222222"
+      },
+      "body": {
+        "fontSize": 18,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#444444"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 20,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#666666"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-034",
+    "name": "Qwigley + EB Garamond (Champagne Gold)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Qwigley",
+      "h2": "EB Garamond",
+      "body": "EB Garamond",
+      "small": "Lato"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 110,
+        "letterSpacing": -5,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#b8945a"
+      },
+      "h2": {
+        "fontSize": 30,
+        "letterSpacing": 18,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#b8945a"
+      },
+      "body": {
+        "fontSize": 18,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 20,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#808080"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-035",
+    "name": "Qwigley + EB Garamond (Navy Royal)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Qwigley",
+      "h2": "EB Garamond",
+      "body": "EB Garamond",
+      "small": "Lato"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 110,
+        "letterSpacing": -5,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#1c2e4a"
+      },
+      "h2": {
+        "fontSize": 30,
+        "letterSpacing": 18,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#3b5998"
+      },
+      "body": {
+        "fontSize": 18,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#333333"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 20,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#555555"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-036",
+    "name": "Qwigley + EB Garamond (Sage Botanical)",
+    "category": "wedding",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Qwigley",
+      "h2": "EB Garamond",
+      "body": "EB Garamond",
+      "small": "Lato"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 110,
+        "letterSpacing": -5,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#6e7a63"
+      },
+      "h2": {
+        "fontSize": 30,
+        "letterSpacing": 18,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#8b9680"
+      },
+      "body": {
+        "fontSize": 18,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 20,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#757575"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-037",
+    "name": "Montserrat + Montserrat (Onyx Monochrome)",
+    "category": "modern",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Montserrat",
+      "h2": "Montserrat",
+      "body": "Open Sans",
+      "small": "Open Sans"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 70,
+        "letterSpacing": 10,
+        "lineHeight": 1.1,
+        "textTransform": "uppercase",
+        "color": "#111111"
+      },
+      "h2": {
+        "fontSize": 24,
+        "letterSpacing": 40,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#222222"
+      },
+      "body": {
+        "fontSize": 14,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#444444"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 30,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#666666"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-038",
+    "name": "Montserrat + Montserrat (Champagne Gold)",
+    "category": "modern",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Montserrat",
+      "h2": "Montserrat",
+      "body": "Open Sans",
+      "small": "Open Sans"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 70,
+        "letterSpacing": 10,
+        "lineHeight": 1.1,
+        "textTransform": "uppercase",
+        "color": "#b8945a"
+      },
+      "h2": {
+        "fontSize": 24,
+        "letterSpacing": 40,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#b8945a"
+      },
+      "body": {
+        "fontSize": 14,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 30,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#808080"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-039",
+    "name": "Montserrat + Montserrat (Navy Royal)",
+    "category": "modern",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Montserrat",
+      "h2": "Montserrat",
+      "body": "Open Sans",
+      "small": "Open Sans"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 70,
+        "letterSpacing": 10,
+        "lineHeight": 1.1,
+        "textTransform": "uppercase",
+        "color": "#1c2e4a"
+      },
+      "h2": {
+        "fontSize": 24,
+        "letterSpacing": 40,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#3b5998"
+      },
+      "body": {
+        "fontSize": 14,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#333333"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 30,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#555555"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-040",
+    "name": "Montserrat + Montserrat (Sage Botanical)",
+    "category": "modern",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Montserrat",
+      "h2": "Montserrat",
+      "body": "Open Sans",
+      "small": "Open Sans"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 70,
+        "letterSpacing": 10,
+        "lineHeight": 1.1,
+        "textTransform": "uppercase",
+        "color": "#6e7a63"
+      },
+      "h2": {
+        "fontSize": 24,
+        "letterSpacing": 40,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#8b9680"
+      },
+      "body": {
+        "fontSize": 14,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 30,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#757575"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-041",
+    "name": "DM Sans + Inter (Onyx Monochrome)",
+    "category": "modern",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "DM Sans",
+      "h2": "Inter",
+      "body": "Inter",
+      "small": "Inter"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 72,
+        "letterSpacing": -3,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#111111"
+      },
+      "h2": {
+        "fontSize": 26,
+        "letterSpacing": 20,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#222222"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#444444"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#666666"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-042",
+    "name": "DM Sans + Inter (Champagne Gold)",
+    "category": "modern",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "DM Sans",
+      "h2": "Inter",
+      "body": "Inter",
+      "small": "Inter"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 72,
+        "letterSpacing": -3,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#b8945a"
+      },
+      "h2": {
+        "fontSize": 26,
+        "letterSpacing": 20,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#b8945a"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#808080"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-043",
+    "name": "DM Sans + Inter (Navy Royal)",
+    "category": "modern",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "DM Sans",
+      "h2": "Inter",
+      "body": "Inter",
+      "small": "Inter"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 72,
+        "letterSpacing": -3,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#1c2e4a"
+      },
+      "h2": {
+        "fontSize": 26,
+        "letterSpacing": 20,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#3b5998"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#333333"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#555555"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-044",
+    "name": "DM Sans + Inter (Sage Botanical)",
+    "category": "modern",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "DM Sans",
+      "h2": "Inter",
+      "body": "Inter",
+      "small": "Inter"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 72,
+        "letterSpacing": -3,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#6e7a63"
+      },
+      "h2": {
+        "fontSize": 26,
+        "letterSpacing": 20,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#8b9680"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#757575"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-045",
+    "name": "Playfair Display + Outfit (Onyx Monochrome)",
+    "category": "modern",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Playfair Display",
+      "h2": "Outfit",
+      "body": "Outfit",
+      "small": "Outfit"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 76,
+        "letterSpacing": 5,
+        "lineHeight": 1.1,
+        "textTransform": "uppercase",
+        "color": "#111111"
+      },
+      "h2": {
+        "fontSize": 22,
+        "letterSpacing": 30,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#222222"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#444444"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 25,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#666666"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-046",
+    "name": "Playfair Display + Outfit (Champagne Gold)",
+    "category": "modern",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Playfair Display",
+      "h2": "Outfit",
+      "body": "Outfit",
+      "small": "Outfit"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 76,
+        "letterSpacing": 5,
+        "lineHeight": 1.1,
+        "textTransform": "uppercase",
+        "color": "#b8945a"
+      },
+      "h2": {
+        "fontSize": 22,
+        "letterSpacing": 30,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#b8945a"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 25,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#808080"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-047",
+    "name": "Playfair Display + Outfit (Navy Royal)",
+    "category": "modern",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Playfair Display",
+      "h2": "Outfit",
+      "body": "Outfit",
+      "small": "Outfit"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 76,
+        "letterSpacing": 5,
+        "lineHeight": 1.1,
+        "textTransform": "uppercase",
+        "color": "#1c2e4a"
+      },
+      "h2": {
+        "fontSize": 22,
+        "letterSpacing": 30,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#3b5998"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#333333"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 25,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#555555"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-048",
+    "name": "Playfair Display + Outfit (Sage Botanical)",
+    "category": "modern",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Playfair Display",
+      "h2": "Outfit",
+      "body": "Outfit",
+      "small": "Outfit"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 76,
+        "letterSpacing": 5,
+        "lineHeight": 1.1,
+        "textTransform": "uppercase",
+        "color": "#6e7a63"
+      },
+      "h2": {
+        "fontSize": 22,
+        "letterSpacing": 30,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#8b9680"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 25,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#757575"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-049",
+    "name": "Jost + Jost (Onyx Monochrome)",
+    "category": "modern",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Jost",
+      "h2": "Jost",
+      "body": "Nunito Sans",
+      "small": "Nunito Sans"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 74,
+        "letterSpacing": 8,
+        "lineHeight": 1.1,
+        "textTransform": "uppercase",
+        "color": "#111111"
+      },
+      "h2": {
+        "fontSize": 26,
+        "letterSpacing": 25,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#222222"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#444444"
+      },
+      "small": {
+        "fontSize": 12,
+        "letterSpacing": 20,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#666666"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-050",
+    "name": "Jost + Jost (Champagne Gold)",
+    "category": "modern",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Jost",
+      "h2": "Jost",
+      "body": "Nunito Sans",
+      "small": "Nunito Sans"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 74,
+        "letterSpacing": 8,
+        "lineHeight": 1.1,
+        "textTransform": "uppercase",
+        "color": "#b8945a"
+      },
+      "h2": {
+        "fontSize": 26,
+        "letterSpacing": 25,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#b8945a"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 12,
+        "letterSpacing": 20,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#808080"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-051",
+    "name": "Jost + Jost (Navy Royal)",
+    "category": "modern",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Jost",
+      "h2": "Jost",
+      "body": "Nunito Sans",
+      "small": "Nunito Sans"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 74,
+        "letterSpacing": 8,
+        "lineHeight": 1.1,
+        "textTransform": "uppercase",
+        "color": "#1c2e4a"
+      },
+      "h2": {
+        "fontSize": 26,
+        "letterSpacing": 25,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#3b5998"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#333333"
+      },
+      "small": {
+        "fontSize": 12,
+        "letterSpacing": 20,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#555555"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-052",
+    "name": "Jost + Jost (Sage Botanical)",
+    "category": "modern",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Jost",
+      "h2": "Jost",
+      "body": "Nunito Sans",
+      "small": "Nunito Sans"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 74,
+        "letterSpacing": 8,
+        "lineHeight": 1.1,
+        "textTransform": "uppercase",
+        "color": "#6e7a63"
+      },
+      "h2": {
+        "fontSize": 26,
+        "letterSpacing": 25,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#8b9680"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 12,
+        "letterSpacing": 20,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#757575"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-053",
+    "name": "Dancing Script + Poppins (Onyx Monochrome)",
+    "category": "quinceanera",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Dancing Script",
+      "h2": "Poppins",
+      "body": "Poppins",
+      "small": "Poppins"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 88,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#111111"
+      },
+      "h2": {
+        "fontSize": 26,
+        "letterSpacing": 15,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#222222"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#444444"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#666666"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-054",
+    "name": "Dancing Script + Poppins (Champagne Gold)",
+    "category": "quinceanera",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Dancing Script",
+      "h2": "Poppins",
+      "body": "Poppins",
+      "small": "Poppins"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 88,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#b8945a"
+      },
+      "h2": {
+        "fontSize": 26,
+        "letterSpacing": 15,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#b8945a"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#808080"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-055",
+    "name": "Dancing Script + Poppins (Navy Royal)",
+    "category": "quinceanera",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Dancing Script",
+      "h2": "Poppins",
+      "body": "Poppins",
+      "small": "Poppins"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 88,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#1c2e4a"
+      },
+      "h2": {
+        "fontSize": 26,
+        "letterSpacing": 15,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#3b5998"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#333333"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#555555"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-056",
+    "name": "Dancing Script + Poppins (Sage Botanical)",
+    "category": "quinceanera",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Dancing Script",
+      "h2": "Poppins",
+      "body": "Poppins",
+      "small": "Poppins"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 88,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#6e7a63"
+      },
+      "h2": {
+        "fontSize": 26,
+        "letterSpacing": 15,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#8b9680"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#757575"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-057",
+    "name": "Pacifico + Quicksand (Onyx Monochrome)",
+    "category": "quinceanera",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Pacifico",
+      "h2": "Quicksand",
+      "body": "Nunito",
+      "small": "Nunito"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 75,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#111111"
+      },
+      "h2": {
+        "fontSize": 24,
+        "letterSpacing": 20,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#222222"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#444444"
+      },
+      "small": {
+        "fontSize": 12,
+        "letterSpacing": 20,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#666666"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-058",
+    "name": "Pacifico + Quicksand (Champagne Gold)",
+    "category": "quinceanera",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Pacifico",
+      "h2": "Quicksand",
+      "body": "Nunito",
+      "small": "Nunito"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 75,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#b8945a"
+      },
+      "h2": {
+        "fontSize": 24,
+        "letterSpacing": 20,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#b8945a"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 12,
+        "letterSpacing": 20,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#808080"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-059",
+    "name": "Pacifico + Quicksand (Navy Royal)",
+    "category": "quinceanera",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Pacifico",
+      "h2": "Quicksand",
+      "body": "Nunito",
+      "small": "Nunito"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 75,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#1c2e4a"
+      },
+      "h2": {
+        "fontSize": 24,
+        "letterSpacing": 20,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#3b5998"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#333333"
+      },
+      "small": {
+        "fontSize": 12,
+        "letterSpacing": 20,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#555555"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-060",
+    "name": "Pacifico + Quicksand (Sage Botanical)",
+    "category": "quinceanera",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Pacifico",
+      "h2": "Quicksand",
+      "body": "Nunito",
+      "small": "Nunito"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 75,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#6e7a63"
+      },
+      "h2": {
+        "fontSize": 24,
+        "letterSpacing": 20,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#8b9680"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 12,
+        "letterSpacing": 20,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#757575"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-061",
+    "name": "Grand Hotel + Raleway (Onyx Monochrome)",
+    "category": "quinceanera",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Grand Hotel",
+      "h2": "Raleway",
+      "body": "Raleway",
+      "small": "Raleway"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 90,
+        "letterSpacing": 2,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#111111"
+      },
+      "h2": {
+        "fontSize": 24,
+        "letterSpacing": 25,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#222222"
+      },
+      "body": {
+        "fontSize": 14,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#444444"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 30,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#666666"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-062",
+    "name": "Grand Hotel + Raleway (Champagne Gold)",
+    "category": "quinceanera",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Grand Hotel",
+      "h2": "Raleway",
+      "body": "Raleway",
+      "small": "Raleway"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 90,
+        "letterSpacing": 2,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#b8945a"
+      },
+      "h2": {
+        "fontSize": 24,
+        "letterSpacing": 25,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#b8945a"
+      },
+      "body": {
+        "fontSize": 14,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 30,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#808080"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-063",
+    "name": "Grand Hotel + Raleway (Navy Royal)",
+    "category": "quinceanera",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Grand Hotel",
+      "h2": "Raleway",
+      "body": "Raleway",
+      "small": "Raleway"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 90,
+        "letterSpacing": 2,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#1c2e4a"
+      },
+      "h2": {
+        "fontSize": 24,
+        "letterSpacing": 25,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#3b5998"
+      },
+      "body": {
+        "fontSize": 14,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#333333"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 30,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#555555"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-064",
+    "name": "Grand Hotel + Raleway (Sage Botanical)",
+    "category": "quinceanera",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Grand Hotel",
+      "h2": "Raleway",
+      "body": "Raleway",
+      "small": "Raleway"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 90,
+        "letterSpacing": 2,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#6e7a63"
+      },
+      "h2": {
+        "fontSize": 24,
+        "letterSpacing": 25,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#8b9680"
+      },
+      "body": {
+        "fontSize": 14,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 30,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#757575"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-065",
+    "name": "Cinzel Decorative + Cinzel (Onyx Monochrome)",
+    "category": "editorial",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Cinzel Decorative",
+      "h2": "Cinzel",
+      "body": "Cormorant Garamond",
+      "small": "Cinzel"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 68,
+        "letterSpacing": 15,
+        "lineHeight": 1.1,
+        "textTransform": "uppercase",
+        "color": "#111111"
+      },
+      "h2": {
+        "fontSize": 22,
+        "letterSpacing": 40,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#222222"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 2,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#444444"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 30,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#666666"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-066",
+    "name": "Cinzel Decorative + Cinzel (Champagne Gold)",
+    "category": "editorial",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Cinzel Decorative",
+      "h2": "Cinzel",
+      "body": "Cormorant Garamond",
+      "small": "Cinzel"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 68,
+        "letterSpacing": 15,
+        "lineHeight": 1.1,
+        "textTransform": "uppercase",
+        "color": "#b8945a"
+      },
+      "h2": {
+        "fontSize": 22,
+        "letterSpacing": 40,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#b8945a"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 2,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 30,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#808080"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-067",
+    "name": "Cinzel Decorative + Cinzel (Navy Royal)",
+    "category": "editorial",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Cinzel Decorative",
+      "h2": "Cinzel",
+      "body": "Cormorant Garamond",
+      "small": "Cinzel"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 68,
+        "letterSpacing": 15,
+        "lineHeight": 1.1,
+        "textTransform": "uppercase",
+        "color": "#1c2e4a"
+      },
+      "h2": {
+        "fontSize": 22,
+        "letterSpacing": 40,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#3b5998"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 2,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#333333"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 30,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#555555"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-068",
+    "name": "Cinzel Decorative + Cinzel (Sage Botanical)",
+    "category": "editorial",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Cinzel Decorative",
+      "h2": "Cinzel",
+      "body": "Cormorant Garamond",
+      "small": "Cinzel"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 68,
+        "letterSpacing": 15,
+        "lineHeight": 1.1,
+        "textTransform": "uppercase",
+        "color": "#6e7a63"
+      },
+      "h2": {
+        "fontSize": 22,
+        "letterSpacing": 40,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#8b9680"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 2,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 10,
+        "letterSpacing": 30,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#757575"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-069",
+    "name": "Vidaloka + Oswald (Onyx Monochrome)",
+    "category": "editorial",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Vidaloka",
+      "h2": "Oswald",
+      "body": "Oswald",
+      "small": "Oswald"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 74,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#111111"
+      },
+      "h2": {
+        "fontSize": 24,
+        "letterSpacing": 30,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#222222"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 5,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#444444"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 25,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#666666"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-070",
+    "name": "Vidaloka + Oswald (Champagne Gold)",
+    "category": "editorial",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Vidaloka",
+      "h2": "Oswald",
+      "body": "Oswald",
+      "small": "Oswald"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 74,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#b8945a"
+      },
+      "h2": {
+        "fontSize": 24,
+        "letterSpacing": 30,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#b8945a"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 5,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 25,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#808080"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-071",
+    "name": "Vidaloka + Oswald (Navy Royal)",
+    "category": "editorial",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Vidaloka",
+      "h2": "Oswald",
+      "body": "Oswald",
+      "small": "Oswald"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 74,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#1c2e4a"
+      },
+      "h2": {
+        "fontSize": 24,
+        "letterSpacing": 30,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#3b5998"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 5,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#333333"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 25,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#555555"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-072",
+    "name": "Vidaloka + Oswald (Sage Botanical)",
+    "category": "editorial",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Vidaloka",
+      "h2": "Oswald",
+      "body": "Oswald",
+      "small": "Oswald"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 74,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#6e7a63"
+      },
+      "h2": {
+        "fontSize": 24,
+        "letterSpacing": 30,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#8b9680"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 5,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 25,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#757575"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-073",
+    "name": "Abril Fatface + Yeseva One (Onyx Monochrome)",
+    "category": "editorial",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Abril Fatface",
+      "h2": "Yeseva One",
+      "body": "Inter",
+      "small": "Inter"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 70,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#111111"
+      },
+      "h2": {
+        "fontSize": 26,
+        "letterSpacing": 10,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#222222"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#444444"
+      },
+      "small": {
+        "fontSize": 12,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#666666"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-074",
+    "name": "Abril Fatface + Yeseva One (Champagne Gold)",
+    "category": "editorial",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Abril Fatface",
+      "h2": "Yeseva One",
+      "body": "Inter",
+      "small": "Inter"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 70,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#b8945a"
+      },
+      "h2": {
+        "fontSize": 26,
+        "letterSpacing": 10,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#b8945a"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 12,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#808080"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-075",
+    "name": "Abril Fatface + Yeseva One (Navy Royal)",
+    "category": "editorial",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Abril Fatface",
+      "h2": "Yeseva One",
+      "body": "Inter",
+      "small": "Inter"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 70,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#1c2e4a"
+      },
+      "h2": {
+        "fontSize": 26,
+        "letterSpacing": 10,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#3b5998"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#333333"
+      },
+      "small": {
+        "fontSize": 12,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#555555"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-076",
+    "name": "Abril Fatface + Yeseva One (Sage Botanical)",
+    "category": "editorial",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Abril Fatface",
+      "h2": "Yeseva One",
+      "body": "Inter",
+      "small": "Inter"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 70,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#6e7a63"
+      },
+      "h2": {
+        "fontSize": 26,
+        "letterSpacing": 10,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#8b9680"
+      },
+      "body": {
+        "fontSize": 15,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 12,
+        "letterSpacing": 15,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#757575"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-077",
+    "name": "Libre Caslon Text + Old Standard TT (Onyx Monochrome)",
+    "category": "classic",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Libre Caslon Text",
+      "h2": "Old Standard TT",
+      "body": "Old Standard TT",
+      "small": "Inter"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 80,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#111111"
+      },
+      "h2": {
+        "fontSize": 28,
+        "letterSpacing": 15,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#222222"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#444444"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 10,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#666666"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-078",
+    "name": "Libre Caslon Text + Old Standard TT (Champagne Gold)",
+    "category": "classic",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Libre Caslon Text",
+      "h2": "Old Standard TT",
+      "body": "Old Standard TT",
+      "small": "Inter"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 80,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#b8945a"
+      },
+      "h2": {
+        "fontSize": 28,
+        "letterSpacing": 15,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#b8945a"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 10,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#808080"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-079",
+    "name": "Libre Caslon Text + Old Standard TT (Navy Royal)",
+    "category": "classic",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Libre Caslon Text",
+      "h2": "Old Standard TT",
+      "body": "Old Standard TT",
+      "small": "Inter"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 80,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#1c2e4a"
+      },
+      "h2": {
+        "fontSize": 28,
+        "letterSpacing": 15,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#3b5998"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#333333"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 10,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#555555"
+      }
+    }
+  },
+  {
+    "id": "TP-PRO-080",
+    "name": "Libre Caslon Text + Old Standard TT (Sage Botanical)",
+    "category": "classic",
+    "lockedFonts": true,
+    "alignment": "center",
+    "fonts": {
+      "h1": "Libre Caslon Text",
+      "h2": "Old Standard TT",
+      "body": "Old Standard TT",
+      "small": "Inter"
+    },
+    "styles": {
+      "h1": {
+        "fontSize": 80,
+        "letterSpacing": 0,
+        "lineHeight": 1.1,
+        "textTransform": "none",
+        "color": "#6e7a63"
+      },
+      "h2": {
+        "fontSize": 28,
+        "letterSpacing": 15,
+        "lineHeight": 1.3,
+        "textTransform": "uppercase",
+        "color": "#8b9680"
+      },
+      "body": {
+        "fontSize": 16,
+        "letterSpacing": 0,
+        "lineHeight": 1.5,
+        "textTransform": "none",
+        "color": "#4a4a4a"
+      },
+      "small": {
+        "fontSize": 11,
+        "letterSpacing": 10,
+        "lineHeight": 1.4,
+        "textTransform": "uppercase",
+        "color": "#757575"
+      }
+    }
   }
-}
 ];

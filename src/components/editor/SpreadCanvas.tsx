@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
-import { Stage, Layer, Rect, Ellipse, Transformer, Image as KonvaImage, Text, Group } from 'react-konva';
+import { Stage, Layer, Rect, Ellipse, Transformer, Image as KonvaImage, Text, Group, Line, Circle } from 'react-konva';
 import Konva from 'konva';
 import { useTranslations } from 'next-intl';
 import { LUT_LIBRARY } from '@/lib/lut-presets';
@@ -15,6 +15,49 @@ interface SpreadCanvasProps {
   stageHeight: number;
   scale: number;
 }
+
+const ShadowDragAnchor = ({ element, spreadId, isSelected }: { element: EditorElement, spreadId: string, isSelected: boolean }) => {
+  const updateElement = useEditorStore((state) => state.updateElement);
+  if (!isSelected || element.shadowOpacity === undefined || element.shadowOpacity <= 0 || element.shadowColor === 'transparent') return null;
+
+  const centerX = element.x_mm + element.w_mm / 2;
+  const centerY = element.y_mm + element.h_mm / 2;
+
+  return (
+    <Group x={centerX} y={centerY}>
+      <Line 
+        points={[0, 0, element.shadowOffsetX || 0, element.shadowOffsetY || 0]} 
+        stroke="#3b82f6" 
+        dash={[4,4]} 
+        strokeWidth={1.5} 
+        opacity={0.8}
+      />
+      <Circle 
+        x={element.shadowOffsetX || 0} 
+        y={element.shadowOffsetY || 0} 
+        radius={7} 
+        fill="#ffffff" 
+        stroke="#3b82f6" 
+        strokeWidth={3} 
+        draggable 
+        onDragMove={(e) => {
+          updateElement(spreadId, element.id, {
+            shadowOffsetX: Math.round(e.target.x()),
+            shadowOffsetY: Math.round(e.target.y())
+          });
+        }}
+        onMouseEnter={(e) => {
+          const container = e.target.getStage()?.container();
+          if (container) container.style.cursor = 'move';
+        }}
+        onMouseLeave={(e) => {
+          const container = e.target.getStage()?.container();
+          if (container) container.style.cursor = 'default';
+        }}
+      />
+    </Group>
+  );
+};
 
 const EditorImage = ({ 
   element, 
@@ -188,6 +231,7 @@ const EditorImage = ({
           }}
         />
       )}
+      <ShadowDragAnchor element={element} spreadId={spreadId} isSelected={isSelected} />
     </React.Fragment>
   );
 };
@@ -292,6 +336,7 @@ const EditorShape = ({
           }}
         />
       )}
+      <ShadowDragAnchor element={element} spreadId={spreadId} isSelected={isSelected} />
     </React.Fragment>
   );
 };
@@ -389,6 +434,7 @@ const EditorText = ({ element, spreadId, isSelected, onSelect, onContextMenu }: 
           }}
         />
       )}
+      <ShadowDragAnchor element={element} spreadId={spreadId} isSelected={isSelected} />
     </React.Fragment>
   );
 };

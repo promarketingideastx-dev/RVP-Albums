@@ -56,7 +56,7 @@ export default function TypographyPresetSelector() {
                 className="text-lg leading-tight mb-1 truncate w-full" 
                 style={{ 
                   fontFamily: `"${preset.fonts.h1}", serif`, 
-                  color: preset.colorPalette.primary,
+                  color: preset.styles?.h1?.color || '#000',
                   letterSpacing: `${preset.styles?.h1.letterSpacing || 0}px`,
                   textTransform: preset.styles?.h1.textTransform || 'none'
                 }}
@@ -66,9 +66,9 @@ export default function TypographyPresetSelector() {
               <div 
                 className="text-[9px] font-semibold tracking-wider mb-2" 
                 style={{ 
-                  fontFamily: `"${preset.fonts.h2}", sans-serif`,
-                  color: preset.colorPalette.secondary,
-                  letterSpacing: `${(preset.styles?.h2.letterSpacing || 0) * 0.5}px`,
+                  fontFamily: `"${preset.fonts.h2}", serif`, 
+                  color: preset.styles?.h2?.color || '#000',
+                  letterSpacing: `${preset.styles?.h2.letterSpacing || 0}px`,
                   textTransform: preset.styles?.h2.textTransform || 'none'
                 }}
               >
@@ -77,10 +77,10 @@ export default function TypographyPresetSelector() {
               
               <div className="flex justify-between items-end mt-auto w-full border-t border-neutral-100 dark:border-neutral-800 pt-2">
                 <span className="text-[9px] text-neutral-400 uppercase tracking-widest">{preset.category}</span>
-                <div className="flex gap-1">
-                  <span className="w-2.5 h-2.5 rounded-full border border-black/10" style={{ backgroundColor: preset.colorPalette.primary }}></span>
-                  <span className="w-2.5 h-2.5 rounded-full border border-black/10" style={{ backgroundColor: preset.colorPalette.secondary }}></span>
-                  <span className="w-2.5 h-2.5 rounded-full border border-black/10" style={{ backgroundColor: preset.colorPalette.accent }}></span>
+                <div className="flex gap-1 ml-auto">
+                  <span className="w-2.5 h-2.5 rounded-full border border-black/10" style={{ backgroundColor: preset.styles?.h1?.color || '#000' }}></span>
+                  <span className="w-2.5 h-2.5 rounded-full border border-black/10" style={{ backgroundColor: preset.styles?.h2?.color || '#000' }}></span>
+                  <span className="w-2.5 h-2.5 rounded-full border border-black/10" style={{ backgroundColor: preset.styles?.body?.color || '#000' }}></span>
                 </div>
               </div>
             </button>

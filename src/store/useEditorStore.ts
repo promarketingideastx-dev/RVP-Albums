@@ -86,12 +86,10 @@ export const useEditorStore = create<EditorState>()(
         
         // Map native color
         const assignedColor = role === 'h1' 
-          ? preset.colorPalette.primary 
+          ? preset.styles?.h1?.color || '#000'
           : role === 'h2' 
-            ? preset.colorPalette.secondary 
-            : (role as string) === 'accent' 
-              ? preset.colorPalette.accent 
-              : preset.colorPalette.primary;
+            ? preset.styles?.h2?.color || '#000'
+            : preset.styles?.body?.color || '#000';
 
         return { 
           ...el, 
