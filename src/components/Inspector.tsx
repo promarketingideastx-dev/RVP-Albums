@@ -24,13 +24,17 @@ export default function Inspector() {
   const [localH, setLocalH] = useState('');
   const [localRot, setLocalRot] = useState('');
   const [localFill, setLocalFill] = useState('');
+  const [localOpacity, setLocalOpacity] = useState('');
+  const [localScale, setLocalScale] = useState('');
 
   const x_mm = element?.x_mm;
   const y_mm = element?.y_mm;
   const w_mm = element?.w_mm;
   const h_mm = element?.h_mm;
   const rotation_deg = element?.rotation_deg;
-  const fillColor = element?.fillColor;
+  const fillColor = element?.fillColor || element?.color;
+  const opacity = element?.opacity !== undefined ? element.opacity : 1;
+  const scale = element?.scale !== undefined ? element.scale : 1;
 
   // Sink memory values downward if they are legitimately updated by the canvas/store
   useEffect(() => {
@@ -40,9 +44,11 @@ export default function Inspector() {
       setLocalW(w_mm.toFixed(2));
       setLocalH(h_mm.toFixed(2));
       setLocalRot(rotation_deg.toFixed(2));
+      setLocalOpacity((opacity * 100).toFixed(0));
+      setLocalScale((scale).toFixed(2));
       if (fillColor) setLocalFill(fillColor);
     }
-  }, [x_mm, y_mm, w_mm, h_mm, rotation_deg, fillColor, selectedElementId]);
+  }, [x_mm, y_mm, w_mm, h_mm, rotation_deg, opacity, scale, fillColor, selectedElementId]);
 
   if (!element || !activeSpreadId) {
     return (
@@ -61,7 +67,10 @@ export default function Inspector() {
       w_mm: Math.max(5, parseFloat(localW) || 5), // Constraint to protect mathematical render collapse
       h_mm: Math.max(5, parseFloat(localH) || 5),
       rotation_deg: parseFloat(localRot) || 0,
-      fillColor: localFill || '#000000'
+      fillColor: localFill || '#000000',
+      color: localFill || '#000000',
+      opacity: (parseFloat(localOpacity) || 100) / 100,
+      scale: parseFloat(localScale) || 1,
     });
   };
 
@@ -89,6 +98,28 @@ export default function Inspector() {
       <InputField label={t('height')} value={localH} setter={setLocalH} />
       <InputField label={t('rotation')} value={localRot} setter={setLocalRot} />
       
+      {element.type === 'decoration' && element.sourceType === 'default' && (
+        <>
+          <InputField label={t('opacity')} value={localOpacity} setter={setLocalOpacity} />
+          <InputField label={t('scale')} value={localScale} setter={setLocalScale} />
+          <div className="flex flex-col gap-1 mb-3">
+            <label className="text-xs font-semibold text-neutral-500 uppercase">{t('color')}</label>
+            <input
+              type="color"
+              className="w-full h-8 cursor-pointer rounded border border-neutral-200 dark:border-neutral-700"
+              value={localFill || '#000000'}
+              onChange={(e) => {
+                setLocalFill(e.target.value);
+                updateElement(activeSpreadId, element.id, {
+                  color: e.target.value
+                });
+              }}
+              onBlur={handleBlurOrEnter}
+            />
+          </div>
+        </>
+      )}
+
       {element.type === 'shape' && (
         <div className="flex flex-col gap-1 mb-3">
           <label className="text-xs font-semibold text-neutral-500 uppercase">{t('fill_color')}</label>

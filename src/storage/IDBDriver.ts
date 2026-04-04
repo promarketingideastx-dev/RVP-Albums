@@ -27,6 +27,9 @@ export class IDBDriver implements StorageDriver {
 
     if (!project) return null;
 
+    // Prefetch global user decorations once to hydrate multiple spread elements optimally
+    const userDecs = await get<UserDecoration[]>('rvp_user_decorations') || [];
+
     // Hydration phase mapping Blobs to objectURLs
     const hydratedSpreads = await Promise.all(project.spreads.map(async (spread) => {
       const hydratedElements = await Promise.all(spread.elements.map(async (el) => {
@@ -42,6 +45,20 @@ export class IDBDriver implements StorageDriver {
           }
           return newEl;
         }
+
+        if (el.type === 'decoration' && el.sourceType === 'user-decoration' && el.sourceId) {
+          const newEl = { ...el };
+          const matched = userDecs.find(d => d.id === el.sourceId);
+          if (matched && matched.blob) {
+            newEl.src = URL.createObjectURL(matched.blob);
+          } else {
+            // Graceful degradation: If global decoration was deleted by user, 
+            // the element will preserve its structural slot safely but won't crash rendering.
+            // (Compatibility: If old legacy blob URL exists, it will naturally fail rendering smoothly)
+          }
+          return newEl;
+        }
+
         return el;
       }));
       return { ...spread, elements: hydratedElements };

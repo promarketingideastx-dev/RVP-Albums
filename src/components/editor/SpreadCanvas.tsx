@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Stage, Layer, Rect, Ellipse, Transformer, Image as KonvaImage, Text, Line } from 'react-konva';
+import { useTranslations } from 'next-intl';
 import { useEditorStore } from '@/store/useEditorStore';
 import { EditorElement } from '@/types/editor';
 import useImage from 'use-image';
@@ -12,7 +13,19 @@ interface SpreadCanvasProps {
   scale: number;
 }
 
-const EditorImage = ({ element, spreadId, isSelected, onSelect }: { element: EditorElement, spreadId: string, isSelected: boolean, onSelect: () => void }) => {
+const EditorImage = ({ 
+  element, 
+  spreadId, 
+  isSelected, 
+  onSelect,
+  onContextMenu
+}: { 
+  element: EditorElement, 
+  spreadId: string, 
+  isSelected: boolean, 
+  onSelect: () => void,
+  onContextMenu: (x: number, y: number, id: string) => void
+}) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const imageRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -39,9 +52,14 @@ const EditorImage = ({ element, spreadId, isSelected, onSelect }: { element: Edi
         width={element.w_mm}
         height={element.h_mm}
         rotation={element.rotation_deg}
+        opacity={element.opacity !== undefined ? element.opacity : 1}
         draggable
         onClick={onSelect}
         onTap={onSelect}
+        onContextMenu={(e) => {
+          e.evt.preventDefault();
+          onContextMenu(e.evt.clientX, e.evt.clientY, element.id);
+        }}
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         onDragEnd={(e) => {
           updateElement(spreadId, element.id, {
@@ -81,7 +99,19 @@ const EditorImage = ({ element, spreadId, isSelected, onSelect }: { element: Edi
   );
 };
 
-const EditorShape = ({ element, spreadId, isSelected, onSelect }: { element: EditorElement, spreadId: string, isSelected: boolean, onSelect: () => void }) => {
+const EditorShape = ({ 
+  element, 
+  spreadId, 
+  isSelected, 
+  onSelect,
+  onContextMenu
+}: { 
+  element: EditorElement, 
+  spreadId: string, 
+  isSelected: boolean, 
+  onSelect: () => void,
+  onContextMenu: (x: number, y: number, id: string) => void
+}) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const shapeRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -99,9 +129,14 @@ const EditorShape = ({ element, spreadId, isSelected, onSelect }: { element: Edi
     ref: shapeRef,
     fill: element.fillColor || '#aaaaaa',
     rotation: element.rotation_deg,
+    opacity: element.opacity !== undefined ? element.opacity : 1,
     draggable: true,
     onClick: onSelect,
     onTap: onSelect,
+    onContextMenu: (e: any) => {
+      e.evt.preventDefault();
+      onContextMenu(e.evt.clientX, e.evt.clientY, element.id);
+    },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onDragEnd: (e: any) => {
       updateElement(spreadId, element.id, {
@@ -166,6 +201,21 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
   const selectedElementId = useEditorStore((state) => state.selectedElementId);
   const setSelectedElement = useEditorStore((state) => state.setSelectedElement);
 
+  const bringToFront = useEditorStore((state) => state.bringToFront);
+  const bringForward = useEditorStore((state) => state.bringForward);
+  const sendBackward = useEditorStore((state) => state.sendBackward);
+  const sendToBack = useEditorStore((state) => state.sendToBack);
+
+  const t = useTranslations('Editor');
+
+  const [contextMenu, setContextMenu] = useState<{ x: number, y: number, elementId: string } | null>(null);
+
+  useEffect(() => {
+    const handleGlobalClick = () => { if (contextMenu) setContextMenu(null); };
+    window.addEventListener('click', handleGlobalClick);
+    return () => window.removeEventListener('click', handleGlobalClick);
+  }, [contextMenu]);
+
   if (!project || !activeSpreadId) return null;
 
   const spread = project.spreads.find((s) => s.id === activeSpreadId);
@@ -184,7 +234,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
 
   return (
     <div 
-      className="flex-1 w-full h-full"
+      className="flex-1 w-full h-full relative"
       onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }}
       onDrop={(e) => {
         e.preventDefault();
@@ -223,6 +273,8 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
                   type: 'decoration',
                   src: payload.src,
                   libraryCategory: payload.libraryCategory,
+                  sourceType: payload.sourceType || 'default',
+                  sourceId: payload.sourceId,
                   x_mm: 20,
                   y_mm: 20,
                   w_mm: w,
@@ -245,6 +297,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
         onMouseDown={checkDeselect}
         onTouchStart={checkDeselect}
         style={{ boxShadow: '0px 10px 30px rgba(0,0,0,0.1)' }}
+        onContextMenu={(e) => e.evt.preventDefault()}
       >
       <Layer scaleX={scale} scaleY={scale}>
         {/* Background Paper */}
@@ -269,6 +322,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
                 spreadId={activeSpreadId}
                 isSelected={selectedElementId === el.id}
                 onSelect={() => setSelectedElement(el.id)}
+                onContextMenu={(x, y, id) => setContextMenu({ x, y, elementId: id })}
               />
             );
           }
@@ -279,6 +333,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
               spreadId={activeSpreadId}
               isSelected={selectedElementId === el.id}
               onSelect={() => setSelectedElement(el.id)}
+              onContextMenu={(x, y, id) => setContextMenu({ x, y, elementId: id })}
             />
           );
         })}
@@ -322,20 +377,13 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
            height={project.size.h_mm - ((project.bleed_mm + project.safe_zone_mm) * 2)}
            stroke="#0000ff"
            strokeWidth={1 / scale}
-           dash={[6 / scale, 4 / scale]}
-           opacity={0.6}
+           dash={[4 / scale, 4 / scale]}
+           opacity={0.4}
            listening={false}
         />
-
-        {/* Center Split Guide: Cyan Solid */}
-        <Line
-           points={[project.size.w_mm / 2, 0, project.size.w_mm / 2, project.size.h_mm]}
-           stroke="#00ffff"
-           strokeWidth={1.5 / scale}
-           opacity={0.8}
-           listening={false}
-        />
-        </Layer>
+        
+        {/* Center Fold Line Component replaced by individual Spread Canvases - No Center Fold needed here */}
+      </Layer>
       </Stage>
     </div>
   );

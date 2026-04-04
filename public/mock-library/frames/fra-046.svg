@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 2000">
+        <!-- Top Left Corner -->
+        <path d="M 50 242 L 50 50 L 242 50" fill="none" stroke="#FFFFFF" stroke-width="18" />
+        <path d="M 70 262 L 70 70 L 262 70" fill="none" stroke="#FFFFFF" stroke-width="6" />
+        
+        <!-- Top Right Corner -->
+        <path d="M 1258 50 L 1450 50 L 1450 242" fill="none" stroke="#FFFFFF" stroke-width="18" />
+        <path d="M 1238 70 L 1430 70 L 1430 262" fill="none" stroke="#FFFFFF" stroke-width="6" />
+        
+        <!-- Bottom Left Corner -->
+        <path d="M 50 1758 L 50 1950 L 242 1950" fill="none" stroke="#FFFFFF" stroke-width="18" />
+        
+        <!-- Bottom Right Corner -->
+        <path d="M 1450 1758 L 1450 1950 L 1258 1950" fill="none" stroke="#FFFFFF" stroke-width="18" />
+      </svg>

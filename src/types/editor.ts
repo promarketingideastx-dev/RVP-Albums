@@ -12,6 +12,12 @@ export interface EditorElement {
   previewBlobId?: string; // Phase 3 Block 1: IndexedDB blob reference
   originalBlobId?: string; // Phase 3 Block 1: IndexedDB blob reference
   libraryCategory?: string; // Phase 7.G: Category discriminator strictly for decoration variants
+  sourceType?: 'default' | 'user-decoration'; // Phase 7.G.2.A: Stable local decoration rendering persistence discriminator
+  sourceId?: string; // Phase 7.G.2.A: Strict persistence reference decoupled from runtime objectURLs
+  opacity?: number; // Phase 7.G.4: Editable transparency multiplier (0 to 1) 
+  scale?: number; // Phase 7.G.4: Generic internal dimension multiplier decoupling generic bounding constraints
+  color?: string; // Phase 7.G.4: Configurable base shape/stroke overlay styling mapping hex variants 
+  variant?: string; // Phase 7.G.4: Strict variant discriminator supporting parametric overrides
   x_mm: number;
   y_mm: number;
   w_mm: number;

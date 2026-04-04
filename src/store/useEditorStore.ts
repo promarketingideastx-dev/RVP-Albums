@@ -25,6 +25,8 @@ interface EditorState {
 
   bringForward: (spreadId: string, elementId: string) => void;
   sendBackward: (spreadId: string, elementId: string) => void;
+  bringToFront: (spreadId: string, elementId: string) => void;
+  sendToBack: (spreadId: string, elementId: string) => void;
 }
 
 export const useEditorStore = create<EditorState>((set) => ({
@@ -147,6 +149,40 @@ export const useEditorStore = create<EditorState>((set) => ({
       const temp = elements[idx];
       elements[idx] = elements[idx - 1];
       elements[idx - 1] = temp;
+
+      elements.forEach((el, index) => { el.zIndex = index; });
+      return { ...spread, elements };
+    });
+    return { project: { ...state.project, spreads: newSpreads } };
+  }),
+
+  bringToFront: (spreadId: string, elementId: string) => set((state) => {
+    if (!state.project) return state;
+    const newSpreads = state.project.spreads.map((spread) => {
+      if (spread.id !== spreadId) return spread;
+      const elements = [...spread.elements].sort((a, b) => a.zIndex - b.zIndex);
+      const idx = elements.findIndex(e => e.id === elementId);
+      if (idx === -1 || idx === elements.length - 1) return spread;
+
+      const target = elements.splice(idx, 1)[0];
+      elements.push(target);
+
+      elements.forEach((el, index) => { el.zIndex = index; });
+      return { ...spread, elements };
+    });
+    return { project: { ...state.project, spreads: newSpreads } };
+  }),
+
+  sendToBack: (spreadId: string, elementId: string) => set((state) => {
+    if (!state.project) return state;
+    const newSpreads = state.project.spreads.map((spread) => {
+      if (spread.id !== spreadId) return spread;
+      const elements = [...spread.elements].sort((a, b) => a.zIndex - b.zIndex);
+      const idx = elements.findIndex(e => e.id === elementId);
+      if (idx <= 0) return spread;
+
+      const target = elements.splice(idx, 1)[0];
+      elements.unshift(target);
 
       elements.forEach((el, index) => { el.zIndex = index; });
       return { ...spread, elements };

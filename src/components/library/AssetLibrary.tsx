@@ -46,7 +46,9 @@ export default function AssetLibrary() {
     e.dataTransfer.setData('application/json', JSON.stringify({
       type: 'decoration',
       src: asset.src,
-      libraryCategory: category
+      libraryCategory: category,
+      sourceType: 'default',
+      sourceId: asset.id
     }));
     e.dataTransfer.effectAllowed = 'copy';
   };
@@ -55,7 +57,9 @@ export default function AssetLibrary() {
     e.dataTransfer.setData('application/json', JSON.stringify({
       type: 'decoration',
       src: dec.preview,
-      libraryCategory: dec.categoryId
+      libraryCategory: dec.categoryId,
+      sourceType: 'user-decoration',
+      sourceId: dec.id
     }));
     e.dataTransfer.effectAllowed = 'copy';
   };

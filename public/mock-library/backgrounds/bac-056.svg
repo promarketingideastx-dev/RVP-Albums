@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 2000">
+       <rect width="100%" height="100%" fill="#000000" />
+       <pattern id="pat56" x="0" y="0" width="106" height="106" patternUnits="userSpaceOnUse">
+         <circle cx="2" cy="2" r="1.5" fill="#ffffff" fill-opacity="0.1" />
+       </pattern>
+       <rect width="100%" height="100%" fill="url(#pat56)" />
+     </svg>
