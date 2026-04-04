@@ -6,9 +6,11 @@ interface RulerGuidesProps {
   scale: number;
   project: EditorProject;
   unit: 'in' | 'cm';
+  panX: number;
+  panY: number;
 }
 
-export function RulerGuides({ scale, project, unit }: RulerGuidesProps) {
+export function RulerGuides({ scale, project, unit, panX, panY }: RulerGuidesProps) {
   const activeSpreadId = useEditorStore(s => s.activeSpreadId);
   const addGuide = useEditorStore(s => s.addGuide);
   const updateGuide = useEditorStore(s => s.updateGuide);
@@ -22,17 +24,17 @@ export function RulerGuides({ scale, project, unit }: RulerGuidesProps) {
      
      const rect = canvasWrapper.getBoundingClientRect();
      const guideId = `guide_${Date.now()}`;
-     const initialPos = orientation === 'horizontal' ? (e.clientY - rect.top) / scale : (e.clientX - rect.left) / scale;
+     const initialPos = orientation === 'horizontal' ? (e.clientY - rect.top - panY) / scale : (e.clientX - rect.left - panX) / scale;
      
      addGuide(activeSpreadId, { id: guideId, orientation, position_mm: initialPos });
 
      const onMove = (ev: PointerEvent) => {
-         const mm = orientation === 'horizontal' ? (ev.clientY - rect.top) / scale : (ev.clientX - rect.left) / scale;
+         const mm = orientation === 'horizontal' ? (ev.clientY - rect.top - panY) / scale : (ev.clientX - rect.left - panX) / scale;
          updateGuide(activeSpreadId, guideId, { position_mm: mm });
      };
 
      const onUp = (ev: PointerEvent) => {
-         const mm = orientation === 'horizontal' ? (ev.clientY - rect.top) / scale : (ev.clientX - rect.left) / scale;
+         const mm = orientation === 'horizontal' ? (ev.clientY - rect.top - panY) / scale : (ev.clientX - rect.left - panX) / scale;
          // Drag-to-delete logic dynamically drops guides snapped completely outside physical page lines
          if (mm < -10 || (orientation === 'vertical' && mm > project.size.w_mm + 10) || (orientation === 'horizontal' && mm > project.size.h_mm + 10)) {
             removeGuide(activeSpreadId, guideId);
@@ -59,58 +61,75 @@ export function RulerGuides({ scale, project, unit }: RulerGuidesProps) {
     <>
       {/* Top Horizontal Ruler */}
       <div 
-        className="absolute bg-white dark:bg-neutral-800 border-b border-neutral-300 dark:border-neutral-700 cursor-row-resize select-none"
+        className="absolute bg-white dark:bg-neutral-800 border-b border-neutral-300 dark:border-neutral-700 cursor-row-resize select-none z-10"
         onPointerDown={(e) => startGuideDrag(e, 'horizontal')}
         style={{
-           top: -rulerThickness,
-           left: 0,
+           top: 0,
+           left: rulerThickness,
            height: rulerThickness,
-           width: wPixels,
+           right: 0,
            overflow: 'hidden'
         }}
       >
-        {Array.from({ length: hTicks }).map((_, i) => {
-          const pos = i * majorTickMm * scale;
-          return (
-            <div 
-              key={i} 
-              className="absolute top-0 bottom-0 border-l border-neutral-400 dark:border-neutral-500"
-              style={{ left: pos }}
-            >
-              <span className="text-[10px] text-neutral-500 ml-1 mt-0.5 block select-none">
-                {i}
-              </span>
-            </div>
-          );
-        })}
+        <div style={{ transform: `translateX(${panX}px)`, width: wPixels, height: '100%', position: 'relative' }}>
+          {Array.from({ length: hTicks }).map((_, i) => {
+            const pos = i * majorTickMm * scale;
+            return (
+              <div 
+                key={i} 
+                className="absolute top-0 bottom-0 border-l border-neutral-400 dark:border-neutral-500"
+                style={{ left: pos }}
+              >
+                <span className="text-[10px] text-neutral-500 ml-1 mt-0.5 block select-none">
+                  {i}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Left Vertical Ruler */}
       <div 
-        className="absolute bg-white dark:bg-neutral-800 border-r border-neutral-300 dark:border-neutral-700 cursor-col-resize select-none"
+        className="absolute bg-white dark:bg-neutral-800 border-r border-neutral-300 dark:border-neutral-700 cursor-col-resize select-none z-10"
         onPointerDown={(e) => startGuideDrag(e, 'vertical')}
         style={{
-           top: 0,
-           left: -rulerThickness,
+           top: rulerThickness,
+           left: 0,
            width: rulerThickness,
-           height: hPixels,
+           bottom: 0,
            overflow: 'hidden'
         }}
       >
-        {Array.from({ length: vTicks }).map((_, i) => {
-          const pos = i * majorTickMm * scale;
-          return (
-            <div 
-              key={i} 
-              className="absolute left-0 right-0 border-t border-neutral-400 dark:border-neutral-500"
-              style={{ top: pos }}
-            >
-              <span className="text-[10px] text-neutral-500 ml-0.5 mt-0.5 block select-none" style={{ transform: 'rotate(-90deg)', transformOrigin: 'top left', marginTop: '14px', marginLeft: '6px' }}>
-                {i}
-              </span>
-            </div>
-          );
-        })}
+        <div style={{ transform: `translateY(${panY}px)`, height: hPixels, width: '100%', position: 'relative' }}>
+          {Array.from({ length: vTicks }).map((_, i) => {
+            const pos = i * majorTickMm * scale;
+            return (
+              <div 
+                key={i} 
+                className="absolute left-0 right-0 border-t border-neutral-400 dark:border-neutral-500"
+                style={{ top: pos }}
+              >
+                <span className="text-[10px] text-neutral-500 ml-0.5 mt-0.5 block select-none" style={{ transform: 'rotate(-90deg)', transformOrigin: 'top left', marginTop: '14px', marginLeft: '6px' }}>
+                  {i}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      
+      {/* Corner Square */}
+      <div 
+        className="absolute bg-white dark:bg-neutral-800 border-b border-r border-neutral-300 dark:border-neutral-700 font-mono text-[9px] text-neutral-400 flex items-center justify-center font-bold z-20"
+        style={{
+          top: 0,
+          left: 0,
+          width: rulerThickness,
+          height: rulerThickness
+        }}
+      >
+        {unit.toUpperCase()}
       </div>
       
       {/* Corner Square */}

@@ -120,7 +120,9 @@ export default function EditorWorkspace() {
              <RulerGuides 
                scale={scale} 
                project={project} 
-               unit={measurementUnit} 
+               unit={measurementUnit}
+               panX={currentPanX}
+               panY={currentPanY}
              />
          </div>
        )}

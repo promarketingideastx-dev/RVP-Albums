@@ -160,18 +160,56 @@ export function NavigatorWidget({ scale, autoScale }: NavigatorProps) {
         />
       </div>
 
-      <div className="p-3 bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 flex items-center gap-2">
-        <svg className="w-3 h-3 text-neutral-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-3.5-8a.5.5 0 01.5-.5h6a.5.5 0 010 1h-6a.5.5 0 01-.5-.5z" clipRule="evenodd" /></svg>
-        <input 
-          type="range"
-          min={0.1}
-          max={5.0} 
-          step={0.05}
-          className="w-full accent-blue-500"
-          value={workspaceZoom === null ? 1.0 : workspaceZoom}
-          onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
-        />
-        <svg className="w-4 h-4 text-neutral-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm4.5-8a.5.5 0 01-.5.5h-3v3a.5.5 0 01-1 0v-3h-3a.5.5 0 010-1h3v-3a.5.5 0 011 0v3h3a.5.5 0 01.5.5z" clipRule="evenodd" /></svg>
+      <div className="p-3 bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <button 
+            title="Fit to Screen"
+            className="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded text-neutral-400 hover:text-blue-500 transition-colors"
+            onClick={() => handleZoomChange(1.0)}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+          </button>
+          
+          <svg className="w-3 h-3 text-neutral-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-3.5-8a.5.5 0 01.5-.5h6a.5.5 0 010 1h-6a.5.5 0 01-.5-.5z" clipRule="evenodd" /></svg>
+          <input 
+            type="range"
+            min={0.1}
+            max={5.0} 
+            step={0.05}
+            className="w-full accent-blue-500"
+            value={workspaceZoom === null ? 1.0 : workspaceZoom}
+            onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
+          />
+          <svg className="w-4 h-4 text-neutral-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm4.5-8a.5.5 0 01-.5.5h-3v3a.5.5 0 01-1 0v-3h-3a.5.5 0 010-1h3v-3a.5.5 0 011 0v3h3a.5.5 0 01.5.5z" clipRule="evenodd" /></svg>
+        </div>
+        
+        {/* Preset Utility Row */}
+        <div className="flex items-center justify-between mt-1">
+           <div className="flex gap-1">
+             {[0.5, 1.0, 2.0, 4.0].map(preset => (
+               <button
+                 key={preset}
+                 className={`text-[9px] font-bold px-1.5 py-0.5 rounded cursor-pointer transition-colors ${workspaceZoom === preset || (preset === 1.0 && workspaceZoom === null) ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200 dark:bg-neutral-700 dark:hover:bg-neutral-600 dark:text-neutral-400'}`}
+                 onClick={() => handleZoomChange(preset)}
+               >
+                 {preset === 1.0 ? 'FIT' : `${preset * 100}%`}
+               </button>
+             ))}
+           </div>
+           
+           <button 
+             className="text-[9px] font-bold px-2 py-0.5 rounded border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 transition-colors"
+             onClick={() => {
+                // Instantly re-center exactly back to mathematical origins
+                const resetPanX = (viewportDims.width - (project.size.w_mm * autoScale)) / 2;
+                const resetPanY = (viewportDims.height - (project.size.h_mm * autoScale)) / 2;
+                setWorkspacePan({ x: resetPanX, y: resetPanY });
+                setWorkspaceZoom(null);
+             }}
+           >
+             RESET
+           </button>
+        </div>
       </div>
     </div>
   );
