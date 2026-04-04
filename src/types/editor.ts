@@ -18,6 +18,11 @@ export interface EditorElement {
   scale?: number; // Phase 7.G.4: Generic internal dimension multiplier decoupling generic bounding constraints
   color?: string; // Phase 7.G.4: Configurable base shape/stroke overlay styling mapping hex variants 
   variant?: string; // Phase 7.G.4: Strict variant discriminator supporting parametric overrides
+  shadowOffsetX?: number;
+  shadowOffsetY?: number;
+  shadowBlur?: number;
+  shadowColor?: string;
+  shadowOpacity?: number;
   text?: string;
   fontSize?: number;
   fontFamily?: string;

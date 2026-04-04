@@ -53,6 +53,11 @@ const EditorImage = ({
         height={element.h_mm}
         rotation={element.rotation_deg}
         opacity={element.opacity !== undefined ? element.opacity : 1}
+        shadowColor={element.shadowColor || 'transparent'}
+        shadowBlur={element.shadowBlur || 0}
+        shadowOffsetX={element.shadowOffsetX || 0}
+        shadowOffsetY={element.shadowOffsetY || 0}
+        shadowOpacity={element.shadowOpacity !== undefined ? element.shadowOpacity : 0.5}
         draggable
         onClick={onSelect}
         onTap={onSelect}
@@ -130,6 +135,11 @@ const EditorShape = ({
     fill: element.fillColor || '#aaaaaa',
     rotation: element.rotation_deg,
     opacity: element.opacity !== undefined ? element.opacity : 1,
+    shadowColor: element.shadowColor || 'transparent',
+    shadowBlur: element.shadowBlur || 0,
+    shadowOffsetX: element.shadowOffsetX || 0,
+    shadowOffsetY: element.shadowOffsetY || 0,
+    shadowOpacity: element.shadowOpacity !== undefined ? element.shadowOpacity : 0.5,
     draggable: true,
     onClick: onSelect,
     onTap: onSelect,

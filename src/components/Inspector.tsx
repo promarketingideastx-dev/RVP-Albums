@@ -117,6 +117,42 @@ export default function Inspector() {
               onBlur={handleBlurOrEnter}
             />
           </div>
+
+          {/* Shadow Controls Segment */}
+          <div className="pt-3 mt-3 border-t border-neutral-200 dark:border-neutral-800">
+             <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-800 dark:text-neutral-200 mb-2">Shadow Effects</h3>
+             <InputField 
+               label={"Shadow Blur"} 
+               value={element.shadowBlur !== undefined ? element.shadowBlur.toString() : "0"} 
+               setter={(val) => updateElement(activeSpreadId, element.id, { shadowBlur: parseFloat(val) })} 
+             />
+             <div className="flex gap-2">
+               <InputField 
+                 label={"Offset X"} 
+                 value={element.shadowOffsetX !== undefined ? element.shadowOffsetX.toString() : "0"} 
+                 setter={(val) => updateElement(activeSpreadId, element.id, { shadowOffsetX: parseFloat(val) })} 
+               />
+               <InputField 
+                 label={"Offset Y"} 
+                 value={element.shadowOffsetY !== undefined ? element.shadowOffsetY.toString() : "0"} 
+                 setter={(val) => updateElement(activeSpreadId, element.id, { shadowOffsetY: parseFloat(val) })} 
+               />
+             </div>
+             <div className="flex flex-col gap-1 mb-2 mt-1">
+               <label className="text-xs font-semibold text-neutral-500 uppercase">Shadow Color</label>
+               <input
+                 type="color"
+                 className="w-full h-8 cursor-pointer rounded border border-neutral-200 dark:border-neutral-700"
+                 value={element.shadowColor || '#000000'}
+                 onChange={(e) => updateElement(activeSpreadId, element.id, { shadowColor: e.target.value })}
+               />
+             </div>
+             <InputField 
+               label={"Shadow Opacity"} 
+               value={element.shadowOpacity !== undefined ? element.shadowOpacity.toString() : "0.5"} 
+               setter={(val) => updateElement(activeSpreadId, element.id, { shadowOpacity: parseFloat(val) })} 
+             />
+          </div>
         </>
       )}
 
