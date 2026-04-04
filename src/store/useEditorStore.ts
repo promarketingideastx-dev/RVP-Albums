@@ -23,6 +23,8 @@ interface EditorState {
   updateElement: (spreadId: string, elementId: string, changes: Partial<EditorElement>) => void;
   addElement: (spreadId: string, element: EditorElement) => void;
   removeElement: (spreadId: string, elementId: string) => void;
+  duplicateElement: (spreadId: string, elementId: string) => void;
+  createGroup: (spreadId: string) => void;
 
   addAsset: (asset: ProjectAsset) => void;
   removeAsset: (assetId: string) => void;
@@ -118,7 +120,12 @@ export const useEditorStore = create<EditorState>()(
     if (!state.project) return state;
     const newSpreads = state.project.spreads.map((spread) => {
       if (spread.id !== spreadId) return spread;
-      element.zIndex = spread.elements.length;
+      
+      const highestZIndex = spread.elements.length > 0 
+        ? Math.max(...spread.elements.map(e => e.zIndex)) 
+        : -1;
+      
+      element.zIndex = highestZIndex + 1;
       return { ...spread, elements: [...spread.elements, element] };
     });
     return { project: { ...state.project, spreads: newSpreads } };
@@ -137,12 +144,78 @@ export const useEditorStore = create<EditorState>()(
 
     const newSpreads = state.project.spreads.map((s) => {
       if (s.id !== spreadId) return s;
-      return { ...s, elements: s.elements.filter(e => e.id !== elementId) };
+      
+      // Filter out element AND strictly filter out all children if element is a generic folder
+      const isGroup = element?.type === 'group';
+      const filteredElements = s.elements.filter(e => {
+        if (e.id === elementId) return false;
+        if (isGroup && e.groupId === elementId) return false;
+        return true;
+      });
+      const sortedElements = [...filteredElements].sort((a, b) => a.zIndex - b.zIndex);
+      const reindexedElements = sortedElements.map((el, index) => ({ ...el, zIndex: index }));
+      
+      return { ...s, elements: reindexedElements };
     });
     
     // Reset selection if deleting the selected item
     const newSelectedId = state.selectedElementId === elementId ? null : state.selectedElementId;
     return { project: { ...state.project, spreads: newSpreads }, selectedElementId: newSelectedId };
+  }),
+
+  duplicateElement: (spreadId, elementId) => set((state) => {
+    if (!state.project) return state;
+    const spread = state.project.spreads.find(s => s.id === spreadId);
+    if (!spread) return state;
+    const element = spread.elements.find(e => e.id === elementId);
+    if (!element) return state;
+
+    const newElement = { 
+      ...element, 
+      id: crypto.randomUUID(),
+      x_mm: element.x_mm + 10,
+      y_mm: element.y_mm + 10,
+    };
+
+    const newSpreads = state.project.spreads.map((s) => {
+      if (s.id !== spreadId) return s;
+      
+      const highestZIndex = s.elements.length > 0 ? Math.max(...s.elements.map(e => e.zIndex)) : -1;
+      newElement.zIndex = highestZIndex + 1;
+      
+      return { ...s, elements: [...s.elements, newElement] };
+    });
+
+    return { project: { ...state.project, spreads: newSpreads }, selectedElementId: newElement.id };
+  }),
+
+  createGroup: (spreadId) => set((state) => {
+    if (!state.project) return state;
+    const spread = state.project.spreads.find(s => s.id === spreadId);
+    if (!spread) return state;
+
+    const highestZIndex = spread.elements.length > 0 ? Math.max(...spread.elements.map(e => e.zIndex)) : -1;
+    const groupElement: EditorElement = {
+      id: crypto.randomUUID(),
+      type: 'group',
+      x_mm: 0,
+      y_mm: 0,
+      w_mm: state.project?.size?.w_mm || 500, // Safe bounding fallback
+      h_mm: state.project?.size?.h_mm || 500,
+      rotation_deg: 0,
+      zIndex: highestZIndex + 1,
+      layerName: `Group ${spread.elements.filter(e => e.type === 'group').length + 1}`,
+      visible: true,
+      locked: false,
+      isCollapsed: false,
+    };
+
+    const newSpreads = state.project.spreads.map((s) => {
+      if (s.id !== spreadId) return s;
+      return { ...s, elements: [...s.elements, groupElement] };
+    });
+
+    return { project: { ...state.project, spreads: newSpreads }, selectedElementId: groupElement.id };
   }),
 
   addAsset: (asset) => set((state) => {

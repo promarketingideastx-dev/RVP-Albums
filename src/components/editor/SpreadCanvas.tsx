@@ -165,7 +165,7 @@ const EditorImage = ({
         rotation={element.rotation_deg || 0}
         scaleX={element.scale || 1}
         scaleY={element.scale || 1}
-        draggable={isSelected}
+        draggable={isSelected && !element.locked}
         onClick={onSelect}
         onTap={onSelect}
         opacity={element.opacity !== undefined ? element.opacity : 1}
@@ -408,7 +408,7 @@ const EditorText = ({ element, spreadId, isSelected, onSelect, onContextMenu }: 
         shadowOffsetX={element.shadowOffsetX || 0}
         shadowOffsetY={element.shadowOffsetY || 0}
         shadowOpacity={element.shadowOpacity !== undefined ? element.shadowOpacity : 0.5}
-        draggable
+        draggable={isSelected && !element.locked}
         onClick={onSelect}
         onTap={onSelect}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

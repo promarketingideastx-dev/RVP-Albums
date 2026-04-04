@@ -1,4 +1,4 @@
-export type ElementType = 'image' | 'text' | 'shape' | 'decoration';
+export type ElementType = 'image' | 'text' | 'shape' | 'decoration' | 'group';
 
 // Coordinates strictly in absolute mm. Precision mapping is applied in presentation components.
 export interface EditorElement {
@@ -24,6 +24,11 @@ export interface EditorElement {
   shadowColor?: string;
   shadowOpacity?: number;
   blendMode?: string;
+  visible?: boolean; // Phase 7.G.6.C: Visibility cascade mapping
+  locked?: boolean; // Phase 7.G.6.C: Selection and Dragging constraint 
+  groupId?: string; // Phase 7.G.6.C: Advanced generic nested folders
+  isCollapsed?: boolean; // Phase 7.G.6.C: Folder structural bounds
+  layerName?: string; // Phase 7.G.6.C: UI-level naming override
   photoFilter?: string;
   filterIntensity?: number;
   text?: string;

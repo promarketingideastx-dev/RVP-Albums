@@ -54,7 +54,21 @@ export async function exportSpreadToJPG(spread: Spread, meta: ExportMeta): Promi
   const objectUrlsToRevoke: string[] = [];
   const sortedElements = [...spread.elements].sort((a, b) => a.zIndex - b.zIndex);
 
-  for (const el of sortedElements) {
+  for (const rawEl of sortedElements) {
+    if (rawEl.type === 'group') continue;
+    if (rawEl.visible === false) continue;
+
+    // Apply cascading visibility and opacity rules safely
+    let el = rawEl;
+    if (el.groupId) {
+      const parent = sortedElements.find(g => g.id === el.groupId);
+      if (parent && parent.visible === false) continue;
+      if (parent && parent.opacity !== undefined) {
+         const childOpacity = el.opacity !== undefined ? el.opacity : 1;
+         el = { ...el, opacity: parent.opacity * childOpacity };
+      }
+    }
+
     if (el.type === 'shape') {
         if (el.shapeType === 'rect') {
           layer.add(new Konva.Rect({
