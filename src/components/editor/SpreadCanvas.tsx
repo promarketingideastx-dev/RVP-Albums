@@ -423,7 +423,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
     fontsSet.add(activePreset.fonts.body);
     fontsSet.add(activePreset.fonts.small);
     return Array.from(fontsSet).map(font => 
-      `@import url('https://fonts.googleapis.com/css2?family=${font.replace(/ /g, '+')}:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap');`
+      `@import url('https://fonts.googleapis.com/css2?family=${font.replace(/ /g, '+')}&display=swap');`
     ).join('\n');
   }, [project?.typographyPresetId]);
 
