@@ -1,4 +1,4 @@
-import { EditorProject, ProjectAsset, EditorElement } from '@/types/editor';
+import { EditorProject, ProjectAsset, EditorElement, CustomCategory, UserDecoration } from '@/types/editor';
 
 export interface ProjectMetadata {
   id: string;
@@ -31,4 +31,13 @@ export interface StorageDriver {
   addAsset(file: File): Promise<ProjectAsset>;
   removeAsset(asset: ProjectAsset): Promise<void>;
   cleanupElement(element: EditorElement): Promise<void>;
+
+  // Global Library (PWA Local Storage)
+  getDecorationCategories(): Promise<CustomCategory[]>;
+  createDecorationCategory(name: string): Promise<CustomCategory>;
+  deleteDecorationCategory(id: string): Promise<void>;
+  
+  getDecorations(): Promise<UserDecoration[]>;
+  uploadDecoration(file: File, categoryId: string): Promise<UserDecoration>;
+  deleteDecoration(id: string): Promise<void>;
 }

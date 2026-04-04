@@ -1,5 +1,5 @@
 import { StorageDriver, ProjectMetadata } from './StorageDriver';
-import { EditorProject, ProjectAsset, EditorElement } from '@/types/editor';
+import { EditorProject, ProjectAsset, EditorElement, CustomCategory, UserDecoration } from '@/types/editor';
 
 export class IDBDriver implements StorageDriver {
   private async getIDB() {
@@ -97,6 +97,89 @@ export class IDBDriver implements StorageDriver {
     if (id === 'proj_genesis') {
        await del('rvp_editor_project');
     }
+  }
+
+  // --- GLOBAL LIBRARY (PWA USER ASSETS) --- //
+  
+  async getDecorationCategories(): Promise<CustomCategory[]> {
+    const { get } = await this.getIDB();
+    const categories = await get<CustomCategory[]>('rvp_user_categories');
+    return categories || [];
+  }
+
+  async createDecorationCategory(name: string): Promise<CustomCategory> {
+    const { get, set } = await this.getIDB();
+    const categories = await get<CustomCategory[]>('rvp_user_categories') || [];
+    const newCategory: CustomCategory = {
+      id: "usr_cat_" + Math.random().toString(36).substr(2, 9),
+      name,
+      createdAt: Date.now()
+    };
+    categories.push(newCategory);
+    await set('rvp_user_categories', categories);
+    return newCategory;
+  }
+
+  async deleteDecorationCategory(id: string): Promise<void> {
+    const { get, set } = await this.getIDB();
+    let categories = await get<CustomCategory[]>('rvp_user_categories') || [];
+    categories = categories.filter(c => c.id !== id);
+    await set('rvp_user_categories', categories);
+    
+    // Cleanup decorations bound to this category to avoid database debris
+    let decs = await get<UserDecoration[]>('rvp_user_decorations') || [];
+    decs = decs.filter(d => d.categoryId !== id);
+    await set('rvp_user_decorations', decs);
+  }
+
+  async getDecorations(): Promise<UserDecoration[]> {
+    const { get } = await this.getIDB();
+    const decs = await get<UserDecoration[]>('rvp_user_decorations') || [];
+    // Hydrate Object URLs live natively
+    return decs.map(d => ({
+      ...d,
+      preview: URL.createObjectURL(d.blob)
+    }));
+  }
+
+  async uploadDecoration(file: File, categoryId: string): Promise<UserDecoration> {
+    const { get, set, del } = await this.getIDB();
+    
+    // 1. Process via existing logic to generate optimal scaled WebP
+    const { processLocalImage } = await import('@/utils/imageIngestion');
+    const processed = await processLocalImage(file);
+    
+    // 2. Extract the generated lightweight preview blob directly
+    const previewBlob = await get<Blob>(processed.previewBlobId);
+    
+    // 3. Purge the disjoint DB references (we don't want original heavy blobs)
+    await del(processed.originalBlobId);
+    await del(processed.previewBlobId);
+    
+    if (!previewBlob) throw new Error("Failed to extract webp compression layer");
+
+    // 4. Forge native User Decoration schema
+    const newDec: UserDecoration = {
+      id: "usr_dec_" + Math.random().toString(36).substr(2, 9),
+      categoryId,
+      blob: previewBlob,
+      preview: URL.createObjectURL(previewBlob),
+      createdAt: Date.now()
+    };
+    
+    // 5. Append array list safely
+    const decs = await get<UserDecoration[]>('rvp_user_decorations') || [];
+    decs.push(newDec);
+    await set('rvp_user_decorations', decs);
+    
+    return newDec;
+  }
+
+  async deleteDecoration(id: string): Promise<void> {
+    const { get, set } = await this.getIDB();
+    let decs = await get<UserDecoration[]>('rvp_user_decorations') || [];
+    decs = decs.filter(d => d.id !== id);
+    await set('rvp_user_decorations', decs);
   }
 
   async addAsset(file: File): Promise<ProjectAsset> {

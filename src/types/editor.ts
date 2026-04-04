@@ -58,3 +58,17 @@ export interface EditorProject {
   spreads: Spread[];
   assets?: ProjectAsset[];
 }
+
+export type CustomCategory = {
+  id: string;
+  name: string;
+  createdAt: number;
+};
+
+export type UserDecoration = {
+  id: string;
+  categoryId: string;
+  blob: Blob;
+  preview: string; // objectURL resolving local Native DB blob representation
+  createdAt: number;
+};
