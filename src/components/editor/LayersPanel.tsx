@@ -96,11 +96,11 @@ export default function LayersPanel() {
          const selEl = spread.elements.find(e => e.id === selectedElementId);
          if (!selEl) return null;
          return (
-           <div className="flex items-center gap-3 px-3 py-2 bg-neutral-100 dark:bg-neutral-900/80 border-b border-neutral-200 dark:border-neutral-800 text-[11px] font-medium transition-colors">
+           <div className="flex items-center justify-between px-4 py-3 bg-neutral-50/80 dark:bg-neutral-900/80 border-b border-neutral-200 dark:border-neutral-800 text-[13px] font-medium transition-colors">
               <select 
                 value={selEl.blendMode || 'source-over'} 
                 onChange={(e) => updateElement(spread.id, selEl.id, { blendMode: e.target.value })}
-                className="bg-transparent text-neutral-700 dark:text-neutral-300 border border-neutral-300 dark:border-neutral-700 rounded outline-none p-1 cursor-pointer min-w-[85px] disabled:opacity-50"
+                className="bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-neutral-300 dark:border-neutral-700 rounded-md outline-none px-2 py-1 cursor-pointer w-[110px] shadow-sm disabled:opacity-50"
                 disabled={selEl.type === 'text' || selEl.type === 'group'}
               >
                 <option value="source-over">Normal</option>
@@ -117,19 +117,17 @@ export default function LayersPanel() {
                 <option value="exclusion">Exclusion</option>
               </select>
               
-              <div className="flex items-center gap-1.5 flex-1 justify-end opacity-90">
+              <div className="flex items-center gap-2 flex-1 justify-end opacity-90">
                  <span className="text-neutral-500">Op:</span>
-                 <div className="flex items-center border border-neutral-300 dark:border-neutral-700 rounded bg-white dark:bg-neutral-800 focus-within:border-blue-500 px-1 overflow-hidden transition-colors">
-                   <input 
-                     type="number" 
-                     min="0" max="100" 
-                     value={Math.round((selEl.opacity !== undefined ? selEl.opacity : 1) * 100)} 
-                     onChange={(e) => updateElement(spread.id, selEl.id, { opacity: Number(e.target.value) / 100 })}
-                     className="w-10 bg-transparent text-neutral-800 dark:text-neutral-200 border-none rounded-none p-0 text-right outline-none ring-0 m-0"
-                     onClick={(e) => { (e.target as HTMLInputElement).select() }}
-                   />
-                   <span className="text-neutral-400 font-normal pr-0.5">%</span>
-                 </div>
+                 <input 
+                   type="number" 
+                   min="0" max="100" 
+                   value={Math.round((selEl.opacity !== undefined ? selEl.opacity : 1) * 100)} 
+                   onChange={(e) => updateElement(spread.id, selEl.id, { opacity: Number(e.target.value) / 100 })}
+                   className="w-[60px] bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-neutral-300 dark:border-neutral-700 rounded-md px-1.5 py-1 text-center outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm transition-all"
+                   onClick={(e) => { (e.target as HTMLInputElement).select() }}
+                 />
+                 <span className="text-neutral-500 font-normal">%</span>
               </div>
            </div>
          );
@@ -190,22 +188,10 @@ export default function LayersPanel() {
                       >
                          {(() => {
                             const type = el.type as string;
-                            if (type === 'group') return el.isCollapsed ? <Folder className="w-5 h-5 text-neutral-500" /> : <FolderOpen className="w-5 h-5 text-blue-500" />;
-                            
-                            const src = el.previewUrl || el.src;
-                            if ((type === 'photo' || type === 'background' || type === 'overlay') && src) {
-                               // eslint-disable-next-line @next/next/no-img-element
-                               return <img src={src} className="w-6 h-6 object-cover rounded-[2px] border border-neutral-300 dark:border-neutral-600 bg-neutral-200 shadow-sm pointer-events-none" alt="" />;
-                            }
+                            if (type === 'group') return el.isCollapsed ? <Folder className="w-4 h-4 text-neutral-500" /> : <FolderOpen className="w-4 h-4 text-blue-500" />;
                             
                             if (type === 'text') {
-                               return <div className="w-6 h-6 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-[2px] flex items-center justify-center font-serif text-[12px] font-bold text-neutral-800 dark:text-neutral-200 shadow-sm pointer-events-none leading-none">T</div>;
-                            }
-                            
-                            if (type === 'shape') {
-                               return <div className="w-6 h-6 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-[2px] flex items-center justify-center shadow-sm pointer-events-none">
-                                  <div className="w-3 h-3 bg-neutral-400" style={{ borderRadius: el.shapeType === 'ellipse' ? '50%' : '0' }}></div>
-                               </div>;
+                               return <div className="w-[22px] h-[22px] bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center font-serif text-[12px] font-bold text-neutral-400 pointer-events-none leading-none shadow-sm rounded-sm">T</div>;
                             }
                             
                             return getIcon(type, el.isCollapsed);
