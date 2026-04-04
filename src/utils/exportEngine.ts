@@ -173,6 +173,7 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
             opacity: el.opacity !== undefined ? el.opacity : 1,
             scaleX: el.scale || 1,
             scaleY: el.scale || 1,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             globalCompositeOperation: (el.blendMode as any) || 'source-over',
             shadowColor: finalShadowColor,
             shadowBlur: appliedShadowBlur * mmToPx,
