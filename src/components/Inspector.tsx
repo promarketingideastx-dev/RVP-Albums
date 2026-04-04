@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useEditorStore } from '@/store/useEditorStore';
 import { LUT_LIBRARY } from '@/lib/lut-presets';
 import TypographyPresetSelector from './editor/TypographyPresetSelector';
-import { AlignLeft, AlignCenter, AlignRight, Baseline, LetterText, Type, PaintBucket, TypeOutline, Baseline as ShadowIcon, TextSelect, Layers, SlidersHorizontal } from 'lucide-react';
+import { AlignLeft, AlignCenter, AlignRight, Baseline, LetterText, Type, PaintBucket, TypeOutline, Baseline as ShadowIcon, TextSelect, Layers, SlidersHorizontal, Globe } from 'lucide-react';
 import LayersPanel from './editor/LayersPanel';
 import GlobalStylesPanel from './editor/GlobalStylesPanel';
 
@@ -30,7 +30,7 @@ export default function Inspector() {
   const [localH, setLocalH] = useState('');
   const [localRot, setLocalRot] = useState('');
   const [localFill, setLocalFill] = useState('#000000');
-  const [activeTab, setActiveTab] = useState<'properties' | 'layers'>('properties');
+  const [activeTab, setActiveTab] = useState<'properties' | 'layers' | 'global'>('properties');
 
   const x_mm = element?.x_mm;
   const y_mm = element?.y_mm;
@@ -51,6 +51,16 @@ export default function Inspector() {
     }
   }, [x_mm, y_mm, w_mm, h_mm, rotation_deg, fillColor, selectedElementId]);
 
+  // Handle intelligent auto-switching of tabs when selecting elements
+  useEffect(() => {
+    if (!selectedElementId && activeTab === 'properties') {
+      setActiveTab('global');
+    } else if (selectedElementId && activeTab === 'global') {
+      setActiveTab('properties');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedElementId]);
+
   if (!activeSpreadId) {
     return (
       <aside className="w-64 shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 p-4 flex flex-col h-full items-center justify-center text-sm text-neutral-400">
@@ -59,17 +69,33 @@ export default function Inspector() {
     );
   }
 
+  const TabsHeader = () => (
+    <div className="flex border-b border-neutral-200 dark:border-neutral-800 shrink-0">
+      <button onClick={() => setActiveTab('properties')} className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === 'properties' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'}`}>
+        <SlidersHorizontal className="w-4 h-4" /> Prop.
+      </button>
+      <button onClick={() => setActiveTab('global')} className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === 'global' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'}`}>
+        <Globe className="w-4 h-4" /> Global
+      </button>
+      <button onClick={() => setActiveTab('layers')} className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === 'layers' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'}`}>
+        <Layers className="w-4 h-4" /> Capas
+      </button>
+    </div>
+  );
+
+  if (activeTab === 'global') {
+    return (
+      <aside className="w-64 shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full overflow-hidden">
+        <TabsHeader />
+        <GlobalStylesPanel />
+      </aside>
+    );
+  }
+
   if (activeTab === 'layers') {
     return (
       <aside className="w-64 shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full overflow-hidden">
-        <div className="flex border-b border-neutral-200 dark:border-neutral-800 shrink-0">
-          <button onClick={() => setActiveTab('properties')} className="flex-1 py-3 text-[11px] font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300">
-            <SlidersHorizontal className="w-3.5 h-3.5" /> Propiedades
-          </button>
-          <button onClick={() => setActiveTab('layers')} className="flex-1 py-3 text-[11px] font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors text-blue-500 border-b-2 border-blue-500">
-            <Layers className="w-3.5 h-3.5" /> Capas
-          </button>
-        </div>
+        <TabsHeader />
         <LayersPanel />
       </aside>
     );
@@ -78,15 +104,10 @@ export default function Inspector() {
   if (!element) {
     return (
       <aside className="w-64 shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full overflow-hidden">
-        <div className="flex border-b border-neutral-200 dark:border-neutral-800 shrink-0">
-          <button onClick={() => setActiveTab('properties')} className="flex-1 py-3 text-[11px] font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors text-blue-500 border-b-2 border-blue-500">
-            <SlidersHorizontal className="w-3.5 h-3.5" /> Propiedades
-          </button>
-          <button onClick={() => setActiveTab('layers')} className="flex-1 py-3 text-[11px] font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300">
-            <Layers className="w-3.5 h-3.5" /> Capas
-          </button>
+        <TabsHeader />
+        <div className="flex-1 p-4 flex flex-col items-center justify-center text-sm text-neutral-400 text-center gap-2">
+          {t('no_selection')}
         </div>
-        <GlobalStylesPanel />
       </aside>
     );
   }
@@ -152,14 +173,7 @@ export default function Inspector() {
 
   return (
     <aside className="w-64 shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full overflow-hidden">
-      <div className="flex border-b border-neutral-200 dark:border-neutral-800 shrink-0">
-        <button onClick={() => setActiveTab('properties')} className="flex-1 py-3 text-[11px] font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors text-blue-500 border-b-2 border-blue-500">
-          <SlidersHorizontal className="w-3.5 h-3.5" /> Propiedades
-        </button>
-        <button onClick={() => setActiveTab('layers')} className="flex-1 py-3 text-[11px] font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300">
-          <Layers className="w-3.5 h-3.5" /> Capas
-        </button>
-      </div>
+      <TabsHeader />
       
       <div className="flex-1 p-4 overflow-y-auto">
         <h2 className="text-sm font-semibold tracking-wider text-neutral-800 dark:text-neutral-200 mb-6 uppercase">{t('properties')}</h2>
