@@ -124,7 +124,7 @@ export default function AssetLibrary() {
                 const bgClass = isDarkCat ? 'bg-[#1e1e1e] border-neutral-800' : 'bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800';
                 
                 return (
-                  <div key={asset.id} className="relative w-full pt-[100%] rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden cursor-grab active:cursor-grabbing transition-transform duration-200 hover:scale-[1.03] shadow-sm hover:shadow-md hover:border-blue-400 group block">
+                  <div key={asset.id} className="relative w-full pt-[100%] rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden cursor-grab active:cursor-grabbing transition-transform duration-200 hover:scale-[1.03] shadow-sm hover:shadow-md hover:border-blue-400 group block" draggable onDragStart={(e) => handleDragStartDefault(e, asset, activeCategory)} title={asset.name}>
                     <div className={`absolute inset-0 ${bgClass} flex items-center justify-center`}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={asset.src} alt={asset.name} className="w-full h-full object-cover pointer-events-none" />
