@@ -11,8 +11,6 @@ export default function AssetTray() {
   const addAsset = useEditorStore((state) => state.addAsset);
   const removeAsset = useEditorStore((state) => state.removeAsset);
   const updateAsset = useEditorStore((state) => state.updateAsset);
-  const activeSpreadId = useEditorStore((state) => state.activeSpreadId);
-  const addElement = useEditorStore((state) => state.addElement);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedAssetIds, setSelectedAssetIds] = useState<Set<string>>(new Set());
@@ -88,38 +86,6 @@ export default function AssetTray() {
       originalBlobId: asset.originalBlobId
     }));
     e.dataTransfer.effectAllowed = 'copy';
-  };
-
-  const injectToCanvas = (asset: ProjectAsset) => {
-    if (!activeSpreadId) return;
-
-    const img = new window.Image();
-    img.onload = () => {
-      const aspect = img.width / img.height;
-      let w = 80;
-      let h = 80 / aspect;
-      
-      if (h > 120) {
-         h = 120;
-         w = 120 * aspect;
-      }
-
-      addElement(activeSpreadId, {
-        id: uuidv4(),
-        type: 'image',
-        previewUrl: asset.previewUrl,
-        originalUrl: asset.originalUrl,
-        previewBlobId: asset.previewBlobId,
-        originalBlobId: asset.originalBlobId,
-        x_mm: 20,
-        y_mm: 20,
-        w_mm: w,
-        h_mm: h,
-        rotation_deg: 0,
-        zIndex: 0
-      });
-    };
-    img.src = asset.previewUrl || '';
   };
 
   const toggleSelection = (e: React.MouseEvent, id: string) => {
@@ -267,7 +233,7 @@ export default function AssetTray() {
                  className="flex-1 w-full relative overflow-hidden"
                  draggable
                  onDragStart={(e) => handleDragStart(e, asset)}
-                 onClick={() => injectToCanvas(asset)}
+                 onClick={(e) => toggleSelection(e, asset.id)}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
