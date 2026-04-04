@@ -451,20 +451,31 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
           if (payload) {
             // Text payloads bypass image loading entirely!
             if (payload.type === 'text') {
+              const role = payload.sourceId === 'txt-heading' ? 'h1' : payload.sourceId === 'txt-subheading' ? 'h2' : 'body';
+              
               useEditorStore.getState().addElement(activeSpreadId, {
                 id: `el_${Date.now()}`,
                 type: 'text',
-                text: 'Escribe tu texto...',
+                textRole: role,
+                text: role === 'h1' ? 'Añadir un título' : role === 'h2' ? 'Añadir un subtítulo' : 'Añade un poco de texto aquí...',
                 fontFamily: 'Inter',
-                fontSize: 32,
+                fontSize: role === 'h1' ? 72 : role === 'h2' ? 48 : 24,
                 textColor: '#000000',
                 x_mm: 30, // Default coordinate 
                 y_mm: 30,
-                w_mm: 150,
-                h_mm: 50,
+                w_mm: role === 'h1' ? 250 : role === 'h2' ? 200 : 150,
+                h_mm: role === 'h1' ? 80 : role === 'h2' ? 60 : 40,
                 rotation_deg: 0,
                 zIndex: 0
               });
+
+              // Auto-apply current preset if active
+              const presetId = useEditorStore.getState().project?.typographyPresetId;
+              if (presetId) {
+                setTimeout(() => {
+                  useEditorStore.getState().applyTypographyPreset(presetId);
+                }, 50);
+              }
               return;
             }
 

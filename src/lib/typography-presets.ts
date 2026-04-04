@@ -227,4 +227,3244 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     alignment: 'left',
     colorPalette: { primary: '#000000', secondary: '#333333', accent: '#CCCCCC' }
   }
-];
+,\n{
+  "id": "preset-011",
+  "category": "modern",
+  "fonts": {
+    "h1": "Lato",
+    "h2": "Poppins",
+    "body": "Oswald",
+    "small": "Oswald"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 1,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 3,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1a1a1a",
+    "secondary": "#4a4a4a",
+    "accent": "#d4af37"
+  }
+},\n{
+  "id": "preset-012",
+  "category": "minimal",
+  "fonts": {
+    "h1": "Poppins",
+    "h2": "Raleway",
+    "body": "Poppins",
+    "small": "Poppins"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 4,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 9,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#222f3e",
+    "secondary": "#576574",
+    "accent": "#ee5253"
+  }
+},\n{
+  "id": "preset-013",
+  "category": "editorial",
+  "fonts": {
+    "h1": "Cormorant Garamond",
+    "h2": "Cormorant Garamond",
+    "body": "Raleway",
+    "small": "Raleway"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 1,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 1,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#4b4b4b",
+    "secondary": "#7d7d7d",
+    "accent": "#c0392b"
+  }
+},\n{
+  "id": "preset-014",
+  "category": "classic",
+  "fonts": {
+    "h1": "Merriweather",
+    "h2": "PT Serif",
+    "body": "Lato",
+    "small": "Lato"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 3,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 3,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2d3436",
+    "secondary": "#636e72",
+    "accent": "#00b894"
+  }
+},\n{
+  "id": "preset-015",
+  "category": "editorial",
+  "fonts": {
+    "h1": "Lora",
+    "h2": "Bodoni Moda",
+    "body": "Oswald",
+    "small": "Oswald"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 2,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 2,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#000000",
+    "secondary": "#666666",
+    "accent": "#ff9f43"
+  }
+},\n{
+  "id": "preset-016",
+  "category": "editorial",
+  "fonts": {
+    "h1": "Merriweather",
+    "h2": "Bodoni Moda",
+    "body": "Montserrat",
+    "small": "Montserrat"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 1,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 7,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1a1a1a",
+    "secondary": "#4a4a4a",
+    "accent": "#d4af37"
+  }
+},\n{
+  "id": "preset-017",
+  "category": "classic",
+  "fonts": {
+    "h1": "Cormorant Garamond",
+    "h2": "Cinzel",
+    "body": "Outfit",
+    "small": "Outfit"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 3,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 8,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2c3e50",
+    "secondary": "#34495e",
+    "accent": "#e74c3c"
+  }
+},\n{
+  "id": "preset-018",
+  "category": "wedding",
+  "fonts": {
+    "h1": "Great Vibes",
+    "h2": "Roboto",
+    "body": "Cormorant Garamond",
+    "small": "Cormorant Garamond"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 2,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 0,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2c3e50",
+    "secondary": "#34495e",
+    "accent": "#e74c3c"
+  }
+},\n{
+  "id": "preset-019",
+  "category": "minimal",
+  "fonts": {
+    "h1": "Montserrat",
+    "h2": "Outfit",
+    "body": "Lato",
+    "small": "Lato"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 0,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 5,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#111111",
+    "secondary": "#555555",
+    "accent": "#8e44ad"
+  }
+},\n{
+  "id": "preset-020",
+  "category": "minimal",
+  "fonts": {
+    "h1": "Lato",
+    "h2": "Raleway",
+    "body": "Oswald",
+    "small": "Oswald"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 1,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 9,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2c3e50",
+    "secondary": "#34495e",
+    "accent": "#e74c3c"
+  }
+},\n{
+  "id": "preset-021",
+  "category": "modern",
+  "fonts": {
+    "h1": "Lato",
+    "h2": "Lato",
+    "body": "Outfit",
+    "small": "Outfit"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 2,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 5,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2c3e50",
+    "secondary": "#34495e",
+    "accent": "#e74c3c"
+  }
+},\n{
+  "id": "preset-022",
+  "category": "editorial",
+  "fonts": {
+    "h1": "Cinzel",
+    "h2": "Cinzel",
+    "body": "Poppins",
+    "small": "Poppins"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 1,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 3,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#4b4b4b",
+    "secondary": "#7d7d7d",
+    "accent": "#c0392b"
+  }
+},\n{
+  "id": "preset-023",
+  "category": "classic",
+  "fonts": {
+    "h1": "Cormorant Garamond",
+    "h2": "Merriweather",
+    "body": "Poppins",
+    "small": "Poppins"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 0,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 0,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1e272e",
+    "secondary": "#485460",
+    "accent": "#ffdd59"
+  }
+},\n{
+  "id": "preset-024",
+  "category": "editorial",
+  "fonts": {
+    "h1": "Playfair Display",
+    "h2": "PT Serif",
+    "body": "Montserrat",
+    "small": "Montserrat"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 1,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 0,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#111111",
+    "secondary": "#555555",
+    "accent": "#8e44ad"
+  }
+},\n{
+  "id": "preset-025",
+  "category": "classic",
+  "fonts": {
+    "h1": "Playfair Display",
+    "h2": "Playfair Display",
+    "body": "Lato",
+    "small": "Lato"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 2,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 1,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#4b4b4b",
+    "secondary": "#7d7d7d",
+    "accent": "#c0392b"
+  }
+},\n{
+  "id": "preset-026",
+  "category": "modern",
+  "fonts": {
+    "h1": "Raleway",
+    "h2": "Roboto",
+    "body": "Lato",
+    "small": "Lato"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 1,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 5,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1e272e",
+    "secondary": "#485460",
+    "accent": "#ffdd59"
+  }
+},\n{
+  "id": "preset-027",
+  "category": "quinceanera",
+  "fonts": {
+    "h1": "Pinyon Script",
+    "h2": "Raleway",
+    "body": "Bodoni Moda",
+    "small": "Bodoni Moda"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 1,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 1,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#222f3e",
+    "secondary": "#576574",
+    "accent": "#ee5253"
+  }
+},\n{
+  "id": "preset-028",
+  "category": "wedding",
+  "fonts": {
+    "h1": "Allura",
+    "h2": "Inter",
+    "body": "Lora",
+    "small": "Lora"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 4,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 1,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#222f3e",
+    "secondary": "#576574",
+    "accent": "#ee5253"
+  }
+},\n{
+  "id": "preset-029",
+  "category": "editorial",
+  "fonts": {
+    "h1": "Playfair Display",
+    "h2": "Cinzel",
+    "body": "Roboto",
+    "small": "Roboto"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 2,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 9,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#222f3e",
+    "secondary": "#576574",
+    "accent": "#ee5253"
+  }
+},\n{
+  "id": "preset-030",
+  "category": "editorial",
+  "fonts": {
+    "h1": "Playfair Display",
+    "h2": "Lora",
+    "body": "Roboto",
+    "small": "Roboto"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 4,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 2,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#111111",
+    "secondary": "#555555",
+    "accent": "#8e44ad"
+  }
+},\n{
+  "id": "preset-031",
+  "category": "editorial",
+  "fonts": {
+    "h1": "Cinzel",
+    "h2": "Playfair Display",
+    "body": "Outfit",
+    "small": "Outfit"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 2,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 5,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2c3e50",
+    "secondary": "#34495e",
+    "accent": "#e74c3c"
+  }
+},\n{
+  "id": "preset-032",
+  "category": "minimal",
+  "fonts": {
+    "h1": "Poppins",
+    "h2": "Montserrat",
+    "body": "Outfit",
+    "small": "Outfit"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 3,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 1,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#111111",
+    "secondary": "#555555",
+    "accent": "#8e44ad"
+  }
+},\n{
+  "id": "preset-033",
+  "category": "quinceanera",
+  "fonts": {
+    "h1": "Allura",
+    "h2": "Inter",
+    "body": "Bodoni Moda",
+    "small": "Bodoni Moda"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 4,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 7,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1a1a1a",
+    "secondary": "#4a4a4a",
+    "accent": "#d4af37"
+  }
+},\n{
+  "id": "preset-034",
+  "category": "wedding",
+  "fonts": {
+    "h1": "Dancing Script",
+    "h2": "Inter",
+    "body": "Cormorant Garamond",
+    "small": "Cormorant Garamond"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 1,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 9,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2c3e50",
+    "secondary": "#34495e",
+    "accent": "#e74c3c"
+  }
+},\n{
+  "id": "preset-035",
+  "category": "classic",
+  "fonts": {
+    "h1": "Cormorant Garamond",
+    "h2": "Cinzel",
+    "body": "Inter",
+    "small": "Inter"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 4,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 2,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1a1a1a",
+    "secondary": "#4a4a4a",
+    "accent": "#d4af37"
+  }
+},\n{
+  "id": "preset-036",
+  "category": "wedding",
+  "fonts": {
+    "h1": "Alex Brush",
+    "h2": "Poppins",
+    "body": "PT Serif",
+    "small": "PT Serif"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 2,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 9,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#4b4b4b",
+    "secondary": "#7d7d7d",
+    "accent": "#c0392b"
+  }
+},\n{
+  "id": "preset-037",
+  "category": "wedding",
+  "fonts": {
+    "h1": "Allura",
+    "h2": "Lato",
+    "body": "Playfair Display",
+    "small": "Playfair Display"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 2,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 2,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1a1a1a",
+    "secondary": "#4a4a4a",
+    "accent": "#d4af37"
+  }
+},\n{
+  "id": "preset-038",
+  "category": "editorial",
+  "fonts": {
+    "h1": "Bodoni Moda",
+    "h2": "Playfair Display",
+    "body": "Oswald",
+    "small": "Oswald"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 3,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 8,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1e272e",
+    "secondary": "#485460",
+    "accent": "#ffdd59"
+  }
+},\n{
+  "id": "preset-039",
+  "category": "minimal",
+  "fonts": {
+    "h1": "Inter",
+    "h2": "Raleway",
+    "body": "Raleway",
+    "small": "Raleway"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 0,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 6,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#4b4b4b",
+    "secondary": "#7d7d7d",
+    "accent": "#c0392b"
+  }
+},\n{
+  "id": "preset-040",
+  "category": "quinceanera",
+  "fonts": {
+    "h1": "Allura",
+    "h2": "Outfit",
+    "body": "PT Serif",
+    "small": "PT Serif"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 4,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 1,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1e272e",
+    "secondary": "#485460",
+    "accent": "#ffdd59"
+  }
+},\n{
+  "id": "preset-041",
+  "category": "modern",
+  "fonts": {
+    "h1": "Outfit",
+    "h2": "Oswald",
+    "body": "Inter",
+    "small": "Inter"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 4,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 7,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2c3e50",
+    "secondary": "#34495e",
+    "accent": "#e74c3c"
+  }
+},\n{
+  "id": "preset-042",
+  "category": "classic",
+  "fonts": {
+    "h1": "Cormorant Garamond",
+    "h2": "Cormorant Garamond",
+    "body": "Inter",
+    "small": "Inter"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 0,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 1,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1e272e",
+    "secondary": "#485460",
+    "accent": "#ffdd59"
+  }
+},\n{
+  "id": "preset-043",
+  "category": "quinceanera",
+  "fonts": {
+    "h1": "Pinyon Script",
+    "h2": "Poppins",
+    "body": "Cormorant Garamond",
+    "small": "Cormorant Garamond"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 1,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 4,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#000000",
+    "secondary": "#666666",
+    "accent": "#ff9f43"
+  }
+},\n{
+  "id": "preset-044",
+  "category": "quinceanera",
+  "fonts": {
+    "h1": "Great Vibes",
+    "h2": "Roboto",
+    "body": "Cormorant Garamond",
+    "small": "Cormorant Garamond"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 3,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 7,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#4b4b4b",
+    "secondary": "#7d7d7d",
+    "accent": "#c0392b"
+  }
+},\n{
+  "id": "preset-045",
+  "category": "wedding",
+  "fonts": {
+    "h1": "Allura",
+    "h2": "Poppins",
+    "body": "Playfair Display",
+    "small": "Playfair Display"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 4,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 1,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#111111",
+    "secondary": "#555555",
+    "accent": "#8e44ad"
+  }
+},\n{
+  "id": "preset-046",
+  "category": "minimal",
+  "fonts": {
+    "h1": "Poppins",
+    "h2": "Raleway",
+    "body": "Montserrat",
+    "small": "Montserrat"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 3,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 6,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#222f3e",
+    "secondary": "#576574",
+    "accent": "#ee5253"
+  }
+},\n{
+  "id": "preset-047",
+  "category": "minimal",
+  "fonts": {
+    "h1": "Outfit",
+    "h2": "Inter",
+    "body": "Outfit",
+    "small": "Outfit"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 4,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 2,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2c3e50",
+    "secondary": "#34495e",
+    "accent": "#e74c3c"
+  }
+},\n{
+  "id": "preset-048",
+  "category": "quinceanera",
+  "fonts": {
+    "h1": "Allura",
+    "h2": "Roboto",
+    "body": "Lora",
+    "small": "Lora"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 2,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 5,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#222f3e",
+    "secondary": "#576574",
+    "accent": "#ee5253"
+  }
+},\n{
+  "id": "preset-049",
+  "category": "minimal",
+  "fonts": {
+    "h1": "Poppins",
+    "h2": "Outfit",
+    "body": "Oswald",
+    "small": "Oswald"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 0,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 0,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#4b4b4b",
+    "secondary": "#7d7d7d",
+    "accent": "#c0392b"
+  }
+},\n{
+  "id": "preset-050",
+  "category": "wedding",
+  "fonts": {
+    "h1": "Tangerine",
+    "h2": "Inter",
+    "body": "Merriweather",
+    "small": "Merriweather"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 3,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 8,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#111111",
+    "secondary": "#555555",
+    "accent": "#8e44ad"
+  }
+},\n{
+  "id": "preset-051",
+  "category": "quinceanera",
+  "fonts": {
+    "h1": "Great Vibes",
+    "h2": "Outfit",
+    "body": "Playfair Display",
+    "small": "Playfair Display"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 0,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 4,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#4b4b4b",
+    "secondary": "#7d7d7d",
+    "accent": "#c0392b"
+  }
+},\n{
+  "id": "preset-052",
+  "category": "editorial",
+  "fonts": {
+    "h1": "Cinzel",
+    "h2": "PT Serif",
+    "body": "Raleway",
+    "small": "Raleway"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 1,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 0,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#222f3e",
+    "secondary": "#576574",
+    "accent": "#ee5253"
+  }
+},\n{
+  "id": "preset-053",
+  "category": "editorial",
+  "fonts": {
+    "h1": "Cormorant Garamond",
+    "h2": "Merriweather",
+    "body": "Roboto",
+    "small": "Roboto"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 3,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 4,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#111111",
+    "secondary": "#555555",
+    "accent": "#8e44ad"
+  }
+},\n{
+  "id": "preset-054",
+  "category": "minimal",
+  "fonts": {
+    "h1": "Inter",
+    "h2": "Outfit",
+    "body": "Oswald",
+    "small": "Oswald"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 2,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 0,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2d3436",
+    "secondary": "#636e72",
+    "accent": "#00b894"
+  }
+},\n{
+  "id": "preset-055",
+  "category": "editorial",
+  "fonts": {
+    "h1": "PT Serif",
+    "h2": "Cormorant Garamond",
+    "body": "Outfit",
+    "small": "Outfit"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 1,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 4,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#000000",
+    "secondary": "#666666",
+    "accent": "#ff9f43"
+  }
+},\n{
+  "id": "preset-056",
+  "category": "wedding",
+  "fonts": {
+    "h1": "Tangerine",
+    "h2": "Roboto",
+    "body": "PT Serif",
+    "small": "PT Serif"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 1,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 2,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#111111",
+    "secondary": "#555555",
+    "accent": "#8e44ad"
+  }
+},\n{
+  "id": "preset-057",
+  "category": "classic",
+  "fonts": {
+    "h1": "Cormorant Garamond",
+    "h2": "Lora",
+    "body": "Lato",
+    "small": "Lato"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 1,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 3,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2c3e50",
+    "secondary": "#34495e",
+    "accent": "#e74c3c"
+  }
+},\n{
+  "id": "preset-058",
+  "category": "quinceanera",
+  "fonts": {
+    "h1": "Pinyon Script",
+    "h2": "Roboto",
+    "body": "Cinzel",
+    "small": "Cinzel"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 2,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 6,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1e272e",
+    "secondary": "#485460",
+    "accent": "#ffdd59"
+  }
+},\n{
+  "id": "preset-059",
+  "category": "minimal",
+  "fonts": {
+    "h1": "Outfit",
+    "h2": "Roboto",
+    "body": "Oswald",
+    "small": "Oswald"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 0,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 7,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2d3436",
+    "secondary": "#636e72",
+    "accent": "#00b894"
+  }
+},\n{
+  "id": "preset-060",
+  "category": "quinceanera",
+  "fonts": {
+    "h1": "Great Vibes",
+    "h2": "Inter",
+    "body": "Cormorant Garamond",
+    "small": "Cormorant Garamond"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 4,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 2,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1e272e",
+    "secondary": "#485460",
+    "accent": "#ffdd59"
+  }
+},\n{
+  "id": "preset-061",
+  "category": "editorial",
+  "fonts": {
+    "h1": "Cormorant Garamond",
+    "h2": "Cormorant Garamond",
+    "body": "Oswald",
+    "small": "Oswald"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 3,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 3,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1a1a1a",
+    "secondary": "#4a4a4a",
+    "accent": "#d4af37"
+  }
+},\n{
+  "id": "preset-062",
+  "category": "minimal",
+  "fonts": {
+    "h1": "Raleway",
+    "h2": "Montserrat",
+    "body": "Montserrat",
+    "small": "Montserrat"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 0,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 1,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1a1a1a",
+    "secondary": "#4a4a4a",
+    "accent": "#d4af37"
+  }
+},\n{
+  "id": "preset-063",
+  "category": "editorial",
+  "fonts": {
+    "h1": "Merriweather",
+    "h2": "PT Serif",
+    "body": "Montserrat",
+    "small": "Montserrat"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 1,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 2,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2d3436",
+    "secondary": "#636e72",
+    "accent": "#00b894"
+  }
+},\n{
+  "id": "preset-064",
+  "category": "wedding",
+  "fonts": {
+    "h1": "Dancing Script",
+    "h2": "Roboto",
+    "body": "Cormorant Garamond",
+    "small": "Cormorant Garamond"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 1,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 4,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#111111",
+    "secondary": "#555555",
+    "accent": "#8e44ad"
+  }
+},\n{
+  "id": "preset-065",
+  "category": "wedding",
+  "fonts": {
+    "h1": "Tangerine",
+    "h2": "Lato",
+    "body": "Lora",
+    "small": "Lora"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 3,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 1,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#4b4b4b",
+    "secondary": "#7d7d7d",
+    "accent": "#c0392b"
+  }
+},\n{
+  "id": "preset-066",
+  "category": "quinceanera",
+  "fonts": {
+    "h1": "Allura",
+    "h2": "Montserrat",
+    "body": "Playfair Display",
+    "small": "Playfair Display"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 4,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 5,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2c3e50",
+    "secondary": "#34495e",
+    "accent": "#e74c3c"
+  }
+},\n{
+  "id": "preset-067",
+  "category": "modern",
+  "fonts": {
+    "h1": "Outfit",
+    "h2": "Lato",
+    "body": "Roboto",
+    "small": "Roboto"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 4,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 7,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1e272e",
+    "secondary": "#485460",
+    "accent": "#ffdd59"
+  }
+},\n{
+  "id": "preset-068",
+  "category": "minimal",
+  "fonts": {
+    "h1": "Raleway",
+    "h2": "Poppins",
+    "body": "Poppins",
+    "small": "Poppins"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 1,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 5,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1e272e",
+    "secondary": "#485460",
+    "accent": "#ffdd59"
+  }
+},\n{
+  "id": "preset-069",
+  "category": "wedding",
+  "fonts": {
+    "h1": "Dancing Script",
+    "h2": "Poppins",
+    "body": "Lora",
+    "small": "Lora"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 2,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 1,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1e272e",
+    "secondary": "#485460",
+    "accent": "#ffdd59"
+  }
+},\n{
+  "id": "preset-070",
+  "category": "modern",
+  "fonts": {
+    "h1": "Oswald",
+    "h2": "Poppins",
+    "body": "Inter",
+    "small": "Inter"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 4,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 2,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1e272e",
+    "secondary": "#485460",
+    "accent": "#ffdd59"
+  }
+},\n{
+  "id": "preset-071",
+  "category": "wedding",
+  "fonts": {
+    "h1": "Alex Brush",
+    "h2": "Outfit",
+    "body": "Merriweather",
+    "small": "Merriweather"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 4,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 9,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2d3436",
+    "secondary": "#636e72",
+    "accent": "#00b894"
+  }
+},\n{
+  "id": "preset-072",
+  "category": "wedding",
+  "fonts": {
+    "h1": "Pinyon Script",
+    "h2": "Outfit",
+    "body": "Bodoni Moda",
+    "small": "Bodoni Moda"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 1,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 2,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#222f3e",
+    "secondary": "#576574",
+    "accent": "#ee5253"
+  }
+},\n{
+  "id": "preset-073",
+  "category": "modern",
+  "fonts": {
+    "h1": "Oswald",
+    "h2": "Outfit",
+    "body": "Outfit",
+    "small": "Outfit"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 2,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 6,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2d3436",
+    "secondary": "#636e72",
+    "accent": "#00b894"
+  }
+},\n{
+  "id": "preset-074",
+  "category": "modern",
+  "fonts": {
+    "h1": "Montserrat",
+    "h2": "Poppins",
+    "body": "Raleway",
+    "small": "Raleway"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 2,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 8,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#222f3e",
+    "secondary": "#576574",
+    "accent": "#ee5253"
+  }
+},\n{
+  "id": "preset-075",
+  "category": "quinceanera",
+  "fonts": {
+    "h1": "Tangerine",
+    "h2": "Lato",
+    "body": "Bodoni Moda",
+    "small": "Bodoni Moda"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 2,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 0,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2d3436",
+    "secondary": "#636e72",
+    "accent": "#00b894"
+  }
+},\n{
+  "id": "preset-076",
+  "category": "wedding",
+  "fonts": {
+    "h1": "Allura",
+    "h2": "Inter",
+    "body": "Cormorant Garamond",
+    "small": "Cormorant Garamond"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 4,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 2,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1e272e",
+    "secondary": "#485460",
+    "accent": "#ffdd59"
+  }
+},\n{
+  "id": "preset-077",
+  "category": "wedding",
+  "fonts": {
+    "h1": "Alex Brush",
+    "h2": "Lato",
+    "body": "Cormorant Garamond",
+    "small": "Cormorant Garamond"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 3,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 6,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#000000",
+    "secondary": "#666666",
+    "accent": "#ff9f43"
+  }
+},\n{
+  "id": "preset-078",
+  "category": "classic",
+  "fonts": {
+    "h1": "Lora",
+    "h2": "Bodoni Moda",
+    "body": "Raleway",
+    "small": "Raleway"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 2,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 1,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2c3e50",
+    "secondary": "#34495e",
+    "accent": "#e74c3c"
+  }
+},\n{
+  "id": "preset-079",
+  "category": "wedding",
+  "fonts": {
+    "h1": "Allura",
+    "h2": "Lato",
+    "body": "Bodoni Moda",
+    "small": "Bodoni Moda"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 3,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 7,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#222f3e",
+    "secondary": "#576574",
+    "accent": "#ee5253"
+  }
+},\n{
+  "id": "preset-080",
+  "category": "quinceanera",
+  "fonts": {
+    "h1": "Great Vibes",
+    "h2": "Roboto",
+    "body": "PT Serif",
+    "small": "PT Serif"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 4,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 9,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#000000",
+    "secondary": "#666666",
+    "accent": "#ff9f43"
+  }
+},\n{
+  "id": "preset-081",
+  "category": "quinceanera",
+  "fonts": {
+    "h1": "Great Vibes",
+    "h2": "Raleway",
+    "body": "Playfair Display",
+    "small": "Playfair Display"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 3,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 8,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#4b4b4b",
+    "secondary": "#7d7d7d",
+    "accent": "#c0392b"
+  }
+},\n{
+  "id": "preset-082",
+  "category": "wedding",
+  "fonts": {
+    "h1": "Dancing Script",
+    "h2": "Oswald",
+    "body": "Playfair Display",
+    "small": "Playfair Display"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 1,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 6,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#222f3e",
+    "secondary": "#576574",
+    "accent": "#ee5253"
+  }
+},\n{
+  "id": "preset-083",
+  "category": "classic",
+  "fonts": {
+    "h1": "Bodoni Moda",
+    "h2": "Playfair Display",
+    "body": "Montserrat",
+    "small": "Montserrat"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 3,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 0,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2d3436",
+    "secondary": "#636e72",
+    "accent": "#00b894"
+  }
+},\n{
+  "id": "preset-084",
+  "category": "classic",
+  "fonts": {
+    "h1": "Cinzel",
+    "h2": "Cormorant Garamond",
+    "body": "Inter",
+    "small": "Inter"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 3,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 7,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#222f3e",
+    "secondary": "#576574",
+    "accent": "#ee5253"
+  }
+},\n{
+  "id": "preset-085",
+  "category": "modern",
+  "fonts": {
+    "h1": "Roboto",
+    "h2": "Lato",
+    "body": "Raleway",
+    "small": "Raleway"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 4,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 3,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#000000",
+    "secondary": "#666666",
+    "accent": "#ff9f43"
+  }
+},\n{
+  "id": "preset-086",
+  "category": "minimal",
+  "fonts": {
+    "h1": "Poppins",
+    "h2": "Oswald",
+    "body": "Oswald",
+    "small": "Oswald"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 4,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 9,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1a1a1a",
+    "secondary": "#4a4a4a",
+    "accent": "#d4af37"
+  }
+},\n{
+  "id": "preset-087",
+  "category": "editorial",
+  "fonts": {
+    "h1": "Cinzel",
+    "h2": "Bodoni Moda",
+    "body": "Oswald",
+    "small": "Oswald"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 2,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 5,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1a1a1a",
+    "secondary": "#4a4a4a",
+    "accent": "#d4af37"
+  }
+},\n{
+  "id": "preset-088",
+  "category": "wedding",
+  "fonts": {
+    "h1": "Pinyon Script",
+    "h2": "Poppins",
+    "body": "Cinzel",
+    "small": "Cinzel"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 2,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 5,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#4b4b4b",
+    "secondary": "#7d7d7d",
+    "accent": "#c0392b"
+  }
+},\n{
+  "id": "preset-089",
+  "category": "classic",
+  "fonts": {
+    "h1": "Cormorant Garamond",
+    "h2": "Bodoni Moda",
+    "body": "Lato",
+    "small": "Lato"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 0,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 5,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#222f3e",
+    "secondary": "#576574",
+    "accent": "#ee5253"
+  }
+},\n{
+  "id": "preset-090",
+  "category": "quinceanera",
+  "fonts": {
+    "h1": "Allura",
+    "h2": "Outfit",
+    "body": "Cinzel",
+    "small": "Cinzel"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 4,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 2,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#000000",
+    "secondary": "#666666",
+    "accent": "#ff9f43"
+  }
+},\n{
+  "id": "preset-091",
+  "category": "editorial",
+  "fonts": {
+    "h1": "Merriweather",
+    "h2": "Cormorant Garamond",
+    "body": "Poppins",
+    "small": "Poppins"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 4,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 7,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#000000",
+    "secondary": "#666666",
+    "accent": "#ff9f43"
+  }
+},\n{
+  "id": "preset-092",
+  "category": "wedding",
+  "fonts": {
+    "h1": "Tangerine",
+    "h2": "Poppins",
+    "body": "Playfair Display",
+    "small": "Playfair Display"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 1,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 7,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2c3e50",
+    "secondary": "#34495e",
+    "accent": "#e74c3c"
+  }
+},\n{
+  "id": "preset-093",
+  "category": "editorial",
+  "fonts": {
+    "h1": "Bodoni Moda",
+    "h2": "Bodoni Moda",
+    "body": "Roboto",
+    "small": "Roboto"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 0,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 0,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1e272e",
+    "secondary": "#485460",
+    "accent": "#ffdd59"
+  }
+},\n{
+  "id": "preset-094",
+  "category": "quinceanera",
+  "fonts": {
+    "h1": "Pinyon Script",
+    "h2": "Poppins",
+    "body": "Merriweather",
+    "small": "Merriweather"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 0,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 1,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#000000",
+    "secondary": "#666666",
+    "accent": "#ff9f43"
+  }
+},\n{
+  "id": "preset-095",
+  "category": "minimal",
+  "fonts": {
+    "h1": "Oswald",
+    "h2": "Lato",
+    "body": "Lato",
+    "small": "Lato"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 2,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 1,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2d3436",
+    "secondary": "#636e72",
+    "accent": "#00b894"
+  }
+},\n{
+  "id": "preset-096",
+  "category": "editorial",
+  "fonts": {
+    "h1": "Cormorant Garamond",
+    "h2": "Merriweather",
+    "body": "Montserrat",
+    "small": "Montserrat"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 2,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 9,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2d3436",
+    "secondary": "#636e72",
+    "accent": "#00b894"
+  }
+},\n{
+  "id": "preset-097",
+  "category": "editorial",
+  "fonts": {
+    "h1": "Merriweather",
+    "h2": "PT Serif",
+    "body": "Raleway",
+    "small": "Raleway"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 4,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 4,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1a1a1a",
+    "secondary": "#4a4a4a",
+    "accent": "#d4af37"
+  }
+},\n{
+  "id": "preset-098",
+  "category": "modern",
+  "fonts": {
+    "h1": "Poppins",
+    "h2": "Roboto",
+    "body": "Raleway",
+    "small": "Raleway"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 3,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 5,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#1a1a1a",
+    "secondary": "#4a4a4a",
+    "accent": "#d4af37"
+  }
+},\n{
+  "id": "preset-099",
+  "category": "wedding",
+  "fonts": {
+    "h1": "Great Vibes",
+    "h2": "Oswald",
+    "body": "Merriweather",
+    "small": "Merriweather"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 4,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 5,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#4b4b4b",
+    "secondary": "#7d7d7d",
+    "accent": "#c0392b"
+  }
+},\n{
+  "id": "preset-100",
+  "category": "editorial",
+  "fonts": {
+    "h1": "Merriweather",
+    "h2": "Cinzel",
+    "body": "Oswald",
+    "small": "Oswald"
+  },
+  "styles": {
+    "h1": {
+      "letterSpacing": 1,
+      "lineHeight": 1.1,
+      "textTransform": "none"
+    },
+    "h2": {
+      "letterSpacing": 6,
+      "lineHeight": 1.2,
+      "textTransform": "uppercase"
+    },
+    "body": {
+      "letterSpacing": 0,
+      "lineHeight": 1.5,
+      "textTransform": "none"
+    },
+    "small": {
+      "letterSpacing": 1,
+      "lineHeight": 1.4,
+      "textTransform": "uppercase"
+    }
+  },
+  "colorPalette": {
+    "primary": "#2c3e50",
+    "secondary": "#34495e",
+    "accent": "#e74c3c"
+  }
+}\n];\n

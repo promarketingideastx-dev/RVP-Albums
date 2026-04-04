@@ -83,11 +83,21 @@ export const useEditorStore = create<EditorState>()(
         const role = el.textRole || 'body'; // Default fallback
         const fontStr = preset.fonts[role] || preset.fonts.body;
         const fontStyle = preset.styles?.[role] || { letterSpacing: 0, lineHeight: 1.2, textTransform: 'none' };
+        
+        // Map native color
+        const assignedColor = role === 'h1' 
+          ? preset.colorPalette.primary 
+          : role === 'h2' 
+            ? preset.colorPalette.secondary 
+            : (role as string) === 'accent' 
+              ? preset.colorPalette.accent 
+              : preset.colorPalette.primary;
 
         return { 
           ...el, 
           fontFamily: fontStr,
           textRole: role,
+          textColor: assignedColor,
           letterSpacing: fontStyle.letterSpacing || 0,
           lineHeight: fontStyle.lineHeight || 1.2,
           textTransform: fontStyle.textTransform || 'none'
