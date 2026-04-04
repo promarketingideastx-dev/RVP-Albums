@@ -92,16 +92,15 @@ export default function LayersPanel() {
       </div>
       
       {/* PHOTOSHOP TOP GLOBAL BAR */}
-      {selectedElementId && (() => {
-         const selEl = spread.elements.find(e => e.id === selectedElementId);
-         if (!selEl) return null;
+      {(() => {
+         const selEl = selectedElementId ? spread.elements.find(e => e.id === selectedElementId) : null;
          return (
            <div className="flex items-center justify-between px-4 py-3 bg-neutral-50/80 dark:bg-neutral-900/80 border-b border-neutral-200 dark:border-neutral-800 text-[13px] font-medium transition-colors">
               <select 
-                value={selEl.blendMode || 'source-over'} 
-                onChange={(e) => updateElement(spread.id, selEl.id, { blendMode: e.target.value })}
+                value={selEl?.blendMode || 'source-over'} 
+                onChange={(e) => { if(selEl) updateElement(spread.id, selEl.id, { blendMode: e.target.value })}}
                 className="bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-neutral-300 dark:border-neutral-700 rounded-md outline-none px-2 py-1 cursor-pointer w-[110px] shadow-sm disabled:opacity-50"
-                disabled={selEl.type === 'text' || selEl.type === 'group'}
+                disabled={!selEl || selEl.type === 'text' || selEl.type === 'group'}
               >
                 <option value="source-over">Normal</option>
                 <option value="multiply">Multiply</option>
@@ -120,11 +119,12 @@ export default function LayersPanel() {
               <div className="flex items-center gap-2 flex-1 justify-end opacity-90">
                  <span className="text-neutral-500">Op:</span>
                  <input 
+                   disabled={!selEl}
                    type="number" 
                    min="0" max="100" 
-                   value={Math.round((selEl.opacity !== undefined ? selEl.opacity : 1) * 100)} 
-                   onChange={(e) => updateElement(spread.id, selEl.id, { opacity: Number(e.target.value) / 100 })}
-                   className="w-[60px] bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-neutral-300 dark:border-neutral-700 rounded-md px-1.5 py-1 text-center outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm transition-all"
+                   value={Math.round(((selEl && selEl.opacity !== undefined) ? selEl.opacity : 1) * 100)} 
+                   onChange={(e) => { if(selEl) updateElement(spread.id, selEl.id, { opacity: Number(e.target.value) / 100 })}}
+                   className="w-[60px] bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-neutral-300 dark:border-neutral-700 rounded-md px-1.5 py-1 text-center outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm transition-all disabled:opacity-50"
                    onClick={(e) => { (e.target as HTMLInputElement).select() }}
                  />
                  <span className="text-neutral-500 font-normal">%</span>
