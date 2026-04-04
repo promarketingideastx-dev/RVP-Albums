@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useEditorStore } from '@/store/useEditorStore';
+import { LUT_LIBRARY } from '@/lib/lut-presets';
 
 export default function Inspector() {
   const t = useTranslations('Editor');
@@ -209,22 +210,31 @@ export default function Inspector() {
              onChange={(e) => updateElement(activeSpreadId, element.id, { photoFilter: e.target.value })}
            >
               <option value="none">Original</option>
-              <option value="sepia">Sepia Clásico</option>
-              <option value="grayscale">Blanco y Negro</option>
-              <option value="invert">Invertir Colores</option>
-              <option value="blur">Desenfoque (Blur)</option>
-              <option value="noise">Ruido de Película (Noise)</option>
-              <option value="brighten">Brillo</option>
-              <option value="contrast">Contraste</option>
-              <option value="posterize">Posterizar</option>
+              {Array.from(new Set(LUT_LIBRARY.map(l => l.category))).map(category => (
+                <optgroup key={category} label={category}>
+                  {LUT_LIBRARY.filter(l => l.category === category).map(lut => (
+                    <option key={lut.id} value={lut.id}>{lut.name}</option>
+                  ))}
+                </optgroup>
+              ))}
+              <optgroup label="Legacy Básicos">
+                <option value="sepia">Sepia (Legacy)</option>
+                <option value="grayscale">B/N (Legacy)</option>
+                <option value="invert">Invertir</option>
+                <option value="blur">Desenfoque</option>
+                <option value="noise">Ruido</option>
+                <option value="brighten">Brillo</option>
+                <option value="contrast">Contraste</option>
+                <option value="posterize">Posterizar</option>
+              </optgroup>
            </select>
-           {['blur', 'noise', 'brighten', 'contrast', 'posterize'].includes(element.photoFilter || '') && (
+           {element.photoFilter && element.photoFilter !== 'none' && (
               <InputField 
-                label="Intensidad del Filtro" 
-                value={element.filterIntensity !== undefined ? element.filterIntensity.toString() : (element.photoFilter === 'posterize' ? '4' : '0')} 
+                label={element.photoFilter?.startsWith('lut_') ? "Intensidad LUT & Fade" : "Nivel del Filtro"} 
+                value={element.filterIntensity !== undefined ? element.filterIntensity.toString() : (element.photoFilter === 'posterize' ? '4' : '1')} 
                 setter={(val) => updateElement(activeSpreadId, element.id, { filterIntensity: parseFloat(val) })} 
-                min={0} max={element.photoFilter === 'posterize' ? 10 : (element.photoFilter === 'blur' ? 20 : (element.photoFilter === 'contrast' ? 100 : 1))}
-                step={element.photoFilter === 'posterize' ? '1' : '0.1'}
+                min={0} max={element.photoFilter?.startsWith('lut_') ? 1 : (element.photoFilter === 'posterize' ? 10 : (element.photoFilter === 'blur' ? 20 : (element.photoFilter === 'contrast' ? 100 : 1)))}
+                step={element.photoFilter?.startsWith('lut_') ? '0.01' : (element.photoFilter === 'posterize' ? '1' : '0.1')}
               />
            )}
         </div>

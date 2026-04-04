@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from 'react';
-import { Stage, Layer, Rect, Ellipse, Transformer, Image as KonvaImage, Text } from 'react-konva';
+import { Stage, Layer, Rect, Ellipse, Transformer, Image as KonvaImage, Text, Group } from 'react-konva';
 import Konva from 'konva';
 import { useTranslations } from 'next-intl';
+import { LUT_LIBRARY } from '@/lib/lut-presets';
 import { useEditorStore } from '@/store/useEditorStore';
 import { EditorElement } from '@/types/editor';
 import useImage from 'use-image';
@@ -28,75 +29,99 @@ const EditorImage = ({
   onContextMenu: (x: number, y: number, id: string) => void
 }) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const imageRef = useRef<any>(null);
+  const groupRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const filterLayerRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const trRef = useRef<any>(null);
   const updateElement = useEditorStore((state) => state.updateElement);
   
-  // Custom hook prioritizing Phase 2 low-res previews over legacy src
   const [image] = useImage(element.previewUrl || element.src || 'https://via.placeholder.com/150');
 
   useEffect(() => {
-    if (isSelected && trRef.current && imageRef.current) {
-      trRef.current.nodes([imageRef.current]);
+    if (isSelected && trRef.current && groupRef.current) {
+      trRef.current.nodes([groupRef.current]);
       trRef.current.getLayer().batchDraw();
     }
   }, [isSelected]);
 
-  // Handle Photo Filters Natively
+  // Handle Photo Filters Natively via Dual-Layer
   useEffect(() => {
-    if (imageRef.current && image) {
-      const node = imageRef.current;
+    if (filterLayerRef.current && image) {
+      const node = filterLayerRef.current;
       if (element.photoFilter && element.photoFilter !== 'none') {
         node.cache();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const filtersArray: any[] = [];
         
-        switch(element.photoFilter) {
-          case 'sepia': filtersArray.push(Konva.Filters.Sepia); break;
-          case 'grayscale': filtersArray.push(Konva.Filters.Grayscale); break;
-          case 'invert': filtersArray.push(Konva.Filters.Invert); break;
-          case 'blur': 
-            filtersArray.push(Konva.Filters.Blur); 
-            node.blurRadius(element.filterIntensity !== undefined ? element.filterIntensity : 5); 
-            break;
-          case 'noise': 
-            filtersArray.push(Konva.Filters.Noise); 
-            node.noise(element.filterIntensity !== undefined ? element.filterIntensity : 1); 
-            break;
-          case 'brighten': 
-            filtersArray.push(Konva.Filters.Brighten); 
-            node.brightness(element.filterIntensity !== undefined ? element.filterIntensity : 0.5); 
-            break;
-          case 'contrast': 
-            filtersArray.push(Konva.Filters.Contrast); 
-            node.contrast(element.filterIntensity !== undefined ? element.filterIntensity : 20); 
-            break;
-          case 'posterize': 
-            filtersArray.push(Konva.Filters.Posterize); 
-            node.levels(element.filterIntensity !== undefined ? element.filterIntensity : 4); 
-            break;
+        const lut = LUT_LIBRARY.find(l => l.id === element.photoFilter);
+        
+        if (lut) {
+           if (lut.contrast && lut.contrast !== 0) {
+              filtersArray.push(Konva.Filters.Contrast);
+              node.contrast(lut.contrast);
+           }
+           if (lut.brightness && lut.brightness !== 0) {
+              filtersArray.push(Konva.Filters.Brighten);
+              node.brightness(lut.brightness);
+           }
+           if (lut.grayscale) filtersArray.push(Konva.Filters.Grayscale);
+           if (lut.sepia) filtersArray.push(Konva.Filters.Sepia);
+           if (lut.invert) filtersArray.push(Konva.Filters.Invert);
+           
+           if (lut.hue !== undefined || lut.saturation !== undefined || lut.luminance !== undefined) {
+              filtersArray.push(Konva.Filters.HSL);
+              if (lut.hue !== undefined) node.hue(lut.hue);
+              if (lut.saturation !== undefined) node.saturation(lut.saturation);
+              if (lut.luminance !== undefined) node.luminance(lut.luminance);
+           }
+        } else {
+           // Fallback for legacy basic filters
+           switch(element.photoFilter) {
+             case 'sepia': filtersArray.push(Konva.Filters.Sepia); break;
+             case 'grayscale': filtersArray.push(Konva.Filters.Grayscale); break;
+             case 'invert': filtersArray.push(Konva.Filters.Invert); break;
+             case 'blur': 
+               filtersArray.push(Konva.Filters.Blur); 
+               node.blurRadius(element.filterIntensity !== undefined ? element.filterIntensity : 5); 
+               break;
+             case 'noise': 
+               filtersArray.push(Konva.Filters.Noise); 
+               node.noise(element.filterIntensity !== undefined ? element.filterIntensity : 1); 
+               break;
+             case 'posterize': 
+               filtersArray.push(Konva.Filters.Posterize); 
+               node.levels(element.filterIntensity !== undefined ? element.filterIntensity : 4); 
+               break;
+           }
         }
         
         node.filters(filtersArray);
+        node.getLayer()?.batchDraw();
       } else {
         node.clearCache();
         node.filters([]);
+        node.getLayer()?.batchDraw();
       }
-      node.getLayer()?.batchDraw();
     }
-  }, [element.photoFilter, element.filterIntensity, image, element.w_mm, element.h_mm]);
+  }, [element.photoFilter, image, element.filterIntensity]);
+
+  const mmToPx = 3.779527559;
 
   return (
     <React.Fragment>
-      <KonvaImage
-        ref={imageRef}
-        image={image}
-        x={element.x_mm}
-        y={element.y_mm}
-        width={element.w_mm}
-        height={element.h_mm}
-        rotation={element.rotation_deg}
+      <Group
+        ref={groupRef}
+        x={element.x_mm * mmToPx}
+        y={element.y_mm * mmToPx}
+        width={element.w_mm * mmToPx}
+        height={element.h_mm * mmToPx}
+        rotation={element.rotation_deg || 0}
+        scaleX={element.scale || 1}
+        scaleY={element.scale || 1}
+        draggable={isSelected}
+        onClick={onSelect}
+        onTap={onSelect}
         opacity={element.opacity !== undefined ? element.opacity : 1}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         globalCompositeOperation={(element.blendMode as any) || 'source-over'}
@@ -105,9 +130,6 @@ const EditorImage = ({
         shadowOffsetX={element.shadowOffsetX || 0}
         shadowOffsetY={element.shadowOffsetY || 0}
         shadowOpacity={element.shadowOpacity !== undefined ? element.shadowOpacity : 0.5}
-        draggable
-        onClick={onSelect}
-        onTap={onSelect}
         onContextMenu={(e) => {
           e.evt.preventDefault();
           onContextMenu(e.evt.clientX, e.evt.clientY, element.id);
@@ -115,29 +137,45 @@ const EditorImage = ({
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         onDragEnd={(e) => {
           updateElement(spreadId, element.id, {
-            x_mm: e.target.x(),
-            y_mm: e.target.y(),
+            x_mm: e.target.x() / mmToPx,
+            y_mm: e.target.y() / mmToPx,
           });
         }}
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         onTransformEnd={(e) => {
-          const node = imageRef.current;
+          const node = groupRef.current;
           const scaleX = node.scaleX();
           const scaleY = node.scaleY();
 
-          // Reset scale internally and update w/h so we keep mm absolute
           node.scaleX(1);
           node.scaleY(1);
 
           updateElement(spreadId, element.id, {
-            x_mm: node.x(),
-            y_mm: node.y(),
-            w_mm: Math.max(5, node.width() * scaleX),
-            h_mm: Math.max(5, node.height() * scaleY),
-             rotation_deg: node.rotation()
+            x_mm: node.x() / mmToPx,
+            y_mm: node.y() / mmToPx,
+            w_mm: Math.max(5, (element.w_mm * mmToPx * scaleX) / mmToPx),
+            h_mm: Math.max(5, (element.h_mm * mmToPx * scaleY) / mmToPx),
+            rotation_deg: node.rotation()
           });
         }}
-      />
+      >
+        <KonvaImage 
+          image={image} 
+          x={0} y={0}
+          width={element.w_mm * mmToPx} 
+          height={element.h_mm * mmToPx} 
+        />
+        {element.photoFilter && element.photoFilter !== 'none' && (
+          <KonvaImage 
+            ref={filterLayerRef}
+            image={image} 
+            x={0} y={0}
+            width={element.w_mm * mmToPx} 
+            height={element.h_mm * mmToPx} 
+            opacity={element.filterIntensity !== undefined ? element.filterIntensity : 1}
+          />
+        )}
+      </Group>
       {isSelected && (
         <Transformer
           ref={trRef}

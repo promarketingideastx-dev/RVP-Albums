@@ -102,8 +102,7 @@ export async function exportSpreadToJPG(spread: Spread, meta: ExportMeta): Promi
 
         try {
           const imgObj = await loadHtmlImage(url);
-          const kImg = new Konva.Image({
-            image: imgObj,
+          const kGroup = new Konva.Group({
             x: el.x_mm * mmToPx,
             y: el.y_mm * mmToPx,
             width: el.w_mm * mmToPx,
@@ -112,42 +111,93 @@ export async function exportSpreadToJPG(spread: Spread, meta: ExportMeta): Promi
             opacity: el.opacity !== undefined ? el.opacity : 1,
             scaleX: el.scale || 1,
             scaleY: el.scale || 1,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            globalCompositeOperation: (el.blendMode as any) || 'source-over',
+            shadowColor: el.shadowColor || 'transparent',
+            shadowBlur: el.shadowBlur || 0,
+            shadowOffsetX: el.shadowOffsetX || 0,
+            shadowOffsetY: el.shadowOffsetY || 0,
+            shadowOpacity: el.shadowOpacity !== undefined ? el.shadowOpacity : 0.5,
           });
 
-          // Handle Photo Filters Headless
+          const kBaseImg = new Konva.Image({
+            image: imgObj,
+            x: 0,
+            y: 0,
+            width: el.w_mm * mmToPx,
+            height: el.h_mm * mmToPx,
+          });
+          kGroup.add(kBaseImg);
+
+          // Handle Photo Filters Headless Dual Layer
           if (el.photoFilter && el.photoFilter !== 'none') {
+            const { LUT_LIBRARY } = await import('@/lib/lut-presets');
+            const lut = LUT_LIBRARY.find(l => l.id === el.photoFilter);
+
+            const kFilterImg = new Konva.Image({
+              image: imgObj,
+              x: 0,
+              y: 0,
+              width: el.w_mm * mmToPx,
+              height: el.h_mm * mmToPx,
+              opacity: el.filterIntensity !== undefined ? el.filterIntensity : 1
+            });
+            kGroup.add(kFilterImg);
+            
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const filtersArray: any[] = [];
-            switch(el.photoFilter) {
-              case 'sepia': filtersArray.push(Konva.Filters.Sepia); break;
-              case 'grayscale': filtersArray.push(Konva.Filters.Grayscale); break;
-              case 'invert': filtersArray.push(Konva.Filters.Invert); break;
-              case 'blur': 
-                filtersArray.push(Konva.Filters.Blur); 
-                kImg.blurRadius(el.filterIntensity !== undefined ? el.filterIntensity : 5); 
-                break;
-              case 'noise': 
-                filtersArray.push(Konva.Filters.Noise); 
-                kImg.noise(el.filterIntensity !== undefined ? el.filterIntensity : 1); 
-                break;
-              case 'brighten': 
-                filtersArray.push(Konva.Filters.Brighten); 
-                kImg.brightness(el.filterIntensity !== undefined ? el.filterIntensity : 0.5); 
-                break;
-              case 'contrast': 
-                filtersArray.push(Konva.Filters.Contrast); 
-                kImg.contrast(el.filterIntensity !== undefined ? el.filterIntensity : 20); 
-                break;
-              case 'posterize': 
-                filtersArray.push(Konva.Filters.Posterize); 
-                kImg.levels(el.filterIntensity !== undefined ? el.filterIntensity : 4); 
-                break;
+            
+            if (lut) {
+               if (lut.contrast && lut.contrast !== 0) {
+                  filtersArray.push(Konva.Filters.Contrast);
+                  kFilterImg.contrast(lut.contrast);
+               }
+               if (lut.brightness && lut.brightness !== 0) {
+                  filtersArray.push(Konva.Filters.Brighten);
+                  kFilterImg.brightness(lut.brightness);
+               }
+               if (lut.grayscale) filtersArray.push(Konva.Filters.Grayscale);
+               if (lut.sepia) filtersArray.push(Konva.Filters.Sepia);
+               if (lut.invert) filtersArray.push(Konva.Filters.Invert);
+               
+               if (lut.hue !== undefined || lut.saturation !== undefined || lut.luminance !== undefined) {
+                  filtersArray.push(Konva.Filters.HSL);
+                  if (lut.hue !== undefined) kFilterImg.hue(lut.hue);
+                  if (lut.saturation !== undefined) kFilterImg.saturation(lut.saturation);
+                  if (lut.luminance !== undefined) kFilterImg.luminance(lut.luminance);
+               }
+            } else {
+               switch(el.photoFilter) {
+                 case 'sepia': filtersArray.push(Konva.Filters.Sepia); break;
+                 case 'grayscale': filtersArray.push(Konva.Filters.Grayscale); break;
+                 case 'invert': filtersArray.push(Konva.Filters.Invert); break;
+                 case 'blur': 
+                   filtersArray.push(Konva.Filters.Blur); 
+                   kFilterImg.blurRadius(el.filterIntensity !== undefined ? el.filterIntensity : 5); 
+                   break;
+                 case 'noise': 
+                   filtersArray.push(Konva.Filters.Noise); 
+                   kFilterImg.noise(el.filterIntensity !== undefined ? el.filterIntensity : 1); 
+                   break;
+                 case 'brighten': 
+                   filtersArray.push(Konva.Filters.Brighten); 
+                   kFilterImg.brightness(el.filterIntensity !== undefined ? el.filterIntensity : 0.5); 
+                   break;
+                 case 'contrast': 
+                   filtersArray.push(Konva.Filters.Contrast); 
+                   kFilterImg.contrast(el.filterIntensity !== undefined ? el.filterIntensity : 20); 
+                   break;
+                 case 'posterize': 
+                   filtersArray.push(Konva.Filters.Posterize); 
+                   kFilterImg.levels(el.filterIntensity !== undefined ? el.filterIntensity : 4); 
+                   break;
+               }
             }
-            kImg.filters(filtersArray);
-            kImg.cache();
+            kFilterImg.filters(filtersArray);
+            kFilterImg.cache();
           }
 
-          layer.add(kImg);
+          layer.add(kGroup);
         } catch (e) {
           console.warn(`Export Engine failed rendering element ${el.id}`, e);
         }
