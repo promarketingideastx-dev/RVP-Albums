@@ -119,17 +119,26 @@ export function buildSmartSnapBoundFunc(
     // Native Konva Bypassing React Reconciliation to draw tracking lines at 144Hz limit 
     const layer = smartLayerRef.current;
     if (layer) {
-       layer.destroyChildren(); // Clear frame natively
+       // Object Recycling Pool - Do NOT destroy children to prevent Konva frame collisions
+       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       const existingLines = layer.getChildren();
+       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       existingLines.forEach((line: any) => line.visible(false));
+       
        if (activeGuides.length > 0) {
-          activeGuides.forEach(g => {
-             layer.add(new Konva.Line({
-                points: g.points,
-                stroke: '#00ffff',
-                strokeWidth: 1.5,
-                // Do not scale the stroke width! Since the whole group scales, dividing by the inverse prevents it internally, but wait the guides live on the same matrix!
-                dash: [6, 4],
-                transformsEnabled: 'position' 
-             }));
+          activeGuides.forEach((g, i) => {
+             if (i < existingLines.length) {
+                existingLines[i].points(g.points);
+                existingLines[i].visible(true);
+             } else {
+                layer.add(new Konva.Line({
+                   points: g.points,
+                   stroke: '#00ffff',
+                   strokeWidth: 1.5,
+                   dash: [6, 4],
+                   transformsEnabled: 'position' 
+                }));
+             }
           });
        }
        layer.batchDraw();
@@ -341,9 +350,12 @@ const EditorImage = ({
           e.evt.stopPropagation();
           onContextMenu(e.evt.clientX, e.evt.clientY, element.id);
         }}
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         onDragEnd={(e) => {
-          if (smartLayerRef.current) { smartLayerRef.current.destroyChildren(); smartLayerRef.current.batchDraw(); }
+          if (smartLayerRef.current) { 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            smartLayerRef.current.getChildren().forEach((line: any) => line.visible(false)); 
+            smartLayerRef.current.batchDraw(); 
+          }
           updateElement(spreadId, element.id, {
             x_mm: e.target.x() / mmToPx,
             y_mm: e.target.y() / mmToPx,
@@ -463,9 +475,12 @@ const EditorShape = ({
       e.evt.stopPropagation();
       onContextMenu(e.evt.clientX, e.evt.clientY, element.id);
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onDragEnd: (e: any) => {
-      if (smartLayerRef.current) { smartLayerRef.current.destroyChildren(); smartLayerRef.current.batchDraw(); }
+      if (smartLayerRef.current) { 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        smartLayerRef.current.getChildren().forEach((line: any) => line.visible(false)); 
+        smartLayerRef.current.batchDraw(); 
+      }
       updateElement(spreadId, element.id, {
         x_mm: e.target.x(),
         y_mm: e.target.y(),
@@ -594,9 +609,12 @@ const EditorText = ({ element, elements, spreadId, isSelected, onSelect, onConte
         draggable={isSelected && !element.locked}
         onClick={onSelect}
         onTap={onSelect}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onDragEnd={(e: any) => {
-          if (smartLayerRef.current) { smartLayerRef.current.destroyChildren(); smartLayerRef.current.batchDraw(); }
+          if (smartLayerRef.current) { 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            smartLayerRef.current.getChildren().forEach((line: any) => line.visible(false)); 
+            smartLayerRef.current.batchDraw(); 
+          }
           updateElement(spreadId, element.id, {
             x_mm: e.target.x(),
             y_mm: e.target.y(),
