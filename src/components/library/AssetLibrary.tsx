@@ -147,20 +147,21 @@ export default function AssetLibrary() {
               <p>{t('lib_empty')}</p>
             </div>
           ) : (
-            <div className={`grid ${activeCategory === 'cinematic' ? 'grid-cols-1 xl:grid-cols-2 gap-4' : 'grid-cols-2 xl:grid-cols-3 gap-3'} overflow-y-auto pr-1 pb-4 pt-1 px-1`}>
+            <div className="grid grid-cols-2 gap-4 overflow-y-auto pr-1 pb-16 pt-2 px-2 custom-scrollbar">
               {assets.map((asset) => {
-                const isDarkCat = ['overlays'].includes(activeCategory);
-                const bgClass = isDarkCat ? 'bg-[#1e1e1e] border-neutral-800' : 'bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800';
+                const isDarkCat = ['overlays', 'cinematic', 'textures', 'light', 'backgrounds'].includes(activeCategory);
+                const bgClass = isDarkCat ? 'bg-[#0a0a0a] border-neutral-800' : 'bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800';
                 
                 return (
-                  <div key={asset.id} className="relative w-full pt-[100%] rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden cursor-grab active:cursor-grabbing transition-transform duration-200 hover:scale-[1.03] shadow-sm hover:shadow-md hover:border-blue-400 group block" draggable onDragStart={(e) => handleDragStartDefault(e, asset, activeCategory)} title={asset.name}>
-                    <div className={`absolute inset-0 ${bgClass} flex items-center justify-center`}>
+                  <div key={asset.id} className={`relative w-full pt-[100%] rounded-xl border ${activeCategory === 'cinematic' ? 'border-neutral-800/50' : 'border-neutral-200 dark:border-neutral-800'} overflow-hidden cursor-grab active:cursor-grabbing transition-all duration-300 hover:scale-[1.05] shadow-sm hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-400 group block`} draggable onDragStart={(e) => handleDragStartDefault(e, asset, activeCategory)} title={asset.name}>
+                    <div className={`absolute inset-0 ${bgClass} flex items-center justify-center transition-colors duration-300`}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={asset.src} alt={asset.name} className="w-full h-full object-cover pointer-events-none" />
+                      <img src={asset.src} alt={asset.name} className="w-full h-full object-cover pointer-events-none group-hover:scale-105 transition-transform duration-300" />
                       
                       {/* Asset Identification Overlay */}
-                      <div className={`absolute bottom-0 left-0 right-0 bg-black/50 text-white font-bold text-center backdrop-blur-sm pointer-events-none transition-opacity ${activeCategory === 'cinematic' ? 'opacity-100 text-xs px-2 py-2' : 'opacity-0 group-hover:opacity-100 text-[10px] px-2 py-1'}`}>
-                         {asset.name || asset.id.split('-').slice(0, 2).join('-').toUpperCase()}
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-8 pb-2 px-3 text-white text-left opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                         <span className="text-[9px] tracking-widest font-mono text-blue-200/80 uppercase block mb-0.5">{asset.id.split('-').slice(0, 2).join('-')}</span>
+                         <span className="text-xs font-semibold truncate block leading-tight">{asset.name || 'Block'}</span>
                       </div>
                     </div>
                   </div>
