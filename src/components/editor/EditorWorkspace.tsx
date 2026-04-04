@@ -18,6 +18,8 @@ export default function EditorWorkspace() {
   const project = useEditorStore((state) => state.project);
   const measurementUnit = useEditorStore((state) => state.measurementUnit);
   const workspaceZoom = useEditorStore((state) => state.workspaceZoom);
+  const workspacePan = useEditorStore((state) => state.workspacePan);
+  const setWorkspacePan = useEditorStore((state) => state.setWorkspacePan);
 
   // Auto-inject Google Fonts globally so preset fonts don't break when sidebar unmounts
   const fontLinks = React.useMemo(() => {
@@ -82,6 +84,12 @@ export default function EditorWorkspace() {
   
   // Apply manual zoom override if interacting with the Navigator!
   const scale = workspaceZoom !== null ? autoScale * workspaceZoom : autoScale;
+
+  const defaultPanX = (dimensions.width - (project.size.w_mm * scale)) / 2;
+  const defaultPanY = (dimensions.height - (project.size.h_mm * scale)) / 2;
+
+  const currentPanX = workspaceZoom === null ? defaultPanX : workspacePan.x;
+  const currentPanY = workspaceZoom === null ? defaultPanY : workspacePan.y;
   
   const isReady = scale > 0 && dimensions.width > 0;
   const stageWidth = isReady ? project.size.w_mm * scale : 0;
@@ -90,37 +98,32 @@ export default function EditorWorkspace() {
   return (
     <div 
       ref={containerRef} 
-      id="workspace-scroll-container"
-      className="flex-1 overflow-auto scroll-smooth bg-neutral-200 dark:bg-neutral-900 relative w-full h-full custom-scrollbar"
+      id="workspace-container"
+      className="flex-1 overflow-hidden bg-neutral-200 dark:bg-neutral-900 relative w-full h-full"
+      onWheel={(e) => {
+         // Intercept MouseWheel / Trackpad sweeps to pan the Konva layer physically mimicking hardware physics
+         if (workspaceZoom !== null) {
+            setWorkspacePan((prev) => ({ x: prev.x - e.deltaX, y: prev.y - e.deltaY }));
+         }
+      }}
     >
        <style dangerouslySetInnerHTML={{ __html: fontLinks }} />
        {!isReady ? (
          <div className="absolute inset-0 flex items-center justify-center text-xs text-neutral-400">Loading Canvas...</div>
        ) : (
-         <div 
-           className="relative flex items-center justify-center"
-           style={{ 
-             minWidth: '100%', 
-             minHeight: '100%', 
-             width: Math.max(dimensions.width, stageWidth + padding),
-             height: Math.max(dimensions.height, stageHeight + padding)
-           }}
-         >
-           <div 
-             className="absolute transition-all duration-200" 
-             style={{ width: stageWidth, height: stageHeight }}
-           >
+         <div className="absolute inset-0 w-full h-full">
              <SpreadCanvas 
-               stageWidth={stageWidth} 
-               stageHeight={stageHeight} 
+               stageWidth={dimensions.width} 
+               stageHeight={dimensions.height} 
                scale={scale} 
+               panX={currentPanX}
+               panY={currentPanY}
              />
              <RulerGuides 
                scale={scale} 
                project={project} 
                unit={measurementUnit} 
              />
-           </div>
          </div>
        )}
        

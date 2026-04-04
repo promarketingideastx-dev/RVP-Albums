@@ -14,6 +14,8 @@ interface SpreadCanvasProps {
   stageWidth: number;
   stageHeight: number;
   scale: number;
+  panX: number;
+  panY: number;
 }
 
 const ShadowDragAnchor = ({ element, spreadId, isSelected }: { element: EditorElement, spreadId: string, isSelected: boolean }) => {
@@ -489,7 +491,7 @@ const EditorText = ({ element, spreadId, isSelected, onSelect, onContextMenu }: 
   );
 };
 
-export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadCanvasProps) {
+export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, panY }: SpreadCanvasProps) {
   const project = useEditorStore((state) => state.project);
   const activeSpreadId = useEditorStore((state) => state.activeSpreadId);
   const selectedElementId = useEditorStore((state) => state.selectedElementId);
@@ -605,8 +607,8 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
             const canvasWrapper = document.querySelector('.konvajs-content');
             if (canvasWrapper) {
                 const rect = canvasWrapper.getBoundingClientRect();
-                dropX = (e.clientX - rect.left) / scale;
-                dropY = (e.clientY - rect.top) / scale;
+                dropX = (e.clientX - rect.left - panX) / scale;
+                dropY = (e.clientY - rect.top - panY) / scale;
             }
 
             // Text payloads bypass image loading entirely!
@@ -706,7 +708,8 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
         style={{ boxShadow: '0px 10px 30px rgba(0,0,0,0.1)' }}
         onContextMenu={(e) => e.evt.preventDefault()}
       >
-      <Layer scaleX={scale} scaleY={scale}>
+      <Group x={panX} y={panY} scaleX={scale} scaleY={scale}>
+      <Layer>
         {/* Background Paper */}
         <Rect
           name="background-paper"
@@ -774,7 +777,6 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
           );
         })}
 
-        {/* Empty State Indicator */}
         {elements.length === 0 && (
            <Text
              text="Drag images here to begin designing"
@@ -789,9 +791,10 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
              listening={false}
            />
         )}
-
-        {/* Print Guides (Bleed, Safe Zone, and Center Fold) - overlay on top, no events */}
+      </Layer>
         
+      {/* Print Guides Overlay separated safely from elements */}
+      <Layer>
         {/* Bleed Guide: Red Dashed */}
         <Rect
            x={project.bleed_mm}
@@ -822,7 +825,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
       </Layer>
       
       {/* Dynamic Native Ruler Guides Overlay */}
-      <Layer id="guides-layer" scaleX={scale} scaleY={scale}>
+      <Layer>
         {spread.guides?.map(guide => (
           <Line
             key={guide.id}
@@ -870,6 +873,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
           />
         ))}
       </Layer>
+      </Group>
       </Stage>
 
       {contextMenu && (
