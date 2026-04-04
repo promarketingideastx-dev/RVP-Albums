@@ -9,6 +9,88 @@ import { AlignLeft, AlignCenter, AlignRight, Baseline, LetterText, Type, PaintBu
 import LayersPanel from './editor/LayersPanel';
 import GlobalStylesPanel from './editor/GlobalStylesPanel';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const LocalShadowPanel = ({ element, activeSpreadId, updateElement }: any) => {
+  const isShadowEnabled = element.shadowColor && element.shadowColor !== 'transparent';
+  return (
+    <div className="mt-4 mb-6 p-3 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50">
+      <label className="flex items-center gap-2 mb-3 cursor-pointer">
+        <input 
+          type="checkbox" 
+          checked={isShadowEnabled || false}
+          onChange={(e) => updateElement(activeSpreadId, element.id, { 
+             shadowColor: e.target.checked ? '#000000' : 'transparent',
+             shadowBlur: e.target.checked ? (element.shadowBlur ?? 15) : undefined,
+             shadowOpacity: e.target.checked ? (element.shadowOpacity ?? 0.5) : undefined,
+             shadowOffsetX: e.target.checked ? (element.shadowOffsetX ?? 0) : undefined,
+             shadowOffsetY: e.target.checked ? (element.shadowOffsetY ?? 10) : undefined
+          })}
+          className="accent-teal-500"
+        />
+        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">Enable Drop Shadow</span>
+      </label>
+      {isShadowEnabled && (
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs text-neutral-500 dark:text-neutral-400 mb-1 block">Color</label>
+            <input 
+              type="color" 
+              value={element.shadowColor || '#000000'}
+              onChange={(e) => updateElement(activeSpreadId, element.id, { shadowColor: e.target.value })}
+              className="w-full h-8 rounded border border-neutral-200 dark:border-neutral-700 cursor-pointer block overflow-hidden"
+            />
+          </div>
+
+          <div>
+            <div className="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+              <label>Opacity</label>
+              <span>{Math.round((element.shadowOpacity ?? 0.5) * 100)}%</span>
+            </div>
+            <div className="flex gap-2">
+              <input type="range" min="0" max="1" step="0.1" className="w-full accent-teal-500" value={element.shadowOpacity ?? 0.5} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOpacity: parseFloat(e.target.value) })}/>
+              <input type="number" step="0.1" className="w-12 bg-white dark:bg-neutral-950 text-xs px-1 rounded border border-neutral-200 dark:border-neutral-800 text-center outline-none" value={element.shadowOpacity ?? 0.5} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOpacity: parseFloat(e.target.value) || 0 })}/>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+              <label>Blur</label>
+              <span>{element.shadowBlur || 0}</span>
+            </div>
+            <div className="flex gap-2">
+              <input type="range" min="0" max="100" step="1" className="w-full accent-teal-500" value={element.shadowBlur || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowBlur: parseInt(e.target.value, 10) })}/>
+              <input type="number" className="w-12 bg-white dark:bg-neutral-950 text-xs px-1 rounded border border-neutral-200 dark:border-neutral-800 text-center outline-none" value={element.shadowBlur || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowBlur: parseInt(e.target.value, 10) || 0 })}/>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+              <label>Distance X</label>
+              <span>{element.shadowOffsetX || 0}</span>
+            </div>
+            <div className="flex gap-2">
+              <input type="range" min="-100" max="100" step="1" className="w-full accent-teal-500" value={element.shadowOffsetX || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOffsetX: parseInt(e.target.value, 10) })}/>
+              <input type="number" className="w-16 bg-white dark:bg-neutral-950 text-xs px-1 rounded border border-neutral-200 dark:border-neutral-800 text-center outline-none" value={element.shadowOffsetX || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOffsetX: parseInt(e.target.value, 10) || 0 })}/>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+              <label>Distance Y</label>
+              <span>{element.shadowOffsetY || 0}</span>
+            </div>
+            <div className="flex gap-2">
+              <input type="range" min="-100" max="100" step="1" className="w-full accent-teal-500" value={element.shadowOffsetY || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOffsetY: parseInt(e.target.value, 10) })}/>
+              <input type="number" className="w-16 bg-white dark:bg-neutral-950 text-xs px-1 rounded border border-neutral-200 dark:border-neutral-800 text-center outline-none" value={element.shadowOffsetY || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOffsetY: parseInt(e.target.value, 10) || 0 })}/>
+            </div>
+          </div>
+
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function Inspector() {
   const t = useTranslations('Editor');
   const project = useEditorStore((state) => state.project);
@@ -251,44 +333,7 @@ export default function Inspector() {
           </div>
 
           {/* Shadow Controls Segment */}
-          <div className="pt-3 mt-3 border-t border-neutral-200 dark:border-neutral-800">
-             <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-800 dark:text-neutral-200 mb-2">Shadow Effects</h3>
-             <InputField 
-               label={"Shadow Blur"} 
-               value={element.shadowBlur !== undefined ? element.shadowBlur.toString() : "0"} 
-               setter={(val) => updateElement(activeSpreadId, element.id, { shadowBlur: parseFloat(val) })} 
-               min={0} max={100} step="1"
-             />
-             <div className="flex gap-2">
-               <InputField 
-                 label={"Offset X"} 
-                 value={element.shadowOffsetX !== undefined ? element.shadowOffsetX.toString() : "0"} 
-                 setter={(val) => updateElement(activeSpreadId, element.id, { shadowOffsetX: parseFloat(val) })} 
-                 min={-100} max={100} step="1"
-               />
-               <InputField 
-                 label={"Offset Y"} 
-                 value={element.shadowOffsetY !== undefined ? element.shadowOffsetY.toString() : "0"} 
-                 setter={(val) => updateElement(activeSpreadId, element.id, { shadowOffsetY: parseFloat(val) })} 
-                 min={-100} max={100} step="1"
-               />
-             </div>
-             <div className="flex flex-col gap-1 mb-2 mt-1">
-               <label className="text-xs font-semibold text-neutral-500 uppercase">Shadow Color</label>
-               <input
-                 type="color"
-                 className="w-full h-8 cursor-pointer rounded border border-neutral-200 dark:border-neutral-700"
-                 value={element.shadowColor || '#000000'}
-                 onChange={(e) => updateElement(activeSpreadId, element.id, { shadowColor: e.target.value })}
-               />
-             </div>
-             <InputField 
-               label={"Shadow Opacity"} 
-               value={element.shadowOpacity !== undefined ? element.shadowOpacity.toString() : "0.5"} 
-               setter={(val) => updateElement(activeSpreadId, element.id, { shadowOpacity: parseFloat(val) })} 
-               min={0} max={1} step="0.01"
-             />
-          </div>
+          <LocalShadowPanel element={element} activeSpreadId={activeSpreadId} updateElement={updateElement} />
         </>
       )}
 
@@ -542,60 +587,8 @@ export default function Inspector() {
               </div>
             </div>
             
-            {/* Shadow Mini Accordion */}
-            <details className="group pt-2 border-t border-neutral-200 dark:border-neutral-800">
-               <summary className="flex items-center justify-between cursor-pointer list-none text-xs font-semibold text-neutral-500 uppercase tracking-wide">
-                 <div className="flex items-center gap-1.5">
-                    <ShadowIcon className="w-3.5 h-3.5" />
-                    Drop Shadow
-                 </div>
-                 <span className="text-neutral-400 group-open:rotate-180 transition-transform">▼</span>
-               </summary>
-               <div className="pt-3 grid grid-cols-2 gap-3 pb-1">
-                 <div className="flex flex-col gap-1">
-                   <label className="text-[10px] text-neutral-400 uppercase">Blur Radius</label>
-                   <input type="range" min="0" max="100" value={element.shadowBlur || 0} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowBlur: parseFloat(e.target.value) })} className="w-full accent-blue-500 h-1 bg-neutral-200 rounded-lg appearance-none cursor-pointer" />
-                 </div>
-                 <div className="flex flex-col gap-1">
-                   <label className="text-[10px] text-neutral-400 uppercase">Opacity</label>
-                   <input type="range" min="0" max="1" step="0.05" value={element.shadowOpacity !== undefined ? element.shadowOpacity : 0.5} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowOpacity: parseFloat(e.target.value) })} className="w-full accent-blue-500 h-1 bg-neutral-200 rounded-lg appearance-none cursor-pointer" />
-                 </div>
-                 <div className="flex flex-col gap-1">
-                   <label className="text-[10px] text-neutral-400 uppercase flex justify-between">
-                     <span>Distance</span>
-                     <span>{Math.round(Math.sqrt((element.shadowOffsetX || 0)**2 + (element.shadowOffsetY || 0)**2))}</span>
-                   </label>
-                   <input type="range" min="0" max="200" value={Math.round(Math.sqrt((element.shadowOffsetX || 0)**2 + (element.shadowOffsetY || 0)**2))} 
-                      onChange={(e) => {
-                         const dist = parseFloat(e.target.value);
-                         const ang = Math.round((Math.atan2(element.shadowOffsetY || 0, element.shadowOffsetX || 0) * 180 / Math.PI + 360) % 360);
-                         updateElement(activeSpreadId, element.id, { 
-                           shadowOffsetX: Math.round(dist * Math.cos(ang * Math.PI / 180)), 
-                           shadowOffsetY: Math.round(dist * Math.sin(ang * Math.PI / 180)) 
-                         });
-                      }} className="w-full accent-blue-500 h-1 bg-neutral-200 rounded-lg appearance-none cursor-pointer" />
-                 </div>
-                 <div className="flex flex-col gap-1">
-                   <label className="text-[10px] text-neutral-400 uppercase flex justify-between">
-                     <span>Angle</span>
-                     <span>{Math.round((Math.atan2(element.shadowOffsetY || 0, element.shadowOffsetX || 0) * 180 / Math.PI + 360) % 360)}°</span>
-                   </label>
-                   <input type="range" min="0" max="360" value={Math.round((Math.atan2(element.shadowOffsetY || 0, element.shadowOffsetX || 0) * 180 / Math.PI + 360) % 360)} 
-                      onChange={(e) => {
-                         const ang = parseFloat(e.target.value);
-                         const dist = Math.round(Math.sqrt((element.shadowOffsetX || 0)**2 + (element.shadowOffsetY || 0)**2));
-                         updateElement(activeSpreadId, element.id, { 
-                           shadowOffsetX: Math.round(dist * Math.cos(ang * Math.PI / 180)), 
-                           shadowOffsetY: Math.round(dist * Math.sin(ang * Math.PI / 180)) 
-                         });
-                      }} className="w-full accent-blue-500 h-1 bg-neutral-200 rounded-lg appearance-none cursor-pointer" />
-                 </div>
-                 <div className="col-span-2 flex items-center justify-between border-t border-neutral-100 dark:border-neutral-800 pt-2 mt-1">
-                   <label className="text-[10px] text-neutral-400 uppercase">Shadow Color</label>
-                   <input type="color" className="w-full max-w-[120px] h-6 rounded border border-neutral-200 cursor-pointer p-0" value={element.shadowColor || '#000000'} onChange={(e) => updateElement(activeSpreadId, element.id, { shadowColor: e.target.value })} />
-                 </div>
-               </div>
-            </details>
+            {/* Shadow Controls Segment */}
+            <LocalShadowPanel element={element} activeSpreadId={activeSpreadId} updateElement={updateElement} />
           </div>
         </div>
       )}
