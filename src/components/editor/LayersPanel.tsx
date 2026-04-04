@@ -91,6 +91,50 @@ export default function LayersPanel() {
         <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-widest">{t('layers')}</h3>
       </div>
       
+      {/* PHOTOSHOP TOP GLOBAL BAR */}
+      {selectedElementId && (() => {
+         const selEl = spread.elements.find(e => e.id === selectedElementId);
+         if (!selEl) return null;
+         return (
+           <div className="flex items-center gap-3 px-3 py-2 bg-neutral-100 dark:bg-neutral-900/80 border-b border-neutral-200 dark:border-neutral-800 text-[11px] font-medium transition-colors">
+              <select 
+                value={selEl.blendMode || 'source-over'} 
+                onChange={(e) => updateElement(spread.id, selEl.id, { blendMode: e.target.value })}
+                className="bg-transparent text-neutral-700 dark:text-neutral-300 border border-neutral-300 dark:border-neutral-700 rounded outline-none p-1 cursor-pointer min-w-[85px] disabled:opacity-50"
+                disabled={selEl.type === 'text' || selEl.type === 'group'}
+              >
+                <option value="source-over">Normal</option>
+                <option value="multiply">Multiply</option>
+                <option value="screen">Screen</option>
+                <option value="overlay">Overlay</option>
+                <option value="darken">Darken</option>
+                <option value="lighten">Lighten</option>
+                <option value="color-dodge">Color Dodge</option>
+                <option value="color-burn">Color Burn</option>
+                <option value="hard-light">Hard Light</option>
+                <option value="soft-light">Soft Light</option>
+                <option value="difference">Difference</option>
+                <option value="exclusion">Exclusion</option>
+              </select>
+              
+              <div className="flex items-center gap-1.5 flex-1 justify-end opacity-90">
+                 <span className="text-neutral-500">Op:</span>
+                 <div className="flex items-center border border-neutral-300 dark:border-neutral-700 rounded bg-white dark:bg-neutral-800 focus-within:border-blue-500 px-1 overflow-hidden transition-colors">
+                   <input 
+                     type="number" 
+                     min="0" max="100" 
+                     value={Math.round((selEl.opacity !== undefined ? selEl.opacity : 1) * 100)} 
+                     onChange={(e) => updateElement(spread.id, selEl.id, { opacity: Number(e.target.value) / 100 })}
+                     className="w-10 bg-transparent text-neutral-800 dark:text-neutral-200 border-none rounded-none p-0 text-right outline-none ring-0 m-0"
+                     onClick={(e) => { (e.target as HTMLInputElement).select() }}
+                   />
+                   <span className="text-neutral-400 font-normal pr-0.5">%</span>
+                 </div>
+              </div>
+           </div>
+         );
+      })()}
+      
       <div className="flex-1 overflow-y-auto p-2">
         <div className="flex flex-col gap-0.5">
           {sortedElements.map((el) => {
@@ -144,7 +188,28 @@ export default function LayersPanel() {
                            }
                         }}
                       >
-                        {getIcon(el.type, el.isCollapsed)}
+                         {(() => {
+                            const type = el.type as string;
+                            if (type === 'group') return el.isCollapsed ? <Folder className="w-5 h-5 text-neutral-500" /> : <FolderOpen className="w-5 h-5 text-blue-500" />;
+                            
+                            const src = el.previewUrl || el.src;
+                            if ((type === 'photo' || type === 'background' || type === 'overlay') && src) {
+                               // eslint-disable-next-line @next/next/no-img-element
+                               return <img src={src} className="w-6 h-6 object-cover rounded-[2px] border border-neutral-300 dark:border-neutral-600 bg-neutral-200 shadow-sm pointer-events-none" alt="" />;
+                            }
+                            
+                            if (type === 'text') {
+                               return <div className="w-6 h-6 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-[2px] flex items-center justify-center font-serif text-[12px] font-bold text-neutral-800 dark:text-neutral-200 shadow-sm pointer-events-none leading-none">T</div>;
+                            }
+                            
+                            if (type === 'shape') {
+                               return <div className="w-6 h-6 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-[2px] flex items-center justify-center shadow-sm pointer-events-none">
+                                  <div className="w-3 h-3 bg-neutral-400" style={{ borderRadius: el.shapeType === 'ellipse' ? '50%' : '0' }}></div>
+                               </div>;
+                            }
+                            
+                            return getIcon(type, el.isCollapsed);
+                         })()}
                       </div>
                       
                       <span 
@@ -178,50 +243,7 @@ export default function LayersPanel() {
                    )}
                  </div>
 
-                 {/* PHOTOSHOP INLINE CONTROLS (ONLY WHEN SELECTED) */}
-                 {isSelected && (
-                    <div 
-                      className="flex items-center justify-between px-3 py-1.5 bg-neutral-100/50 dark:bg-neutral-800/30 border-b border-neutral-200 dark:border-neutral-800 text-[10px]"
-                      style={{ marginLeft: el.groupId ? '1.25rem' : '0' }}
-                    >
-                      <div className="flex items-center gap-2">
-                        {el.type !== 'text' ? (
-                          <select 
-                            value={el.blendMode || 'source-over'} 
-                            onChange={(e) => updateElement(spread.id, el.id, { blendMode: e.target.value })}
-                            className="bg-transparent text-neutral-600 dark:text-neutral-300 border border-neutral-300 dark:border-neutral-700/50 rounded outline-none p-0.5 cursor-pointer max-w-[85px] truncate"
-                          >
-                            <option value="source-over">Normal</option>
-                            <option value="multiply">Multiply</option>
-                            <option value="screen">Screen</option>
-                            <option value="overlay">Overlay</option>
-                            <option value="darken">Darken</option>
-                            <option value="lighten">Lighten</option>
-                            <option value="color-dodge">Color Dodge</option>
-                            <option value="color-burn">Color Burn</option>
-                            <option value="hard-light">Hard Light</option>
-                            <option value="soft-light">Soft Light</option>
-                            <option value="difference">Difference</option>
-                            <option value="exclusion">Exclusion</option>
-                          </select>
-                        ) : (
-                          <span className="text-neutral-400">Normal</span> // Text falls back safely
-                        )}
-                        
-                        <div className="flex items-center gap-1">
-                           <span className="text-neutral-400">Op:</span>
-                           <input 
-                             type="number" 
-                             min="0" max="100" 
-                             value={Math.round((el.opacity !== undefined ? el.opacity : 1) * 100)} 
-                             onChange={(e) => updateElement(spread.id, el.id, { opacity: Number(e.target.value) / 100 })}
-                             className="w-10 bg-transparent text-neutral-700 dark:text-neutral-200 border-none rounded p-0 text-right outline-none ring-0 appearance-none m-0"
-                             onClick={(e) => { (e.target as HTMLInputElement).select() }}
-                           />%
-                        </div>
-                      </div>
-                    </div>
-                 )}
+                 {/* DELETED INLINE COMPONENT REPLACED BY TOP HEADER BAR */}
                </div>
              );
           })}

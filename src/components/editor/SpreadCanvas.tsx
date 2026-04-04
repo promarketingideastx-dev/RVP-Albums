@@ -615,7 +615,23 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
         />
 
         {/* Elements */}
-        {elements.map((el) => {
+        {elements.map((rawEl) => {
+          let el = { ...rawEl };
+          if (el.type === 'group') return null; // Logical container bypassing visual draw explicitly
+          if (el.visible === false) return null; // Direct visibility toggle overriding render loops
+
+          // Calculate cascading visibility and Opacity correctly natively protecting render cycles
+          if (el.groupId) {
+             const parent = spread.elements.find(g => g.id === el.groupId);
+             if (parent && parent.visible === false) return null; // Cascade Visibility
+             
+             if (parent && parent.opacity !== undefined) {
+                // If parent has opacity, merge it natively
+                const childOpacity = el.opacity !== undefined ? el.opacity : 1;
+                el = { ...el, opacity: parent.opacity * childOpacity };
+             }
+          }
+
           if (el.type === 'shape') {
             return (
               <EditorShape
