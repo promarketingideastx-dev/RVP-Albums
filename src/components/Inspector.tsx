@@ -209,9 +209,11 @@ export default function Inspector() {
              {element.photoFilter && element.photoFilter !== 'none' && (
                <button
                  type="button"
-                 onPointerDown={() => setPreviewOriginalPhotoId(element.id)}
-                 onPointerUp={() => setPreviewOriginalPhotoId(null)}
-                 onPointerLeave={() => setPreviewOriginalPhotoId(null)}
+                 onMouseDown={() => setPreviewOriginalPhotoId(element.id)}
+                 onMouseUp={() => setPreviewOriginalPhotoId(null)}
+                 onMouseLeave={() => setPreviewOriginalPhotoId(null)}
+                 onTouchStart={() => setPreviewOriginalPhotoId(element.id)}
+                 onTouchEnd={() => setPreviewOriginalPhotoId(null)}
                  className="p-1 rounded bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 transition-colors"
                  title="Mantener presionado para ver original sin filtros"
                >
@@ -380,14 +382,14 @@ export default function Inspector() {
           className="flex-1 py-1.5 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-xs font-semibold uppercase rounded text-neutral-600 dark:text-neutral-400 transition-colors"
           title={t('send_backward')}
         >
-          ↓
+          Capa ↓
         </button>
         <button 
           onClick={() => bringForward(activeSpreadId, element.id)} 
           className="flex-1 py-1.5 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-xs font-semibold uppercase rounded text-neutral-600 dark:text-neutral-400 transition-colors"
           title={t('bring_forward')}
         >
-          ↑
+          Capa ↑
         </button>
         <button 
           onClick={() => removeElement(activeSpreadId, element.id)} 

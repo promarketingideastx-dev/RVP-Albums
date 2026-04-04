@@ -105,7 +105,7 @@ const EditorImage = ({
         node.getLayer()?.batchDraw();
       }
     }
-  }, [element.photoFilter, image, element.filterIntensity]);
+  }, [element.photoFilter, image, element.filterIntensity, previewOriginalPhotoId]);
 
   const mmToPx = 3.779527559;
 
