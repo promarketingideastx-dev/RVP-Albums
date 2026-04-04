@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useEditorStore } from '@/store/useEditorStore';
 import { useTranslations } from 'next-intl';
 import { 
   Camera, Type, Square, Image as ImageIcon, Sparkles, 
-  LayoutTemplate, Eye, EyeOff, Lock, Unlock, Folder, 
-  Trash2, Copy, FolderOpen 
+  LayoutTemplate, Eye, EyeOff, Lock, Unlock, Folder,
+  Trash2, Copy, FolderOpen
 } from 'lucide-react';
 
 export default function LayersPanel() {
@@ -20,8 +20,17 @@ export default function LayersPanel() {
   const removeElement = useEditorStore((state) => state.removeElement);
   const duplicateElement = useEditorStore((state) => state.duplicateElement);
   const createGroup = useEditorStore((state) => state.createGroup);
+  const bringToFront = useEditorStore((state) => state.bringToFront);
+  const sendToBack = useEditorStore((state) => state.sendToBack);
 
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [contextMenu, setContextMenu] = useState<{x: number, y: number, elementId: string} | null>(null);
+
+  useEffect(() => {
+    const handleClick = () => setContextMenu(null);
+    window.addEventListener('click', handleClick);
+    return () => window.removeEventListener('click', handleClick);
+  }, []);
 
   const spread = project?.spreads.find(s => s.id === activeSpreadId);
   if (!spread) {
@@ -77,7 +86,7 @@ export default function LayersPanel() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-neutral-950 overflow-hidden w-full">
+    <div className="flex flex-col h-full bg-white dark:bg-neutral-950 overflow-hidden w-full relative">
       <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
         <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-widest">{t('layers')}</h3>
       </div>
@@ -89,6 +98,7 @@ export default function LayersPanel() {
              const isSelected = selectedElementId === el.id;
              const isVisible = el.visible !== false;
              const isLocked = el.locked === true;
+             const isGroup = el.type === 'group';
 
              // Prevent rendering children if their parent group is collapsed currently
              if (el.groupId) {
@@ -97,65 +107,119 @@ export default function LayersPanel() {
              }
 
              return (
-               <div 
-                 key={el.id}
-                 draggable
-                 onDragStart={(e) => handleDragStart(e, originalIndex)}
-                 onDragOver={handleDragOver}
-                 onDrop={(e) => handleDrop(e, originalIndex)}
-                 onClick={() => setSelectedElement(el.id)}
-                 onContextMenu={(e) => {
-                   e.preventDefault();
-                   setSelectedElement(el.id);
-                   // In a full implementation we'd hook up a massive floating ContextMenu natively here.
-                 }}
-                 className={`group flex items-center justify-between py-1.5 px-2 rounded-md cursor-pointer text-xs transition-colors border ${
-                   isSelected 
-                     ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300' 
-                     : 'bg-white dark:bg-neutral-900 border-transparent text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800/50'
-                 } ${!isVisible ? 'opacity-50' : 'opacity-100'}`}
-                 style={{ marginLeft: el.groupId ? '1.5rem' : '0' }}
-               >
-                 <div className="flex items-center gap-2 overflow-hidden w-full">
-                    {/* VISIBILITY TOGGLE */}
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); updateElement(spread.id, el.id, { visible: !isVisible }); }}
-                      className="p-1 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded shrink-0 pointer-events-auto text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
-                    >
-                      {isVisible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                    </button>
+               <div key={el.id} className="flex flex-col">
+                 <div 
+                   draggable
+                   onDragStart={(e) => handleDragStart(e, originalIndex)}
+                   onDragOver={handleDragOver}
+                   onDrop={(e) => handleDrop(e, originalIndex)}
+                   onClick={() => setSelectedElement(el.id)}
+                   onContextMenu={(e) => {
+                     e.preventDefault();
+                     setSelectedElement(el.id);
+                     setContextMenu({ x: e.clientX, y: e.clientY, elementId: el.id });
+                   }}
+                   className={`group flex items-center justify-between py-1.5 px-2 cursor-pointer text-xs transition-colors border-l-2 ${
+                     isSelected 
+                       ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 text-blue-700 dark:text-blue-300' 
+                       : 'bg-transparent border-transparent text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800/50'
+                   } ${!isVisible ? 'opacity-50' : 'opacity-100'}`}
+                   style={{ marginLeft: el.groupId ? '1.25rem' : '0' }}
+                 >
+                   <div className="flex items-center gap-2 overflow-hidden w-full">
+                      {/* VISIBILITY TOGGLE */}
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); updateElement(spread.id, el.id, { visible: !isVisible }); }}
+                        className={`p-1 rounded shrink-0 pointer-events-auto transition-colors ${isVisible ? 'text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300' : 'text-neutral-300 dark:text-neutral-600'}`}
+                      >
+                        {isVisible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                      </button>
 
-                    <div className={`${isSelected ? 'text-blue-500' : 'text-neutral-400 group-hover:text-neutral-500'} shrink-0 transition-colors`}>
-                      {getIcon(el.type, el.isCollapsed)}
-                    </div>
-                    
-                    <span 
-                       className="truncate flex-1 font-medium select-none"
-                       onDoubleClick={(e) => {
-                         e.stopPropagation();
-                         const newName = window.prompt('Rename Layer:', getLayerName(el));
-                         if (newName) updateElement(spread.id, el.id, { layerName: newName });
-                       }}
-                    >
-                      {getLayerName(el)}
-                    </span>
+                      <div 
+                        className={`${isSelected ? 'text-blue-500' : 'text-neutral-400 group-hover:text-neutral-500'} shrink-0 transition-colors`}
+                        onClick={(e) => {
+                           if (isGroup) {
+                             e.stopPropagation();
+                             updateElement(spread.id, el.id, { isCollapsed: !el.isCollapsed });
+                           }
+                        }}
+                      >
+                        {getIcon(el.type, el.isCollapsed)}
+                      </div>
+                      
+                      <span 
+                         className="truncate flex-1 font-medium select-none text-[11px]"
+                         onDoubleClick={(e) => {
+                           e.stopPropagation();
+                           const newName = window.prompt('Rename Layer:', getLayerName(el));
+                           if (newName) updateElement(spread.id, el.id, { layerName: newName });
+                         }}
+                      >
+                        {getLayerName(el)}
+                      </span>
+                   </div>
+                   
+                   {/* RIGHT SIDE CONTROLS (LOCK) */}
+                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); updateElement(spread.id, el.id, { locked: !isLocked }); }}
+                        className={`p-1 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded pointer-events-auto ${isLocked ? 'text-red-500 opacity-100' : 'text-neutral-400'}`}
+                        title="Lock Layer"
+                      >
+                        {isLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                      </button>
+                   </div>
+                   
+                   {/* Persistent Lock Display if locked but not hovering */}
+                   {isLocked && (
+                      <div className="group-hover:hidden shrink-0 pl-1">
+                        <Lock className="w-3.5 h-3.5 text-red-500" />
+                      </div>
+                   )}
                  </div>
-                 
-                 {/* RIGHT SIDE CONTROLS (OPACITY, LOCK) */}
-                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                    {/* LOCK TOGGLE */}
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); updateElement(spread.id, el.id, { locked: !isLocked }); }}
-                      className={`p-1 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded pointer-events-auto ${isLocked ? 'text-red-500 opacity-100' : 'text-neutral-400'}`}
+
+                 {/* PHOTOSHOP INLINE CONTROLS (ONLY WHEN SELECTED) */}
+                 {isSelected && (
+                    <div 
+                      className="flex items-center justify-between px-3 py-1.5 bg-neutral-100/50 dark:bg-neutral-800/30 border-b border-neutral-200 dark:border-neutral-800 text-[10px]"
+                      style={{ marginLeft: el.groupId ? '1.25rem' : '0' }}
                     >
-                      {isLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
-                    </button>
-                 </div>
-                 
-                 {/* Persistent Lock Display if locked but not hovering */}
-                 {isLocked && (
-                    <div className="group-hover:hidden shrink-0 pl-1">
-                      <Lock className="w-3.5 h-3.5 text-red-400/50" />
+                      <div className="flex items-center gap-2">
+                        {el.type !== 'text' ? (
+                          <select 
+                            value={el.blendMode || 'source-over'} 
+                            onChange={(e) => updateElement(spread.id, el.id, { blendMode: e.target.value })}
+                            className="bg-transparent text-neutral-600 dark:text-neutral-300 border border-neutral-300 dark:border-neutral-700/50 rounded outline-none p-0.5 cursor-pointer max-w-[85px] truncate"
+                          >
+                            <option value="source-over">Normal</option>
+                            <option value="multiply">Multiply</option>
+                            <option value="screen">Screen</option>
+                            <option value="overlay">Overlay</option>
+                            <option value="darken">Darken</option>
+                            <option value="lighten">Lighten</option>
+                            <option value="color-dodge">Color Dodge</option>
+                            <option value="color-burn">Color Burn</option>
+                            <option value="hard-light">Hard Light</option>
+                            <option value="soft-light">Soft Light</option>
+                            <option value="difference">Difference</option>
+                            <option value="exclusion">Exclusion</option>
+                          </select>
+                        ) : (
+                          <span className="text-neutral-400">Normal</span> // Text falls back safely
+                        )}
+                        
+                        <div className="flex items-center gap-1">
+                           <span className="text-neutral-400">Op:</span>
+                           <input 
+                             type="number" 
+                             min="0" max="100" 
+                             value={Math.round((el.opacity !== undefined ? el.opacity : 1) * 100)} 
+                             onChange={(e) => updateElement(spread.id, el.id, { opacity: Number(e.target.value) / 100 })}
+                             className="w-10 bg-transparent text-neutral-700 dark:text-neutral-200 border-none rounded p-0 text-right outline-none ring-0 appearance-none m-0"
+                             onClick={(e) => { (e.target as HTMLInputElement).select() }}
+                           />%
+                        </div>
+                      </div>
                     </div>
                  )}
                </div>
@@ -168,9 +232,7 @@ export default function LayersPanel() {
       <div className="flex items-center justify-end gap-1 px-3 py-2 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/40">
         <button 
           onClick={() => {
-             if (selectedElementId) {
-                duplicateElement(spread.id, selectedElementId);
-             }
+             if (selectedElementId) duplicateElement(spread.id, selectedElementId);
           }}
           disabled={!selectedElementId}
           className="p-1.5 rounded-md hover:bg-neutral-200 dark:hover:bg-neutral-800 text-neutral-500 dark:text-neutral-400 disabled:opacity-30 transition-colors"
@@ -179,9 +241,7 @@ export default function LayersPanel() {
           <Copy className="w-4 h-4" />
         </button>
         <button 
-          onClick={() => {
-            createGroup(spread.id);
-          }}
+          onClick={() => createGroup(spread.id)}
           className="p-1.5 rounded-md hover:bg-neutral-200 dark:hover:bg-neutral-800 text-neutral-500 dark:text-neutral-400 transition-colors"
           title="Create Group"
         >
@@ -189,9 +249,7 @@ export default function LayersPanel() {
         </button>
         <button 
           onClick={() => {
-            if (selectedElementId) {
-               removeElement(spread.id, selectedElementId);
-            }
+            if (selectedElementId) removeElement(spread.id, selectedElementId);
           }}
           disabled={!selectedElementId}
           className="p-1.5 rounded-md hover:bg-red-100 dark:hover:bg-red-900/30 text-neutral-500 hover:text-red-600 dark:text-neutral-400 dark:hover:text-red-400 disabled:opacity-30 transition-colors"
@@ -200,6 +258,79 @@ export default function LayersPanel() {
           <Trash2 className="w-4 h-4" />
         </button>
       </div>
+
+      {/* FLOATING CONTEXT MENU OVELAY */}
+      {contextMenu && (
+        <div 
+          className="fixed z-[99999] bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-xl rounded-md py-1 min-w-[160px] text-[11px] font-medium"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+          onClick={(e) => e.stopPropagation()} // Prevent bubble up that closes it prematurely
+        >
+           <button onClick={() => { duplicateElement(spread.id, contextMenu.elementId); setContextMenu(null); }} className="w-full text-left px-3 py-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+              Duplicate Layer
+           </button>
+           
+           <button onClick={() => { createGroup(spread.id); setContextMenu(null); }} className="w-full text-left px-3 py-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+              Create Group Here
+           </button>
+           
+           <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1 mx-2" />
+           
+           <button onClick={() => {
+              const tgt = spread.elements.find(e => e.id === contextMenu.elementId);
+              if(tgt) updateElement(spread.id, contextMenu.elementId, { visible: tgt.visible === false ? true : false });
+              setContextMenu(null);
+           }} className="w-full text-left px-3 py-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+              Hide / Show Layer
+           </button>
+           
+           <button onClick={() => {
+              const tgt = spread.elements.find(e => e.id === contextMenu.elementId);
+              if(tgt) updateElement(spread.id, contextMenu.elementId, { locked: !tgt.locked });
+              setContextMenu(null);
+           }} className="w-full text-left px-3 py-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+              Lock / Unlock Bound
+           </button>
+           
+           <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1 mx-2" />
+
+           <button onClick={() => {
+              const tgt = spread.elements.find(e => e.id === contextMenu.elementId);
+              if (tgt) { 
+                const n = window.prompt('Rename Layer:', getLayerName(tgt)); 
+                if(n) updateElement(spread.id, tgt.id, { layerName: n }); 
+              }
+              setContextMenu(null);
+           }} className="w-full text-left px-3 py-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+              Rename Base...
+           </button>
+           
+           <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1 mx-2" />
+           
+           <button onClick={() => {
+              bringToFront(spread.id, contextMenu.elementId);
+              setContextMenu(null);
+           }} className="w-full text-left px-3 py-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-blue-600 dark:text-blue-400">
+              Bring Forward Strict
+           </button>
+
+           <button onClick={() => {
+              sendToBack(spread.id, contextMenu.elementId);
+              setContextMenu(null);
+           }} className="w-full text-left px-3 py-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-blue-600 dark:text-blue-400">
+              Send Backward Strict
+           </button>
+
+           <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1 mx-2" />
+
+           <button onClick={() => {
+              removeElement(spread.id, contextMenu.elementId);
+              setContextMenu(null);
+           }} className="w-full text-left px-3 py-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30">
+              Delete Object
+           </button>
+        </div>
+      )}
     </div>
   );
 }
