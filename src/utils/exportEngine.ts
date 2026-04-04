@@ -122,9 +122,9 @@ export async function exportSpreadToJPG(spread: Spread, meta: ExportMeta): Promi
             x: el.x_mm * mmToPx,
             y: el.y_mm * mmToPx,
             text: el.text || '',
-            fontSize: (el.fontSize || 12) * mmToPx,
-            fontFamily: el.fontFamily || 'sans-serif',
-            fill: el.fillColor || el.color || '#000000',
+            fontSize: (el.fontSize || 32) * mmToPx,
+            fontFamily: el.fontFamily || 'Inter',
+            fill: el.textColor || el.fillColor || el.color || '#000000',
             align: el.textAlign || 'left',
             fontStyle: (el.isBold ? 'bold ' : '') + (el.isItalic ? 'italic' : ''),
             rotation: el.rotation_deg,
@@ -133,6 +133,13 @@ export async function exportSpreadToJPG(spread: Spread, meta: ExportMeta): Promi
             scaleY: el.scale || 1,
             width: el.w_mm ? el.w_mm * mmToPx : undefined,
             height: el.h_mm ? el.h_mm * mmToPx : undefined,
+            stroke: el.strokeColor || undefined,
+            strokeWidth: el.strokeWidth ? el.strokeWidth * mmToPx : 0,
+            shadowColor: el.shadowColor || 'black',
+            shadowBlur: el.shadowBlur ? el.shadowBlur * mmToPx : 0,
+            shadowOffsetX: el.shadowOffsetX ? el.shadowOffsetX * mmToPx : 0,
+            shadowOffsetY: el.shadowOffsetY ? el.shadowOffsetY * mmToPx : 0,
+            shadowOpacity: el.shadowOpacity !== undefined ? el.shadowOpacity : 0.5,
         }));
     }
   }

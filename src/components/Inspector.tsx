@@ -156,6 +156,106 @@ export default function Inspector() {
         </>
       )}
 
+      {element.type === 'text' && (
+        <div className="mb-4 bg-neutral-50 dark:bg-neutral-900/50 p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-800 dark:text-neutral-200 mb-3 border-b border-neutral-200 dark:border-neutral-800 pb-2">Typography</h3>
+          <div className="flex flex-col gap-1 mb-3">
+            <label className="text-xs font-semibold text-neutral-500 uppercase">Text Source</label>
+            <textarea
+              className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-700 rounded px-2 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow min-h-[60px]"
+              value={element.text || ''}
+              onChange={(e) => updateElement(activeSpreadId, element.id, { text: e.target.value })}
+            />
+          </div>
+          <div className="flex flex-col gap-1 mb-3">
+            <label className="text-xs font-semibold text-neutral-500 uppercase">Font Family</label>
+            <select
+              className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-700 rounded px-2 py-1.5 text-sm focus:outline-none"
+              value={element.fontFamily || 'Inter'}
+              onChange={(e) => updateElement(activeSpreadId, element.id, { fontFamily: e.target.value })}
+            >
+              <option value="Inter">Inter (Sans Serif)</option>
+              <option value="Arial">Arial</option>
+              <option value="Times New Roman">Times New Roman</option>
+              <option value="Courier New">Courier New</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Verdana">Verdana</option>
+              <option value="Impact">Impact</option>
+              <option value="Comic Sans MS">Comic Sans MS</option>
+              <option value="Oswald">Oswald</option>
+              <option value="Playfair Display">Playfair Display</option>
+            </select>
+          </div>
+          <InputField 
+            label={"Font Size"} 
+            value={element.fontSize !== undefined ? element.fontSize.toString() : "32"} 
+            setter={(val) => updateElement(activeSpreadId, element.id, { fontSize: parseFloat(val) })} 
+          />
+          <div className="flex flex-col gap-1 mb-3">
+            <label className="text-xs font-semibold text-neutral-500 uppercase">Text Fill Color</label>
+            <input
+              type="color"
+              className="w-full h-8 cursor-pointer rounded border border-neutral-200 dark:border-neutral-700"
+              value={element.textColor || '#000000'}
+              onChange={(e) => updateElement(activeSpreadId, element.id, { textColor: e.target.value })}
+            />
+          </div>
+          
+          <div className="pt-3 mt-3 border-t border-neutral-200 dark:border-neutral-800">
+             <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-800 dark:text-neutral-200 mb-2">Outline (Stroke)</h3>
+             <InputField 
+               label={"Outline Thickness"} 
+               value={element.strokeWidth !== undefined ? element.strokeWidth.toString() : "0"} 
+               setter={(val) => updateElement(activeSpreadId, element.id, { strokeWidth: parseFloat(val) })} 
+             />
+             <div className="flex flex-col gap-1 mb-2 mt-1">
+               <label className="text-xs font-semibold text-neutral-500 uppercase">Outline Color</label>
+               <input
+                 type="color"
+                 className="w-full h-8 cursor-pointer rounded border border-neutral-200 dark:border-neutral-700"
+                 value={element.strokeColor || '#000000'}
+                 onChange={(e) => updateElement(activeSpreadId, element.id, { strokeColor: e.target.value })}
+               />
+             </div>
+          </div>
+
+          <div className="pt-3 mt-3 border-t border-neutral-200 dark:border-neutral-800">
+             <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-800 dark:text-neutral-200 mb-2">Text Shadow Drops</h3>
+             <InputField 
+               label={"Shadow Blur Radius"} 
+               value={element.shadowBlur !== undefined ? element.shadowBlur.toString() : "0"} 
+               setter={(val) => updateElement(activeSpreadId, element.id, { shadowBlur: parseFloat(val) })} 
+             />
+             <div className="flex gap-2">
+               <InputField 
+                 label={"Offset X"} 
+                 value={element.shadowOffsetX !== undefined ? element.shadowOffsetX.toString() : "0"} 
+                 setter={(val) => updateElement(activeSpreadId, element.id, { shadowOffsetX: parseFloat(val) })} 
+               />
+               <InputField 
+                 label={"Offset Y"} 
+                 value={element.shadowOffsetY !== undefined ? element.shadowOffsetY.toString() : "0"} 
+                 setter={(val) => updateElement(activeSpreadId, element.id, { shadowOffsetY: parseFloat(val) })} 
+               />
+             </div>
+             <div className="flex flex-col gap-1 mb-2 mt-1">
+               <label className="text-xs font-semibold text-neutral-500 uppercase">Shadow Color</label>
+               <input
+                 type="color"
+                 className="w-full h-8 cursor-pointer rounded border border-neutral-200 dark:border-neutral-700"
+                 value={element.shadowColor || '#000000'}
+                 onChange={(e) => updateElement(activeSpreadId, element.id, { shadowColor: e.target.value })}
+               />
+             </div>
+             <InputField 
+               label={"Shadow Translucency"} 
+               value={element.shadowOpacity !== undefined ? element.shadowOpacity.toString() : "0.5"} 
+               setter={(val) => updateElement(activeSpreadId, element.id, { shadowOpacity: parseFloat(val) })} 
+             />
+          </div>
+        </div>
+      )}
+
       {element.type === 'shape' && (
         <div className="flex flex-col gap-1 mb-3">
           <label className="text-xs font-semibold text-neutral-500 uppercase">{t('fill_color')}</label>

@@ -43,8 +43,11 @@ export default function AssetLibrary() {
 
   // Handlers
   const handleDragStartDefault = (e: React.DragEvent, asset: RegistryAsset, category: string) => {
+    // Implement smart payload mapping. If typography, it is a native text block, not dynamic SVG!
+    const elementType = category === 'typography' ? 'text' : 'decoration';
+    
     e.dataTransfer.setData('application/json', JSON.stringify({
-      type: 'decoration',
+      type: elementType,
       src: asset.src,
       libraryCategory: category,
       sourceType: 'default',
@@ -120,7 +123,7 @@ export default function AssetLibrary() {
           ) : (
             <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 overflow-y-auto pr-1 pb-4 pt-1 px-1">
               {assets.map((asset) => {
-                const isDarkCat = ['overlays', 'cinematic', 'textures', 'frames'].includes(activeCategory);
+                const isDarkCat = ['overlays'].includes(activeCategory);
                 const bgClass = isDarkCat ? 'bg-[#1e1e1e] border-neutral-800' : 'bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800';
                 
                 return (

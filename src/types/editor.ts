@@ -24,11 +24,14 @@ export interface EditorElement {
   shadowColor?: string;
   shadowOpacity?: number;
   text?: string;
+  textColor?: string;
   fontSize?: number;
   fontFamily?: string;
   textAlign?: string;
   isBold?: boolean;
   isItalic?: boolean;
+  strokeColor?: string;
+  strokeWidth?: number;
   x_mm: number;
   y_mm: number;
   w_mm: number;
