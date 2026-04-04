@@ -95,40 +95,52 @@ export default function LayersPanel() {
       {(() => {
          const selEl = selectedElementId ? spread.elements.find(e => e.id === selectedElementId) : null;
          return (
-           <div className="flex items-center justify-between px-4 py-3 bg-neutral-50/80 dark:bg-neutral-900/80 border-b border-neutral-200 dark:border-neutral-800 text-[13px] font-medium transition-colors">
-              <select 
-                value={selEl?.blendMode || 'source-over'} 
-                onChange={(e) => { if(selEl) updateElement(spread.id, selEl.id, { blendMode: e.target.value })}}
-                className="bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-neutral-300 dark:border-neutral-700 rounded-md outline-none px-2 py-1 cursor-pointer w-[110px] shadow-sm disabled:opacity-50"
-                disabled={!selEl || selEl.type === 'text' || selEl.type === 'group'}
-              >
-                <option value="source-over">Normal</option>
-                <option value="multiply">Multiply</option>
-                <option value="screen">Screen</option>
-                <option value="overlay">Overlay</option>
-                <option value="darken">Darken</option>
-                <option value="lighten">Lighten</option>
-                <option value="color-dodge">Color Dodge</option>
-                <option value="color-burn">Color Burn</option>
-                <option value="hard-light">Hard Light</option>
-                <option value="soft-light">Soft Light</option>
-                <option value="difference">Difference</option>
-                <option value="exclusion">Exclusion</option>
-              </select>
-              
-              <div className="flex items-center gap-2 flex-1 justify-end opacity-90">
-                 <span className="text-neutral-500">Op:</span>
-                 <input 
-                   disabled={!selEl}
-                   type="number" 
-                   min="0" max="100" 
-                   value={Math.round(((selEl && selEl.opacity !== undefined) ? selEl.opacity : 1) * 100)} 
-                   onChange={(e) => { if(selEl) updateElement(spread.id, selEl.id, { opacity: Number(e.target.value) / 100 })}}
-                   className="w-[60px] bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-neutral-300 dark:border-neutral-700 rounded-md px-1.5 py-1 text-center outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm transition-all disabled:opacity-50"
-                   onClick={(e) => { (e.target as HTMLInputElement).select() }}
-                 />
-                 <span className="text-neutral-500 font-normal">%</span>
-              </div>
+           <div className="flex flex-col gap-2 px-4 py-3 bg-neutral-50/80 dark:bg-neutral-900/80 border-b border-neutral-200 dark:border-neutral-800 text-[12px] font-medium transition-colors">
+             <div className="flex items-center justify-between">
+                <select 
+                  value={selEl?.blendMode || 'source-over'} 
+                  onChange={(e) => { if(selEl) updateElement(spread.id, selEl.id, { blendMode: e.target.value })}}
+                  className="bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-neutral-300 dark:border-neutral-700 rounded-md outline-none px-2 py-1 cursor-pointer w-[110px] shadow-sm disabled:opacity-50"
+                  disabled={!selEl || selEl.type === 'text' || selEl.type === 'group'}
+                >
+                  <option value="source-over">Normal</option>
+                  <option value="multiply">Multiply</option>
+                  <option value="screen">Screen</option>
+                  <option value="overlay">Overlay</option>
+                  <option value="darken">Darken</option>
+                  <option value="lighten">Lighten</option>
+                  <option value="color-dodge">Color Dodge</option>
+                  <option value="color-burn">Color Burn</option>
+                  <option value="hard-light">Hard Light</option>
+                  <option value="soft-light">Soft Light</option>
+                  <option value="difference">Difference</option>
+                  <option value="exclusion">Exclusion</option>
+                </select>
+                
+                <div className="flex items-center gap-1 opacity-90">
+                   <span className="text-neutral-500 mr-1">{t('op') || 'Op:'}</span>
+                   <input 
+                     disabled={!selEl}
+                     type="range" 
+                     min="0" max="100" 
+                     value={Math.round(((selEl && selEl.opacity !== undefined) ? selEl.opacity : 1) * 100)} 
+                     onChange={(e) => { if(selEl) updateElement(spread.id, selEl.id, { opacity: Number(e.target.value) / 100 })}}
+                     className="w-16 accent-blue-500 disabled:opacity-50 cursor-pointer"
+                   />
+                   <div className="flex items-center border border-neutral-300 dark:border-neutral-700 rounded bg-white dark:bg-neutral-800 px-1 py-0.5 ml-1">
+                     <input 
+                       disabled={!selEl}
+                       type="number" 
+                       min="0" max="100" 
+                       value={Math.round(((selEl && selEl.opacity !== undefined) ? selEl.opacity : 1) * 100)} 
+                       onChange={(e) => { if(selEl) updateElement(spread.id, selEl.id, { opacity: Number(e.target.value) / 100 })}}
+                       className="w-8 bg-transparent text-neutral-800 dark:text-neutral-200 text-right outline-none ring-0 p-0 m-0 text-[11px]"
+                       onClick={(e) => { (e.target as HTMLInputElement).select() }}
+                     />
+                     <span className="text-neutral-500 font-normal ml-0.5">%</span>
+                   </div>
+                </div>
+             </div>
            </div>
          );
       })()}
@@ -188,10 +200,22 @@ export default function LayersPanel() {
                       >
                          {(() => {
                             const type = el.type as string;
-                            if (type === 'group') return el.isCollapsed ? <Folder className="w-4 h-4 text-neutral-500" /> : <FolderOpen className="w-4 h-4 text-blue-500" />;
+                            if (type === 'group') return el.isCollapsed ? <Folder className="w-5 h-5 text-neutral-500 shrink-0" /> : <FolderOpen className="w-5 h-5 text-blue-500 shrink-0" />;
+                            
+                            const src = el.previewUrl || el.src;
+                            if ((type === 'photo' || type === 'image' || type === 'background' || type === 'overlay') && src && src.length > 5) {
+                               // eslint-disable-next-line @next/next/no-img-element
+                               return <img src={src} className="w-7 h-7 object-cover rounded-[2px] border border-neutral-300 dark:border-neutral-600 bg-neutral-200 shadow-sm pointer-events-none shrink-0" alt="" />;
+                            }
                             
                             if (type === 'text') {
-                               return <div className="w-[22px] h-[22px] bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center font-serif text-[12px] font-bold text-neutral-400 pointer-events-none leading-none shadow-sm rounded-sm">T</div>;
+                               return <div className="w-7 h-7 shrink-0 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-[2px] flex items-center justify-center font-serif text-[14px] font-bold text-neutral-800 dark:text-neutral-200 shadow-sm pointer-events-none leading-none">T</div>;
+                            }
+                            
+                            if (type === 'shape') {
+                               return <div className="w-7 h-7 shrink-0 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-[2px] flex items-center justify-center shadow-sm pointer-events-none">
+                                  <div className="w-3.5 h-3.5 bg-neutral-400" style={{ borderRadius: el.shapeType === 'ellipse' ? '50%' : '0' }}></div>
+                               </div>;
                             }
                             
                             return getIcon(type, el.isCollapsed);
