@@ -1,5 +1,5 @@
 export type TextHierarchy = 'h1' | 'h2' | 'body' | 'small';
-export type PresetCategory = 'wedding' | 'quinceanera' | 'modern' | 'minimal' | 'formal';
+export type PresetCategory = 'wedding' | 'quinceanera' | 'modern' | 'minimal' | 'formal' | 'editorial' | 'classic';
 
 export interface TypographyPreset {
   id: string;
@@ -230,6 +230,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 ,
 {
   "id": "preset-011",
+  "name": "Luxury preset-011",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "modern",
   "fonts": {
     "h1": "Lato",
@@ -267,6 +270,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-012",
+  "name": "Luxury preset-012",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "minimal",
   "fonts": {
     "h1": "Poppins",
@@ -304,6 +310,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-013",
+  "name": "Luxury preset-013",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "editorial",
   "fonts": {
     "h1": "Cormorant Garamond",
@@ -341,6 +350,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-014",
+  "name": "Luxury preset-014",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "classic",
   "fonts": {
     "h1": "Merriweather",
@@ -378,6 +390,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-015",
+  "name": "Luxury preset-015",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "editorial",
   "fonts": {
     "h1": "Lora",
@@ -415,6 +430,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-016",
+  "name": "Luxury preset-016",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "editorial",
   "fonts": {
     "h1": "Merriweather",
@@ -452,6 +470,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-017",
+  "name": "Luxury preset-017",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "classic",
   "fonts": {
     "h1": "Cormorant Garamond",
@@ -489,6 +510,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-018",
+  "name": "Luxury preset-018",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "wedding",
   "fonts": {
     "h1": "Great Vibes",
@@ -526,6 +550,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-019",
+  "name": "Luxury preset-019",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "minimal",
   "fonts": {
     "h1": "Montserrat",
@@ -563,6 +590,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-020",
+  "name": "Luxury preset-020",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "minimal",
   "fonts": {
     "h1": "Lato",
@@ -600,6 +630,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-021",
+  "name": "Luxury preset-021",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "modern",
   "fonts": {
     "h1": "Lato",
@@ -637,6 +670,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-022",
+  "name": "Luxury preset-022",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "editorial",
   "fonts": {
     "h1": "Cinzel",
@@ -674,6 +710,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-023",
+  "name": "Luxury preset-023",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "classic",
   "fonts": {
     "h1": "Cormorant Garamond",
@@ -711,6 +750,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-024",
+  "name": "Luxury preset-024",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "editorial",
   "fonts": {
     "h1": "Playfair Display",
@@ -748,6 +790,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-025",
+  "name": "Luxury preset-025",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "classic",
   "fonts": {
     "h1": "Playfair Display",
@@ -785,6 +830,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-026",
+  "name": "Luxury preset-026",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "modern",
   "fonts": {
     "h1": "Raleway",
@@ -822,6 +870,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-027",
+  "name": "Luxury preset-027",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "quinceanera",
   "fonts": {
     "h1": "Pinyon Script",
@@ -859,6 +910,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-028",
+  "name": "Luxury preset-028",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "wedding",
   "fonts": {
     "h1": "Allura",
@@ -896,6 +950,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-029",
+  "name": "Luxury preset-029",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "editorial",
   "fonts": {
     "h1": "Playfair Display",
@@ -933,6 +990,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-030",
+  "name": "Luxury preset-030",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "editorial",
   "fonts": {
     "h1": "Playfair Display",
@@ -970,6 +1030,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-031",
+  "name": "Luxury preset-031",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "editorial",
   "fonts": {
     "h1": "Cinzel",
@@ -1007,6 +1070,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-032",
+  "name": "Luxury preset-032",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "minimal",
   "fonts": {
     "h1": "Poppins",
@@ -1044,6 +1110,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-033",
+  "name": "Luxury preset-033",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "quinceanera",
   "fonts": {
     "h1": "Allura",
@@ -1081,6 +1150,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-034",
+  "name": "Luxury preset-034",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "wedding",
   "fonts": {
     "h1": "Dancing Script",
@@ -1118,6 +1190,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-035",
+  "name": "Luxury preset-035",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "classic",
   "fonts": {
     "h1": "Cormorant Garamond",
@@ -1155,6 +1230,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-036",
+  "name": "Luxury preset-036",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "wedding",
   "fonts": {
     "h1": "Alex Brush",
@@ -1192,6 +1270,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-037",
+  "name": "Luxury preset-037",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "wedding",
   "fonts": {
     "h1": "Allura",
@@ -1229,6 +1310,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-038",
+  "name": "Luxury preset-038",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "editorial",
   "fonts": {
     "h1": "Bodoni Moda",
@@ -1266,6 +1350,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-039",
+  "name": "Luxury preset-039",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "minimal",
   "fonts": {
     "h1": "Inter",
@@ -1303,6 +1390,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-040",
+  "name": "Luxury preset-040",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "quinceanera",
   "fonts": {
     "h1": "Allura",
@@ -1340,6 +1430,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-041",
+  "name": "Luxury preset-041",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "modern",
   "fonts": {
     "h1": "Outfit",
@@ -1377,6 +1470,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-042",
+  "name": "Luxury preset-042",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "classic",
   "fonts": {
     "h1": "Cormorant Garamond",
@@ -1414,6 +1510,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-043",
+  "name": "Luxury preset-043",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "quinceanera",
   "fonts": {
     "h1": "Pinyon Script",
@@ -1451,6 +1550,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-044",
+  "name": "Luxury preset-044",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "quinceanera",
   "fonts": {
     "h1": "Great Vibes",
@@ -1488,6 +1590,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-045",
+  "name": "Luxury preset-045",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "wedding",
   "fonts": {
     "h1": "Allura",
@@ -1525,6 +1630,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-046",
+  "name": "Luxury preset-046",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "minimal",
   "fonts": {
     "h1": "Poppins",
@@ -1562,6 +1670,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-047",
+  "name": "Luxury preset-047",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "minimal",
   "fonts": {
     "h1": "Outfit",
@@ -1599,6 +1710,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-048",
+  "name": "Luxury preset-048",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "quinceanera",
   "fonts": {
     "h1": "Allura",
@@ -1636,6 +1750,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-049",
+  "name": "Luxury preset-049",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "minimal",
   "fonts": {
     "h1": "Poppins",
@@ -1673,6 +1790,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-050",
+  "name": "Luxury preset-050",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "wedding",
   "fonts": {
     "h1": "Tangerine",
@@ -1710,6 +1830,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-051",
+  "name": "Luxury preset-051",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "quinceanera",
   "fonts": {
     "h1": "Great Vibes",
@@ -1747,6 +1870,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-052",
+  "name": "Luxury preset-052",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "editorial",
   "fonts": {
     "h1": "Cinzel",
@@ -1784,6 +1910,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-053",
+  "name": "Luxury preset-053",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "editorial",
   "fonts": {
     "h1": "Cormorant Garamond",
@@ -1821,6 +1950,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-054",
+  "name": "Luxury preset-054",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "minimal",
   "fonts": {
     "h1": "Inter",
@@ -1858,6 +1990,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-055",
+  "name": "Luxury preset-055",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "editorial",
   "fonts": {
     "h1": "PT Serif",
@@ -1895,6 +2030,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-056",
+  "name": "Luxury preset-056",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "wedding",
   "fonts": {
     "h1": "Tangerine",
@@ -1932,6 +2070,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-057",
+  "name": "Luxury preset-057",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "classic",
   "fonts": {
     "h1": "Cormorant Garamond",
@@ -1969,6 +2110,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-058",
+  "name": "Luxury preset-058",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "quinceanera",
   "fonts": {
     "h1": "Pinyon Script",
@@ -2006,6 +2150,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-059",
+  "name": "Luxury preset-059",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "minimal",
   "fonts": {
     "h1": "Outfit",
@@ -2043,6 +2190,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-060",
+  "name": "Luxury preset-060",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "quinceanera",
   "fonts": {
     "h1": "Great Vibes",
@@ -2080,6 +2230,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-061",
+  "name": "Luxury preset-061",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "editorial",
   "fonts": {
     "h1": "Cormorant Garamond",
@@ -2117,6 +2270,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-062",
+  "name": "Luxury preset-062",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "minimal",
   "fonts": {
     "h1": "Raleway",
@@ -2154,6 +2310,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-063",
+  "name": "Luxury preset-063",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "editorial",
   "fonts": {
     "h1": "Merriweather",
@@ -2191,6 +2350,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-064",
+  "name": "Luxury preset-064",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "wedding",
   "fonts": {
     "h1": "Dancing Script",
@@ -2228,6 +2390,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-065",
+  "name": "Luxury preset-065",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "wedding",
   "fonts": {
     "h1": "Tangerine",
@@ -2265,6 +2430,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-066",
+  "name": "Luxury preset-066",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "quinceanera",
   "fonts": {
     "h1": "Allura",
@@ -2302,6 +2470,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-067",
+  "name": "Luxury preset-067",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "modern",
   "fonts": {
     "h1": "Outfit",
@@ -2339,6 +2510,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-068",
+  "name": "Luxury preset-068",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "minimal",
   "fonts": {
     "h1": "Raleway",
@@ -2376,6 +2550,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-069",
+  "name": "Luxury preset-069",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "wedding",
   "fonts": {
     "h1": "Dancing Script",
@@ -2413,6 +2590,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-070",
+  "name": "Luxury preset-070",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "modern",
   "fonts": {
     "h1": "Oswald",
@@ -2450,6 +2630,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-071",
+  "name": "Luxury preset-071",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "wedding",
   "fonts": {
     "h1": "Alex Brush",
@@ -2487,6 +2670,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-072",
+  "name": "Luxury preset-072",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "wedding",
   "fonts": {
     "h1": "Pinyon Script",
@@ -2524,6 +2710,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-073",
+  "name": "Luxury preset-073",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "modern",
   "fonts": {
     "h1": "Oswald",
@@ -2561,6 +2750,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-074",
+  "name": "Luxury preset-074",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "modern",
   "fonts": {
     "h1": "Montserrat",
@@ -2598,6 +2790,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-075",
+  "name": "Luxury preset-075",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "quinceanera",
   "fonts": {
     "h1": "Tangerine",
@@ -2635,6 +2830,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-076",
+  "name": "Luxury preset-076",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "wedding",
   "fonts": {
     "h1": "Allura",
@@ -2672,6 +2870,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-077",
+  "name": "Luxury preset-077",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "wedding",
   "fonts": {
     "h1": "Alex Brush",
@@ -2709,6 +2910,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-078",
+  "name": "Luxury preset-078",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "classic",
   "fonts": {
     "h1": "Lora",
@@ -2746,6 +2950,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-079",
+  "name": "Luxury preset-079",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "wedding",
   "fonts": {
     "h1": "Allura",
@@ -2783,6 +2990,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-080",
+  "name": "Luxury preset-080",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "quinceanera",
   "fonts": {
     "h1": "Great Vibes",
@@ -2820,6 +3030,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-081",
+  "name": "Luxury preset-081",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "quinceanera",
   "fonts": {
     "h1": "Great Vibes",
@@ -2857,6 +3070,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-082",
+  "name": "Luxury preset-082",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "wedding",
   "fonts": {
     "h1": "Dancing Script",
@@ -2894,6 +3110,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-083",
+  "name": "Luxury preset-083",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "classic",
   "fonts": {
     "h1": "Bodoni Moda",
@@ -2931,6 +3150,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-084",
+  "name": "Luxury preset-084",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "classic",
   "fonts": {
     "h1": "Cinzel",
@@ -2968,6 +3190,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-085",
+  "name": "Luxury preset-085",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "modern",
   "fonts": {
     "h1": "Roboto",
@@ -3005,6 +3230,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-086",
+  "name": "Luxury preset-086",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "minimal",
   "fonts": {
     "h1": "Poppins",
@@ -3042,6 +3270,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-087",
+  "name": "Luxury preset-087",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "editorial",
   "fonts": {
     "h1": "Cinzel",
@@ -3079,6 +3310,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-088",
+  "name": "Luxury preset-088",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "wedding",
   "fonts": {
     "h1": "Pinyon Script",
@@ -3116,6 +3350,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-089",
+  "name": "Luxury preset-089",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "classic",
   "fonts": {
     "h1": "Cormorant Garamond",
@@ -3153,6 +3390,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-090",
+  "name": "Luxury preset-090",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "quinceanera",
   "fonts": {
     "h1": "Allura",
@@ -3190,6 +3430,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-091",
+  "name": "Luxury preset-091",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "editorial",
   "fonts": {
     "h1": "Merriweather",
@@ -3227,6 +3470,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-092",
+  "name": "Luxury preset-092",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "wedding",
   "fonts": {
     "h1": "Tangerine",
@@ -3264,6 +3510,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-093",
+  "name": "Luxury preset-093",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "editorial",
   "fonts": {
     "h1": "Bodoni Moda",
@@ -3301,6 +3550,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-094",
+  "name": "Luxury preset-094",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "quinceanera",
   "fonts": {
     "h1": "Pinyon Script",
@@ -3338,6 +3590,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-095",
+  "name": "Luxury preset-095",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "minimal",
   "fonts": {
     "h1": "Oswald",
@@ -3375,6 +3630,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-096",
+  "name": "Luxury preset-096",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "editorial",
   "fonts": {
     "h1": "Cormorant Garamond",
@@ -3412,6 +3670,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-097",
+  "name": "Luxury preset-097",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "editorial",
   "fonts": {
     "h1": "Merriweather",
@@ -3449,6 +3710,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-098",
+  "name": "Luxury preset-098",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "modern",
   "fonts": {
     "h1": "Poppins",
@@ -3486,6 +3750,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-099",
+  "name": "Luxury preset-099",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "wedding",
   "fonts": {
     "h1": "Great Vibes",
@@ -3523,6 +3790,9 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 },
 {
   "id": "preset-100",
+  "name": "Luxury preset-100",
+  "lockedFonts": true,
+  "alignment": "center",
   "category": "editorial",
   "fonts": {
     "h1": "Merriweather",
