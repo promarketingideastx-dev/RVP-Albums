@@ -824,7 +824,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
 
       {contextMenu && (
         <div 
-          className="absolute z-50 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-xl py-1 min-w-[160px] text-sm overflow-hidden"
+          className="fixed z-50 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-xl py-1 min-w-[160px] text-sm overflow-hidden"
           style={{ top: contextMenu.y, left: contextMenu.x }}
           onClick={(e) => e.stopPropagation()}
         >
