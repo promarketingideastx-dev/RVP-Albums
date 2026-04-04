@@ -227,7 +227,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     alignment: 'left',
     colorPalette: { primary: '#000000', secondary: '#333333', accent: '#CCCCCC' }
   }
-,\n{
+,
+{
   "id": "preset-011",
   "category": "modern",
   "fonts": {
@@ -263,7 +264,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#4a4a4a",
     "accent": "#d4af37"
   }
-},\n{
+},
+{
   "id": "preset-012",
   "category": "minimal",
   "fonts": {
@@ -299,7 +301,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#576574",
     "accent": "#ee5253"
   }
-},\n{
+},
+{
   "id": "preset-013",
   "category": "editorial",
   "fonts": {
@@ -335,7 +338,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#7d7d7d",
     "accent": "#c0392b"
   }
-},\n{
+},
+{
   "id": "preset-014",
   "category": "classic",
   "fonts": {
@@ -371,7 +375,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#636e72",
     "accent": "#00b894"
   }
-},\n{
+},
+{
   "id": "preset-015",
   "category": "editorial",
   "fonts": {
@@ -407,7 +412,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#666666",
     "accent": "#ff9f43"
   }
-},\n{
+},
+{
   "id": "preset-016",
   "category": "editorial",
   "fonts": {
@@ -443,7 +449,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#4a4a4a",
     "accent": "#d4af37"
   }
-},\n{
+},
+{
   "id": "preset-017",
   "category": "classic",
   "fonts": {
@@ -479,7 +486,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#34495e",
     "accent": "#e74c3c"
   }
-},\n{
+},
+{
   "id": "preset-018",
   "category": "wedding",
   "fonts": {
@@ -515,7 +523,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#34495e",
     "accent": "#e74c3c"
   }
-},\n{
+},
+{
   "id": "preset-019",
   "category": "minimal",
   "fonts": {
@@ -551,7 +560,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#555555",
     "accent": "#8e44ad"
   }
-},\n{
+},
+{
   "id": "preset-020",
   "category": "minimal",
   "fonts": {
@@ -587,7 +597,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#34495e",
     "accent": "#e74c3c"
   }
-},\n{
+},
+{
   "id": "preset-021",
   "category": "modern",
   "fonts": {
@@ -623,7 +634,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#34495e",
     "accent": "#e74c3c"
   }
-},\n{
+},
+{
   "id": "preset-022",
   "category": "editorial",
   "fonts": {
@@ -659,7 +671,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#7d7d7d",
     "accent": "#c0392b"
   }
-},\n{
+},
+{
   "id": "preset-023",
   "category": "classic",
   "fonts": {
@@ -695,7 +708,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#485460",
     "accent": "#ffdd59"
   }
-},\n{
+},
+{
   "id": "preset-024",
   "category": "editorial",
   "fonts": {
@@ -731,7 +745,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#555555",
     "accent": "#8e44ad"
   }
-},\n{
+},
+{
   "id": "preset-025",
   "category": "classic",
   "fonts": {
@@ -767,7 +782,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#7d7d7d",
     "accent": "#c0392b"
   }
-},\n{
+},
+{
   "id": "preset-026",
   "category": "modern",
   "fonts": {
@@ -803,7 +819,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#485460",
     "accent": "#ffdd59"
   }
-},\n{
+},
+{
   "id": "preset-027",
   "category": "quinceanera",
   "fonts": {
@@ -839,7 +856,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#576574",
     "accent": "#ee5253"
   }
-},\n{
+},
+{
   "id": "preset-028",
   "category": "wedding",
   "fonts": {
@@ -875,7 +893,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#576574",
     "accent": "#ee5253"
   }
-},\n{
+},
+{
   "id": "preset-029",
   "category": "editorial",
   "fonts": {
@@ -911,7 +930,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#576574",
     "accent": "#ee5253"
   }
-},\n{
+},
+{
   "id": "preset-030",
   "category": "editorial",
   "fonts": {
@@ -947,7 +967,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#555555",
     "accent": "#8e44ad"
   }
-},\n{
+},
+{
   "id": "preset-031",
   "category": "editorial",
   "fonts": {
@@ -983,7 +1004,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#34495e",
     "accent": "#e74c3c"
   }
-},\n{
+},
+{
   "id": "preset-032",
   "category": "minimal",
   "fonts": {
@@ -1019,7 +1041,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#555555",
     "accent": "#8e44ad"
   }
-},\n{
+},
+{
   "id": "preset-033",
   "category": "quinceanera",
   "fonts": {
@@ -1055,7 +1078,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#4a4a4a",
     "accent": "#d4af37"
   }
-},\n{
+},
+{
   "id": "preset-034",
   "category": "wedding",
   "fonts": {
@@ -1091,7 +1115,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#34495e",
     "accent": "#e74c3c"
   }
-},\n{
+},
+{
   "id": "preset-035",
   "category": "classic",
   "fonts": {
@@ -1127,7 +1152,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#4a4a4a",
     "accent": "#d4af37"
   }
-},\n{
+},
+{
   "id": "preset-036",
   "category": "wedding",
   "fonts": {
@@ -1163,7 +1189,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#7d7d7d",
     "accent": "#c0392b"
   }
-},\n{
+},
+{
   "id": "preset-037",
   "category": "wedding",
   "fonts": {
@@ -1199,7 +1226,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#4a4a4a",
     "accent": "#d4af37"
   }
-},\n{
+},
+{
   "id": "preset-038",
   "category": "editorial",
   "fonts": {
@@ -1235,7 +1263,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#485460",
     "accent": "#ffdd59"
   }
-},\n{
+},
+{
   "id": "preset-039",
   "category": "minimal",
   "fonts": {
@@ -1271,7 +1300,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#7d7d7d",
     "accent": "#c0392b"
   }
-},\n{
+},
+{
   "id": "preset-040",
   "category": "quinceanera",
   "fonts": {
@@ -1307,7 +1337,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#485460",
     "accent": "#ffdd59"
   }
-},\n{
+},
+{
   "id": "preset-041",
   "category": "modern",
   "fonts": {
@@ -1343,7 +1374,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#34495e",
     "accent": "#e74c3c"
   }
-},\n{
+},
+{
   "id": "preset-042",
   "category": "classic",
   "fonts": {
@@ -1379,7 +1411,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#485460",
     "accent": "#ffdd59"
   }
-},\n{
+},
+{
   "id": "preset-043",
   "category": "quinceanera",
   "fonts": {
@@ -1415,7 +1448,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#666666",
     "accent": "#ff9f43"
   }
-},\n{
+},
+{
   "id": "preset-044",
   "category": "quinceanera",
   "fonts": {
@@ -1451,7 +1485,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#7d7d7d",
     "accent": "#c0392b"
   }
-},\n{
+},
+{
   "id": "preset-045",
   "category": "wedding",
   "fonts": {
@@ -1487,7 +1522,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#555555",
     "accent": "#8e44ad"
   }
-},\n{
+},
+{
   "id": "preset-046",
   "category": "minimal",
   "fonts": {
@@ -1523,7 +1559,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#576574",
     "accent": "#ee5253"
   }
-},\n{
+},
+{
   "id": "preset-047",
   "category": "minimal",
   "fonts": {
@@ -1559,7 +1596,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#34495e",
     "accent": "#e74c3c"
   }
-},\n{
+},
+{
   "id": "preset-048",
   "category": "quinceanera",
   "fonts": {
@@ -1595,7 +1633,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#576574",
     "accent": "#ee5253"
   }
-},\n{
+},
+{
   "id": "preset-049",
   "category": "minimal",
   "fonts": {
@@ -1631,7 +1670,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#7d7d7d",
     "accent": "#c0392b"
   }
-},\n{
+},
+{
   "id": "preset-050",
   "category": "wedding",
   "fonts": {
@@ -1667,7 +1707,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#555555",
     "accent": "#8e44ad"
   }
-},\n{
+},
+{
   "id": "preset-051",
   "category": "quinceanera",
   "fonts": {
@@ -1703,7 +1744,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#7d7d7d",
     "accent": "#c0392b"
   }
-},\n{
+},
+{
   "id": "preset-052",
   "category": "editorial",
   "fonts": {
@@ -1739,7 +1781,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#576574",
     "accent": "#ee5253"
   }
-},\n{
+},
+{
   "id": "preset-053",
   "category": "editorial",
   "fonts": {
@@ -1775,7 +1818,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#555555",
     "accent": "#8e44ad"
   }
-},\n{
+},
+{
   "id": "preset-054",
   "category": "minimal",
   "fonts": {
@@ -1811,7 +1855,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#636e72",
     "accent": "#00b894"
   }
-},\n{
+},
+{
   "id": "preset-055",
   "category": "editorial",
   "fonts": {
@@ -1847,7 +1892,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#666666",
     "accent": "#ff9f43"
   }
-},\n{
+},
+{
   "id": "preset-056",
   "category": "wedding",
   "fonts": {
@@ -1883,7 +1929,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#555555",
     "accent": "#8e44ad"
   }
-},\n{
+},
+{
   "id": "preset-057",
   "category": "classic",
   "fonts": {
@@ -1919,7 +1966,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#34495e",
     "accent": "#e74c3c"
   }
-},\n{
+},
+{
   "id": "preset-058",
   "category": "quinceanera",
   "fonts": {
@@ -1955,7 +2003,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#485460",
     "accent": "#ffdd59"
   }
-},\n{
+},
+{
   "id": "preset-059",
   "category": "minimal",
   "fonts": {
@@ -1991,7 +2040,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#636e72",
     "accent": "#00b894"
   }
-},\n{
+},
+{
   "id": "preset-060",
   "category": "quinceanera",
   "fonts": {
@@ -2027,7 +2077,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#485460",
     "accent": "#ffdd59"
   }
-},\n{
+},
+{
   "id": "preset-061",
   "category": "editorial",
   "fonts": {
@@ -2063,7 +2114,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#4a4a4a",
     "accent": "#d4af37"
   }
-},\n{
+},
+{
   "id": "preset-062",
   "category": "minimal",
   "fonts": {
@@ -2099,7 +2151,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#4a4a4a",
     "accent": "#d4af37"
   }
-},\n{
+},
+{
   "id": "preset-063",
   "category": "editorial",
   "fonts": {
@@ -2135,7 +2188,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#636e72",
     "accent": "#00b894"
   }
-},\n{
+},
+{
   "id": "preset-064",
   "category": "wedding",
   "fonts": {
@@ -2171,7 +2225,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#555555",
     "accent": "#8e44ad"
   }
-},\n{
+},
+{
   "id": "preset-065",
   "category": "wedding",
   "fonts": {
@@ -2207,7 +2262,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#7d7d7d",
     "accent": "#c0392b"
   }
-},\n{
+},
+{
   "id": "preset-066",
   "category": "quinceanera",
   "fonts": {
@@ -2243,7 +2299,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#34495e",
     "accent": "#e74c3c"
   }
-},\n{
+},
+{
   "id": "preset-067",
   "category": "modern",
   "fonts": {
@@ -2279,7 +2336,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#485460",
     "accent": "#ffdd59"
   }
-},\n{
+},
+{
   "id": "preset-068",
   "category": "minimal",
   "fonts": {
@@ -2315,7 +2373,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#485460",
     "accent": "#ffdd59"
   }
-},\n{
+},
+{
   "id": "preset-069",
   "category": "wedding",
   "fonts": {
@@ -2351,7 +2410,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#485460",
     "accent": "#ffdd59"
   }
-},\n{
+},
+{
   "id": "preset-070",
   "category": "modern",
   "fonts": {
@@ -2387,7 +2447,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#485460",
     "accent": "#ffdd59"
   }
-},\n{
+},
+{
   "id": "preset-071",
   "category": "wedding",
   "fonts": {
@@ -2423,7 +2484,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#636e72",
     "accent": "#00b894"
   }
-},\n{
+},
+{
   "id": "preset-072",
   "category": "wedding",
   "fonts": {
@@ -2459,7 +2521,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#576574",
     "accent": "#ee5253"
   }
-},\n{
+},
+{
   "id": "preset-073",
   "category": "modern",
   "fonts": {
@@ -2495,7 +2558,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#636e72",
     "accent": "#00b894"
   }
-},\n{
+},
+{
   "id": "preset-074",
   "category": "modern",
   "fonts": {
@@ -2531,7 +2595,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#576574",
     "accent": "#ee5253"
   }
-},\n{
+},
+{
   "id": "preset-075",
   "category": "quinceanera",
   "fonts": {
@@ -2567,7 +2632,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#636e72",
     "accent": "#00b894"
   }
-},\n{
+},
+{
   "id": "preset-076",
   "category": "wedding",
   "fonts": {
@@ -2603,7 +2669,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#485460",
     "accent": "#ffdd59"
   }
-},\n{
+},
+{
   "id": "preset-077",
   "category": "wedding",
   "fonts": {
@@ -2639,7 +2706,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#666666",
     "accent": "#ff9f43"
   }
-},\n{
+},
+{
   "id": "preset-078",
   "category": "classic",
   "fonts": {
@@ -2675,7 +2743,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#34495e",
     "accent": "#e74c3c"
   }
-},\n{
+},
+{
   "id": "preset-079",
   "category": "wedding",
   "fonts": {
@@ -2711,7 +2780,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#576574",
     "accent": "#ee5253"
   }
-},\n{
+},
+{
   "id": "preset-080",
   "category": "quinceanera",
   "fonts": {
@@ -2747,7 +2817,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#666666",
     "accent": "#ff9f43"
   }
-},\n{
+},
+{
   "id": "preset-081",
   "category": "quinceanera",
   "fonts": {
@@ -2783,7 +2854,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#7d7d7d",
     "accent": "#c0392b"
   }
-},\n{
+},
+{
   "id": "preset-082",
   "category": "wedding",
   "fonts": {
@@ -2819,7 +2891,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#576574",
     "accent": "#ee5253"
   }
-},\n{
+},
+{
   "id": "preset-083",
   "category": "classic",
   "fonts": {
@@ -2855,7 +2928,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#636e72",
     "accent": "#00b894"
   }
-},\n{
+},
+{
   "id": "preset-084",
   "category": "classic",
   "fonts": {
@@ -2891,7 +2965,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#576574",
     "accent": "#ee5253"
   }
-},\n{
+},
+{
   "id": "preset-085",
   "category": "modern",
   "fonts": {
@@ -2927,7 +3002,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#666666",
     "accent": "#ff9f43"
   }
-},\n{
+},
+{
   "id": "preset-086",
   "category": "minimal",
   "fonts": {
@@ -2963,7 +3039,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#4a4a4a",
     "accent": "#d4af37"
   }
-},\n{
+},
+{
   "id": "preset-087",
   "category": "editorial",
   "fonts": {
@@ -2999,7 +3076,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#4a4a4a",
     "accent": "#d4af37"
   }
-},\n{
+},
+{
   "id": "preset-088",
   "category": "wedding",
   "fonts": {
@@ -3035,7 +3113,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#7d7d7d",
     "accent": "#c0392b"
   }
-},\n{
+},
+{
   "id": "preset-089",
   "category": "classic",
   "fonts": {
@@ -3071,7 +3150,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#576574",
     "accent": "#ee5253"
   }
-},\n{
+},
+{
   "id": "preset-090",
   "category": "quinceanera",
   "fonts": {
@@ -3107,7 +3187,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#666666",
     "accent": "#ff9f43"
   }
-},\n{
+},
+{
   "id": "preset-091",
   "category": "editorial",
   "fonts": {
@@ -3143,7 +3224,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#666666",
     "accent": "#ff9f43"
   }
-},\n{
+},
+{
   "id": "preset-092",
   "category": "wedding",
   "fonts": {
@@ -3179,7 +3261,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#34495e",
     "accent": "#e74c3c"
   }
-},\n{
+},
+{
   "id": "preset-093",
   "category": "editorial",
   "fonts": {
@@ -3215,7 +3298,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#485460",
     "accent": "#ffdd59"
   }
-},\n{
+},
+{
   "id": "preset-094",
   "category": "quinceanera",
   "fonts": {
@@ -3251,7 +3335,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#666666",
     "accent": "#ff9f43"
   }
-},\n{
+},
+{
   "id": "preset-095",
   "category": "minimal",
   "fonts": {
@@ -3287,7 +3372,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#636e72",
     "accent": "#00b894"
   }
-},\n{
+},
+{
   "id": "preset-096",
   "category": "editorial",
   "fonts": {
@@ -3323,7 +3409,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#636e72",
     "accent": "#00b894"
   }
-},\n{
+},
+{
   "id": "preset-097",
   "category": "editorial",
   "fonts": {
@@ -3359,7 +3446,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#4a4a4a",
     "accent": "#d4af37"
   }
-},\n{
+},
+{
   "id": "preset-098",
   "category": "modern",
   "fonts": {
@@ -3395,7 +3483,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#4a4a4a",
     "accent": "#d4af37"
   }
-},\n{
+},
+{
   "id": "preset-099",
   "category": "wedding",
   "fonts": {
@@ -3431,7 +3520,8 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#7d7d7d",
     "accent": "#c0392b"
   }
-},\n{
+},
+{
   "id": "preset-100",
   "category": "editorial",
   "fonts": {
@@ -3467,4 +3557,5 @@ export const TYPOGRAPHY_PRESETS: TypographyPreset[] = [
     "secondary": "#34495e",
     "accent": "#e74c3c"
   }
-}\n];\n
+}
+];
