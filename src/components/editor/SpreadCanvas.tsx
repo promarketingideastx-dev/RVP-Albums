@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { Stage, Layer, Rect, Ellipse, Transformer, Image as KonvaImage, Text } from 'react-konva';
+import Konva from 'konva';
 import { useTranslations } from 'next-intl';
 import { useEditorStore } from '@/store/useEditorStore';
 import { EditorElement } from '@/types/editor';
@@ -41,6 +42,50 @@ const EditorImage = ({
       trRef.current.getLayer().batchDraw();
     }
   }, [isSelected]);
+
+  // Handle Photo Filters Natively
+  useEffect(() => {
+    if (imageRef.current && image) {
+      const node = imageRef.current;
+      if (element.photoFilter && element.photoFilter !== 'none') {
+        node.cache();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const filtersArray: any[] = [];
+        
+        switch(element.photoFilter) {
+          case 'sepia': filtersArray.push(Konva.Filters.Sepia); break;
+          case 'grayscale': filtersArray.push(Konva.Filters.Grayscale); break;
+          case 'invert': filtersArray.push(Konva.Filters.Invert); break;
+          case 'blur': 
+            filtersArray.push(Konva.Filters.Blur); 
+            node.blurRadius(element.filterIntensity !== undefined ? element.filterIntensity : 5); 
+            break;
+          case 'noise': 
+            filtersArray.push(Konva.Filters.Noise); 
+            node.noise(element.filterIntensity !== undefined ? element.filterIntensity : 1); 
+            break;
+          case 'brighten': 
+            filtersArray.push(Konva.Filters.Brighten); 
+            node.brightness(element.filterIntensity !== undefined ? element.filterIntensity : 0.5); 
+            break;
+          case 'contrast': 
+            filtersArray.push(Konva.Filters.Contrast); 
+            node.contrast(element.filterIntensity !== undefined ? element.filterIntensity : 20); 
+            break;
+          case 'posterize': 
+            filtersArray.push(Konva.Filters.Posterize); 
+            node.levels(element.filterIntensity !== undefined ? element.filterIntensity : 4); 
+            break;
+        }
+        
+        node.filters(filtersArray);
+      } else {
+        node.clearCache();
+        node.filters([]);
+      }
+      node.getLayer()?.batchDraw();
+    }
+  }, [element.photoFilter, element.filterIntensity, image, element.w_mm, element.h_mm]);
 
   return (
     <React.Fragment>

@@ -24,6 +24,8 @@ export interface EditorElement {
   shadowColor?: string;
   shadowOpacity?: number;
   blendMode?: string;
+  photoFilter?: string;
+  filterIntensity?: number;
   text?: string;
   textColor?: string;
   fontSize?: number;

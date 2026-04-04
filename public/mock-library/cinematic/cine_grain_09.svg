@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">
-          <defs>
-            <radialGradient id="vig9">
-              <stop offset="50%" stop-color="#000" stop-opacity="0" />
-              <stop offset="100%" stop-color="#000" stop-opacity="0.9" />
-            </radialGradient>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#vig9)" />
-        </svg>

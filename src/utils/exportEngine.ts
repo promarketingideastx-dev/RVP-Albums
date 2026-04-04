@@ -113,6 +113,40 @@ export async function exportSpreadToJPG(spread: Spread, meta: ExportMeta): Promi
             scaleX: el.scale || 1,
             scaleY: el.scale || 1,
           });
+
+          // Handle Photo Filters Headless
+          if (el.photoFilter && el.photoFilter !== 'none') {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const filtersArray: any[] = [];
+            switch(el.photoFilter) {
+              case 'sepia': filtersArray.push(Konva.Filters.Sepia); break;
+              case 'grayscale': filtersArray.push(Konva.Filters.Grayscale); break;
+              case 'invert': filtersArray.push(Konva.Filters.Invert); break;
+              case 'blur': 
+                filtersArray.push(Konva.Filters.Blur); 
+                kImg.blurRadius(el.filterIntensity !== undefined ? el.filterIntensity : 5); 
+                break;
+              case 'noise': 
+                filtersArray.push(Konva.Filters.Noise); 
+                kImg.noise(el.filterIntensity !== undefined ? el.filterIntensity : 1); 
+                break;
+              case 'brighten': 
+                filtersArray.push(Konva.Filters.Brighten); 
+                kImg.brightness(el.filterIntensity !== undefined ? el.filterIntensity : 0.5); 
+                break;
+              case 'contrast': 
+                filtersArray.push(Konva.Filters.Contrast); 
+                kImg.contrast(el.filterIntensity !== undefined ? el.filterIntensity : 20); 
+                break;
+              case 'posterize': 
+                filtersArray.push(Konva.Filters.Posterize); 
+                kImg.levels(el.filterIntensity !== undefined ? el.filterIntensity : 4); 
+                break;
+            }
+            kImg.filters(filtersArray);
+            kImg.cache();
+          }
+
           layer.add(kImg);
         } catch (e) {
           console.warn(`Export Engine failed rendering element ${el.id}`, e);

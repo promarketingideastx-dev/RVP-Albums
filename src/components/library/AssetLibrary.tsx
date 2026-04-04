@@ -36,10 +36,12 @@ export default function AssetLibrary() {
   }, [activeCategory]);
 
   // Derived Default
-  const defaultCategories = Object.keys(assetLibrary).map(key => ({
-    id: key,
-    labelKey: assetLibrary[key].labelKey
-  }));
+  const defaultCategories = Object.keys(assetLibrary)
+    .filter(key => key !== 'cinematic')
+    .map(key => ({
+      id: key,
+      labelKey: assetLibrary[key].labelKey
+    }));
 
   // Handlers
   const handleDragStartDefault = (e: React.DragEvent, asset: RegistryAsset, category: string) => {

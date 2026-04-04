@@ -180,6 +180,34 @@ export default function Inspector() {
         </>
       )}
 
+      {element.type === 'image' && (
+        <div className="pt-3 mt-3 border-t border-neutral-200 dark:border-neutral-800">
+           <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-800 dark:text-neutral-200 mb-2">Filtros Fotográficos</h3>
+           <select 
+             className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow mb-2"
+             value={element.photoFilter || 'none'}
+             onChange={(e) => updateElement(activeSpreadId, element.id, { photoFilter: e.target.value })}
+           >
+              <option value="none">Original</option>
+              <option value="sepia">Sepia Clásico</option>
+              <option value="grayscale">Blanco y Negro</option>
+              <option value="invert">Invertir Colores</option>
+              <option value="blur">Desenfoque (Blur)</option>
+              <option value="noise">Ruido de Película (Noise)</option>
+              <option value="brighten">Brillo</option>
+              <option value="contrast">Contraste</option>
+              <option value="posterize">Posterizar</option>
+           </select>
+           {['blur', 'noise', 'brighten', 'contrast', 'posterize'].includes(element.photoFilter || '') && (
+              <InputField 
+                label="Intensidad del Filtro" 
+                value={element.filterIntensity !== undefined ? element.filterIntensity.toString() : (element.photoFilter === 'posterize' ? '4' : '0')} 
+                setter={(val) => updateElement(activeSpreadId, element.id, { filterIntensity: parseFloat(val) })} 
+              />
+           )}
+        </div>
+      )}
+
       {element.type === 'text' && (
         <div className="mb-4 bg-neutral-50 dark:bg-neutral-900/50 p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-800 dark:text-neutral-200 mb-3 border-b border-neutral-200 dark:border-neutral-800 pb-2">Typography</h3>
