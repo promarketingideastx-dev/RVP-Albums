@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import { Stage, Layer, Rect, Ellipse, Transformer, Image as KonvaImage, Text, Group } from 'react-konva';
 import Konva from 'konva';
 import { useTranslations } from 'next-intl';
@@ -47,7 +47,7 @@ const EditorImage = ({
   }, [isSelected]);
 
   // Handle Photo Filters Natively via Dual-Layer
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (filterLayerRef.current && image) {
       const node = filterLayerRef.current;
       if (element.photoFilter && element.photoFilter !== 'none') {
