@@ -124,13 +124,15 @@ export default function AssetLibrary() {
                 const bgClass = isDarkCat ? 'bg-[#1e1e1e] border-neutral-800' : 'bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800';
                 
                 return (
-                  <div key={asset.id} className={`aspect-square ${bgClass} rounded-xl border relative overflow-hidden cursor-grab active:cursor-grabbing transition-transform duration-200 hover:scale-[1.03] shadow-sm hover:shadow-md hover:border-blue-400 group p-0`} draggable onDragStart={(e) => handleDragStartDefault(e, asset, activeCategory)} title={asset.name}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={asset.src} alt={asset.name} className="absolute inset-0 w-full h-full object-contain pointer-events-none" />
-                    
-                    {/* Asset Identification Overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] font-bold px-2 py-1 text-center backdrop-blur-sm pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-                       {asset.name || asset.id.split('-').slice(0, 2).join('-').toUpperCase()}
+                  <div key={asset.id} className="relative w-full pt-[100%] rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden cursor-grab active:cursor-grabbing transition-transform duration-200 hover:scale-[1.03] shadow-sm hover:shadow-md hover:border-blue-400 group block">
+                    <div className={`absolute inset-0 ${bgClass} flex items-center justify-center`}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={asset.src} alt={asset.name} className="w-full h-full object-cover pointer-events-none" />
+                      
+                      {/* Asset Identification Overlay */}
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] font-bold px-2 py-1 text-center backdrop-blur-sm pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                         {asset.name || asset.id.split('-').slice(0, 2).join('-').toUpperCase()}
+                      </div>
                     </div>
                   </div>
                 );
@@ -156,23 +158,27 @@ export default function AssetLibrary() {
           
           <input type="file" ref={fileInputRef} className="hidden" multiple accept="image/*" onChange={handleFileUpload} />
           
-          <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 overflow-y-auto pr-1 pb-4 pt-1 px-1">
+          <div className="grid grid-cols-2 xl:grid-cols-3 gap-4 overflow-y-auto pr-1 pb-4 pt-1 px-1">
             {/* UPLOAD TILE */}
-            <button onClick={() => fileInputRef.current?.click()} className="aspect-square bg-blue-50 dark:bg-blue-900/10 rounded-xl border border-dashed border-blue-300 dark:border-blue-800 flex flex-col items-center justify-center text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/20 hover:border-blue-400 transition-all cursor-pointer hover:scale-[1.02]">
-              <svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-              <span className="text-xs font-semibold">{t('lib_upload_images')}</span>
-            </button>
+            <div className="relative w-full pt-[100%] rounded-xl border border-dashed border-blue-300 dark:border-blue-800 overflow-hidden cursor-pointer hover:scale-[1.02] transition-transform block" onClick={() => fileInputRef.current?.click()}>
+              <div className="absolute inset-0 bg-blue-50 dark:bg-blue-900/10 flex flex-col items-center justify-center text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/20">
+                <svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+                <span className="text-xs font-semibold">{t('lib_upload_images')}</span>
+              </div>
+            </div>
 
             {decs.map((dec) => (
-              <div key={dec.id} className="aspect-square bg-neutral-50 dark:bg-neutral-900 p-0 rounded-xl border border-neutral-200 dark:border-neutral-800 relative overflow-hidden cursor-grab active:cursor-grabbing transition-transform duration-200 hover:scale-[1.03] shadow-sm hover:shadow-md hover:border-blue-400 group" draggable onDragStart={(e) => handleDragStartUser(e, dec)}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={dec.preview} alt="user decoration" className="absolute inset-0 w-full h-full object-contain pointer-events-none" />
-                <button onClick={(e) => handleDeleteDecoration(e, dec.id)} className="absolute top-2 right-2 bg-white dark:bg-neutral-800 rounded-full p-1 opacity-0 group-hover:opacity-100 shadow-sm border border-neutral-200 dark:border-neutral-700 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-500 transition-all z-10">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-                {/* Asset Identification Overlay */}
-                <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] font-bold px-2 py-1 text-center backdrop-blur-sm pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-                   {dec.id.slice(0, 6).toUpperCase()}
+              <div key={dec.id} className="relative w-full pt-[100%] rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden cursor-grab active:cursor-grabbing transition-transform duration-200 hover:scale-[1.03] shadow-sm hover:shadow-md hover:border-blue-400 group block" draggable onDragStart={(e) => handleDragStartUser(e, dec)}>
+                <div className="absolute inset-0 bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={dec.preview} alt="user decoration" className="w-full h-full object-cover pointer-events-none" />
+                  <button onClick={(e) => handleDeleteDecoration(e, dec.id)} className="absolute top-2 right-2 bg-white dark:bg-neutral-800 rounded-full p-1 opacity-0 group-hover:opacity-100 shadow-sm border border-neutral-200 dark:border-neutral-700 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-500 transition-all z-10">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                  </button>
+                  {/* Asset Identification Overlay */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] font-bold px-2 py-1 text-center backdrop-blur-sm pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                     {dec.id.slice(0, 6).toUpperCase()}
+                  </div>
                 </div>
               </div>
             ))}
