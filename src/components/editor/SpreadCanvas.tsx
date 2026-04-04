@@ -79,7 +79,8 @@ const SmartGuidesRenderer = () => {
 
 export function buildSmartSnapBoundFunc(
   element: EditorElement,
-  elements: EditorElement[]
+  elements: EditorElement[],
+  spreadSize: { w_mm: number, h_mm: number }
 ) {
   return (pos: { x: number, y: number }) => {
     // We are returning the theoretical {x, y} which is the top-left of the Group dragging!
@@ -109,17 +110,19 @@ export function buildSmartSnapBoundFunc(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const activeGuides: any[] = [];
 
-    // Check all siblings across theoretical viewport space
-    elements.forEach(sib => {
-      if (sib.id === element.id) return;
-      if (sib.type === 'group') return;
-      
-      const sibBox = {
+    // Check mathematical siblings + Spread Absolute Limits
+    const scanTargets = [
+      ...elements.filter(sib => sib.id !== element.id && sib.type !== 'group').map(sib => ({
          x: sib.x_mm,
          y: sib.y_mm,
          w: sib.w_mm * (sib.scale || 1),
          h: sib.h_mm * (sib.scale || 1)
-      };
+      })),
+      // pseudo-sibling representing the absolute SCREEN geometry for Center/Top/Bottom alignments
+      { x: 0, y: 0, w: spreadSize.w_mm, h: spreadSize.h_mm }
+    ];
+
+    scanTargets.forEach(sibBox => {
       
       const sibEdges = {
          top: sibBox.y,
@@ -252,6 +255,7 @@ const EditorImage = ({
   const updateElement = useEditorStore((state) => state.updateElement);
   const previewOriginalPhotoId = useEditorStore((state) => state.previewOriginalPhotoId);
   const globalStyles = useEditorStore((state) => state.project?.globalImageStyles);
+  const projectSize = useEditorStore((state) => state.project?.size) || { w_mm: 1000, h_mm: 1000 };
   
   const [image] = useImage(element.previewUrl || element.src || 'https://via.placeholder.com/150');
 
@@ -384,7 +388,7 @@ const EditorImage = ({
             y_mm: e.target.y(),
           });
         }}
-        dragBoundFunc={buildSmartSnapBoundFunc(element, elements)}
+        dragBoundFunc={buildSmartSnapBoundFunc(element, elements, projectSize)}
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         onTransformEnd={(e) => {
           const node = groupRef.current;
@@ -465,6 +469,7 @@ const EditorShape = ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const trRef = useRef<any>(null);
   const updateElement = useEditorStore((state) => state.updateElement);
+  const projectSize = useEditorStore((state) => state.project?.size) || { w_mm: 1000, h_mm: 1000 };
 
   useEffect(() => {
     if (isSelected && trRef.current && shapeRef.current) {
@@ -503,7 +508,7 @@ const EditorShape = ({
         y_mm: e.target.y(),
       });
     },
-    dragBoundFunc: buildSmartSnapBoundFunc(element, elements),
+    dragBoundFunc: buildSmartSnapBoundFunc(element, elements, projectSize),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onTransformEnd: () => {
       const node = shapeRef.current;
@@ -563,6 +568,7 @@ const EditorText = ({ element, elements, spreadId, isSelected, onSelect, onConte
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const trRef = useRef<any>(null);
   const updateElement = useEditorStore((state) => state.updateElement);
+  const projectSize = useEditorStore((state) => state.project?.size) || { w_mm: 1000, h_mm: 1000 };
 
   useEffect(() => {
     if (isSelected && trRef.current && shapeRef.current) {
@@ -634,7 +640,7 @@ const EditorText = ({ element, elements, spreadId, isSelected, onSelect, onConte
             y_mm: e.target.y(),
           });
         }}
-        dragBoundFunc={buildSmartSnapBoundFunc(element, elements)}
+        dragBoundFunc={buildSmartSnapBoundFunc(element, elements, projectSize)}
         onTransformEnd={onTransformEnd}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onContextMenu={(e: any) => {
