@@ -65,7 +65,7 @@ export default function AppPage() {
       }
       setInit(true);
     }).catch(console.error);
-  }, [mounted, init]);
+  }, [mounted, init, loadProject]);
 
   // LOAD PROJECT HANDLER
   const handleOpenProject = async (id: string) => {

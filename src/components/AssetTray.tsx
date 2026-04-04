@@ -31,7 +31,8 @@ export default function AssetTray() {
       filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     }
     return filtered;
-  }, [assets, filterRating, sortMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project?.assets, filterRating, sortMode]);
 
 
           

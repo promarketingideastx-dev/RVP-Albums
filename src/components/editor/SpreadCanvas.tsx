@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from 'react';
-import { Stage, Layer, Rect, Ellipse, Transformer, Image as KonvaImage, Text, Line } from 'react-konva';
+import { Stage, Layer, Rect, Ellipse, Transformer, Image as KonvaImage, Text } from 'react-konva';
 import { useTranslations } from 'next-intl';
 import { useEditorStore } from '@/store/useEditorStore';
 import { EditorElement } from '@/types/editor';
@@ -133,6 +133,7 @@ const EditorShape = ({
     draggable: true,
     onClick: onSelect,
     onTap: onSelect,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onContextMenu: (e: any) => {
       e.evt.preventDefault();
       onContextMenu(e.evt.clientX, e.evt.clientY, element.id);
@@ -385,6 +386,40 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale }: SpreadC
         {/* Center Fold Line Component replaced by individual Spread Canvases - No Center Fold needed here */}
       </Layer>
       </Stage>
+
+      {contextMenu && (
+        <div 
+          className="absolute z-50 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-xl py-1 min-w-[160px] text-sm overflow-hidden"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            className="w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 transition-colors"
+            onClick={() => { bringToFront(activeSpreadId, contextMenu.elementId); setContextMenu(null); }}
+          >
+            {t('bring_to_front')}
+          </button>
+          <button
+            className="w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 transition-colors"
+            onClick={() => { bringForward(activeSpreadId, contextMenu.elementId); setContextMenu(null); }}
+          >
+            {t('bring_forward')}
+          </button>
+          <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1"></div>
+          <button
+            className="w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 transition-colors"
+            onClick={() => { sendBackward(activeSpreadId, contextMenu.elementId); setContextMenu(null); }}
+          >
+            {t('send_backward')}
+          </button>
+          <button
+            className="w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 transition-colors"
+            onClick={() => { sendToBack(activeSpreadId, contextMenu.elementId); setContextMenu(null); }}
+          >
+            {t('send_to_back')}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
