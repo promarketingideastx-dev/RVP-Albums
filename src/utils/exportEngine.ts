@@ -88,6 +88,8 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
     if (rawEl.type === 'group') continue;
     if (rawEl.visible === false) continue;
 
+    const CONSTANT_SPREAD_SCALAR = 3.779527559; // Binds DB inverse-scaled matrix natively identical to SpreadCanvas
+
     // Apply cascading visibility and opacity rules safely
     let el = rawEl;
     if (el.groupId) {
@@ -165,10 +167,10 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
           const appliedBorderRadius = el.borderRadius ?? (cornerRadiusEnabled ? (globalStyles?.borderRadius ?? 0) : 0);
 
           const kGroup = new Konva.Group({
-            x: el.x_mm * mmToPx,
-            y: el.y_mm * mmToPx,
-            width: el.w_mm * mmToPx,
-            height: el.h_mm * mmToPx,
+            x: (el.x_mm * CONSTANT_SPREAD_SCALAR) * mmToPx,
+            y: (el.y_mm * CONSTANT_SPREAD_SCALAR) * mmToPx,
+            width: (el.w_mm * CONSTANT_SPREAD_SCALAR) * mmToPx,
+            height: (el.h_mm * CONSTANT_SPREAD_SCALAR) * mmToPx,
             rotation: el.rotation_deg,
             opacity: el.opacity !== undefined ? el.opacity : 1,
             scaleX: el.scale || 1,
@@ -186,8 +188,8 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
             image: imgObj,
             x: 0,
             y: 0,
-            width: el.w_mm * mmToPx,
-            height: el.h_mm * mmToPx,
+            width: (el.w_mm * CONSTANT_SPREAD_SCALAR) * mmToPx,
+            height: (el.h_mm * CONSTANT_SPREAD_SCALAR) * mmToPx,
             cornerRadius: appliedBorderRadius * mmToPx,
             stroke: appliedStrokeWidth > 0 ? appliedStrokeColor : undefined,
             strokeWidth: appliedStrokeWidth * mmToPx,
@@ -203,8 +205,8 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
               image: imgObj,
               x: 0,
               y: 0,
-              width: el.w_mm * mmToPx,
-              height: el.h_mm * mmToPx,
+              width: (el.w_mm * CONSTANT_SPREAD_SCALAR) * mmToPx,
+              height: (el.h_mm * CONSTANT_SPREAD_SCALAR) * mmToPx,
               opacity: el.filterIntensity !== undefined ? el.filterIntensity : 1,
               cornerRadius: appliedBorderRadius * mmToPx,
               stroke: appliedStrokeWidth > 0 ? appliedStrokeColor : undefined,
