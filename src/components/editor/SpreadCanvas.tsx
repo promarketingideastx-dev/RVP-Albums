@@ -475,6 +475,7 @@ const EditorShape = ({
       e.evt.stopPropagation();
       onContextMenu(e.evt.clientX, e.evt.clientY, element.id);
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onDragEnd: (e: any) => {
       if (smartLayerRef.current) { 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -609,6 +610,7 @@ const EditorText = ({ element, elements, spreadId, isSelected, onSelect, onConte
         draggable={isSelected && !element.locked}
         onClick={onSelect}
         onTap={onSelect}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onDragEnd={(e: any) => {
           if (smartLayerRef.current) { 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
