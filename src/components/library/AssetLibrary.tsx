@@ -3,37 +3,19 @@
 import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
-type Category = 'backgrounds' | 'overlays' | 'frames' | 'shapes' | 'typography' | 'cinematic';
-
-interface MockAsset {
-  id: string;
-  src: string;
-  name: string;
-}
-
-const ASSET_DATA: Record<Category, MockAsset[]> = {
-  backgrounds: [{ id: 'bg1', src: '/mock-library/backgrounds/bg-solid-1.svg', name: 'Background 1' }],
-  overlays: [{ id: 'ov1', src: '/mock-library/overlays/overlay-1.svg', name: 'Overlay 1' }],
-  frames: [{ id: 'fr1', src: '/mock-library/frames/frame-1.svg', name: 'Frame 1' }],
-  shapes: [{ id: 'sh1', src: '/mock-library/shapes/shape-1.svg', name: 'Shape 1' }],
-  typography: [{ id: 'ty1', src: '/mock-library/typography/type-1.svg', name: 'Typography 1' }],
-  cinematic: [{ id: 'ci1', src: '/mock-library/cinematic/cine-1.svg', name: 'Cinematic 1' }]
-};
+import { assetLibrary, RegistryAsset } from '@/lib/asset-library';
 
 export default function AssetLibrary() {
   const t = useTranslations('Editor');
-  const [activeCategory, setActiveCategory] = useState<Category | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  const categories: { id: Category, labelKey: string }[] = [
-    { id: 'backgrounds', labelKey: 'lib_backgrounds' },
-    { id: 'overlays', labelKey: 'lib_overlays' },
-    { id: 'frames', labelKey: 'lib_frames' },
-    { id: 'shapes', labelKey: 'lib_shapes' },
-    { id: 'typography', labelKey: 'lib_typography' },
-    { id: 'cinematic', labelKey: 'lib_cinematic' }
-  ];
+  // Derive categories strictly mapped from dynamic global registry paths
+  const categories = Object.keys(assetLibrary).map(key => ({
+    id: key,
+    labelKey: assetLibrary[key].labelKey
+  }));
 
-  const handleDragStart = (e: React.DragEvent, asset: MockAsset, category: string) => {
+  const handleDragStart = (e: React.DragEvent, asset: RegistryAsset, category: string) => {
     e.dataTransfer.setData('application/json', JSON.stringify({
       type: 'decoration',
       src: asset.src,
@@ -42,8 +24,8 @@ export default function AssetLibrary() {
     e.dataTransfer.effectAllowed = 'copy';
   };
 
-  if (activeCategory) {
-    const assets = ASSET_DATA[activeCategory] || [];
+  if (activeCategory && assetLibrary[activeCategory]) {
+    const assets = assetLibrary[activeCategory].items || [];
     return (
       <div className="flex flex-col h-full bg-white dark:bg-neutral-950 p-4">
         <button 
