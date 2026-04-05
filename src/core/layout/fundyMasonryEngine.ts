@@ -84,32 +84,45 @@ export function generateFundyMasonryLayout(config: MasonryEngineConfig): Masonry
             const sorted = validPartitions.sort((a,b) => a.error - b.error);
             bestRows = sorted[variantSeed % Math.max(1, sorted.length)].rows;
         } else if (targetStrategy === 'PRIORITIZE_WIDTH') {
-            const sorted = validPartitions.sort((a,b) => a.avgPhotosPerRow - b.avgPhotosPerRow);
+            const sorted = validPartitions.sort((a,b) => b.avgPhotosPerRow - a.avgPhotosPerRow);
             bestRows = sorted[variantSeed % Math.max(1, Math.min(5, sorted.length))].rows;
         } else if (targetStrategy === 'FORCE_TWO_COLUMNS') {
             bestRows = validPartitions.sort((a,b) => Math.abs(a.avgPhotosPerRow - 2) - Math.abs(b.avgPhotosPerRow - 2))[0].rows;
         } else {
             // HERO_VARIANCE or CHAOTIC_BALANCED: We want dynamic asymmetry.
-            // A varied layout is one where row lengths differ (e.g. 1 photo on top, 3 below).
             const scoredPartitions = validPartitions.map(p => {
                  const rowSizes = p.rows.map(r => r.length);
                  const uniqueSizes = new Set(rowSizes).size;
-                 // Reward having a "hero row" (a row with exactly 1 photo) if we have enough total photos
+                 
+                 // Evaluate the mathematical height required by this partition
+                 const sumNaturalH = p.rows.map(row => {
+                     const totalAR = row.reduce((sum, photo) => sum + photo.aspectRatio, 0);
+                     return (W - (row.length - 1) * gap) / totalAR;
+                 }).reduce((s, h) => s + h, 0);
+                 
+                 // If the natural height massively exceeds the available height, globalScale will shrink the width drastically!
+                 // We heavily penalize partitions that force globalScale down below 0.8 to preserve full-page usage.
+                 const scaleRatio = H / sumNaturalH;
+                 const skinnyPenalty = scaleRatio < 0.85 ? -5000 * (1 - scaleRatio) : 0; 
+                 
+                 // Reward a "hero row" ONLY if it does not trigger a catastrophic skinny shrink!
                  const hasHeroRow = p.rows.some(r => r.length === 1);
-                 const heroBonus = (photos.length >= 3 && hasHeroRow) ? 500 : 0;
-                 // Add penalty for rows over 5 photos
+                 const heroBonus = (photos.length >= 3 && hasHeroRow) ? 300 : 0;
+                 
                  const overCrowdedPenalty = p.rows.some(r => r.length >= 5) ? -200 : 0;
                  
-                 const score = heroBonus + overCrowdedPenalty + (uniqueSizes * 100) - p.error;
+                 const varianceBonus = uniqueSizes * 100;
+                 const precisionScore = -p.error;
+                 
+                 const score = heroBonus + varianceBonus + overCrowdedPenalty + skinnyPenalty + precisionScore;
                  return { ...p, varianceScore: score };
             });
             
             const sortedPartitions = scoredPartitions.sort((a,b) => b.varianceScore - a.varianceScore);
-            // Cycle through the top 4 geometric best mathematically fit varied structures
-            const selectedPartition = sortedPartitions[variantSeed % Math.max(1, Math.min(4, sortedPartitions.length))];
+            const maxVariants = Math.min(5, sortedPartitions.length);
+            const selectedPartition = sortedPartitions[variantSeed % Math.max(1, maxVariants)];
             bestRows = selectedPartition.rows;
 
-            // Introduce a subtle layout rotation: cycle the Hero row via reversing or manual shifting
             if (targetStrategy === 'CHAOTIC_BALANCED' || (variantSeed % 2 === 1)) {
                  bestRows.reverse();
             }
