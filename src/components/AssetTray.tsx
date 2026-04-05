@@ -353,7 +353,8 @@ export default function AssetTray() {
           return (
             <div
               key={asset.id}
-              className={`h-full aspect-[2/3] md:aspect-[3/4] bg-white dark:bg-neutral-800 border-2 ${isSelected ? 'border-orange-500' : 'border-neutral-200 dark:border-neutral-700'} overflow-hidden cursor-grab active:cursor-grabbing relative group shrink-0 flex flex-col shadow-sm hover:shadow-md transition-shadow`}
+              className={`h-full bg-white dark:bg-neutral-800 border-2 ${isSelected ? 'border-orange-500' : 'border-neutral-200 dark:border-neutral-700'} overflow-hidden cursor-grab active:cursor-grabbing relative group shrink-0 flex flex-col shadow-sm hover:shadow-md transition-shadow`}
+              style={{ aspectRatio: (asset.aspectRatio && asset.aspectRatio > 0.1) ? asset.aspectRatio : 1 }}
             >
               {/* Checkbox Hook Layer */}
               <div 
@@ -422,9 +423,8 @@ export default function AssetTray() {
                 />
               </div>
               
-              {/* Metadata Control Strip */}
               <div className="h-10 bg-[#1c1c1c] flex items-center justify-between px-2 shrink-0 border-t border-black">
-                 <div className="flex gap-1 text-[20px] tracking-tighter">
+                 <div className="flex gap-0.5 text-[18px] tracking-tighter">
                    {[1, 2, 3, 4, 5].map(star => (
                      <span 
                        key={star}
@@ -437,7 +437,7 @@ export default function AssetTray() {
                  </div>
                  <div 
                    onClick={(e) => toggleFavorite(e, asset)}
-                   className={`${asset.isFavorite ? 'text-red-500 drop-shadow-md' : 'text-neutral-600'} hover:text-red-400 cursor-pointer text-[26px] font-bold leading-none -mt-1`}
+                   className={`${asset.isFavorite ? 'text-red-500 drop-shadow-md' : 'text-neutral-600'} hover:text-red-400 cursor-pointer text-[20px] font-bold leading-none -mt-1`}
                  >
                    {asset.isFavorite ? '♥' : '♡'}
                  </div>

@@ -14,6 +14,9 @@ export function NavigatorWidget({ scale, autoScale }: NavigatorProps) {
   const setWorkspaceZoom = useEditorStore(state => state.setWorkspaceZoom);
   const workspacePan = useEditorStore(state => state.workspacePan);
   const setWorkspacePan = useEditorStore(state => state.setWorkspacePan);
+  const activeSpreadId = useEditorStore(state => state.activeSpreadId);
+  const activeSpread = project?.spreads.find(s => s.id === activeSpreadId);
+
 
   const minimapRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -140,11 +143,35 @@ export function NavigatorWidget({ scale, autoScale }: NavigatorProps) {
 
       <div 
         ref={minimapRef}
-        className="relative bg-white dark:bg-neutral-950 w-[200px] overflow-hidden"
+        className="relative bg-white dark:bg-neutral-950 w-[200px] overflow-hidden border border-neutral-300 dark:border-neutral-800"
         style={{ height: MAP_HEIGHT }}
       >
+        {activeSpread?.bg_color && (
+          <div className="absolute inset-0" style={{ backgroundColor: activeSpread.bg_color }} />
+        )}
+        
+        {activeSpread?.elements.map((el) => (
+           <div
+             key={el.id}
+             className="absolute pointer-events-none opacity-80"
+             style={{
+               left: el.x_mm * trackingRatio,
+               top: el.y_mm * trackingRatio,
+               width: Math.max(1, el.w_mm * trackingRatio),
+               height: Math.max(1, el.h_mm * trackingRatio),
+               backgroundColor: el.type === 'image' ? '#444' : el.fillColor || '#e5e5e5',
+               backgroundImage: (el.type === 'image' && el.previewUrl) ? `url(${el.previewUrl})` : 'none',
+               backgroundSize: 'cover',
+               backgroundPosition: 'center',
+               transform: `rotate(${el.rotation_deg || 0}deg)`,
+               zIndex: el.zIndex,
+               borderRadius: `${(el.borderRadius || 0) * trackingRatio}px`
+             }}
+           />
+        ))}
+
         <div 
-          className="absolute border-2 border-red-500 cursor-grab hover:bg-red-500 hover:bg-opacity-10 transition-colors"
+          className="absolute border-2 border-red-500 cursor-grab hover:bg-red-500 hover:bg-opacity-10 transition-colors z-50 shadow-sm"
           style={{
             left: boxLeft,
             top: boxTop,
