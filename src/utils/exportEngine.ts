@@ -287,10 +287,14 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
                  kImg.hue(0);
               }
               
-              // Advanced Color: Temperature and Tint (Thermal Curves via Linear Normalized RGB)
+              // Advanced Color: Temperature and Tint (Thermal Curves via Linear Normalized RGBA Multipliers)
               if (adj.temperature || adj.tint) {
-                 if (!filtersArray.includes(Konva.Filters.RGB)) filtersArray.push(Konva.Filters.RGB);
-                 let r = 0, g = 0, b = 0;
+                 // CRITICAL FIX: Konva.Filters.RGB is a luminance tinter (turns image black natively).
+                 // Must use Konva.Filters.RGBA to preserve native hue through multiplicative offsets.
+                 if (!filtersArray.includes(Konva.Filters.RGBA)) filtersArray.push(Konva.Filters.RGBA);
+                 
+                 // RGBA natively multiplies channels against a baseline of 255.
+                 let r = 255, g = 255, b = 255;
                  
                  const TEMP_STRENGTH = 15;
                  const TINT_STRENGTH = 10;
@@ -306,11 +310,13 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
                      r = r + tintNormalized * (TINT_STRENGTH * 0.25);  
                      b = b + tintNormalized * (TINT_STRENGTH * 0.25);   
                  }
+                 
                  if (typeof kImg.red === 'function') {
-                    // MANDATORY CLAMP (CRITICAL) - no negative clipping
+                    // MANDATORY CLAMP (CRITICAL) - no negative clipping, max strictly 255.
                     kImg.red(Math.max(0, Math.min(255, r)));
                     kImg.green(Math.max(0, Math.min(255, g)));
                     kImg.blue(Math.max(0, Math.min(255, b)));
+                    kImg.alpha(1);
                  }
               }
               
