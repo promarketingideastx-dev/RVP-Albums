@@ -322,9 +322,23 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
 
             kImg.filters(filtersArray);
             
-            // EXPORT PIPELINE GUARANTEE: Full Native Resolution Cache Locking
+            // EXPORT PIPELINE GUARANTEE: Full Native Resolution Cache Locking with VRAM Limits
+            const isMassiveAsset = imgObj.naturalWidth > 6000 || imgObj.naturalHeight > 6000;
             const exportRatio = Math.max(1, imgObj.naturalWidth / ((el.w_mm * CONSTANT_SPREAD_SCALAR) * mmToPx));
-            kImg.cache({ pixelRatio: exportRatio, imageSmoothingEnabled: false });
+            
+            // If asset is brutally scaled but massive memory, clamp the multiplier safely
+            const safeExportRatio = isMassiveAsset ? Math.min(exportRatio, 2.5) : exportRatio;
+            
+            if (process.env.NODE_ENV === 'development') {
+              console.log(`[Export Processor] Filter Cache Applied to ${el.id} | Natural Width: ${imgObj.naturalWidth} | Target Ratio: ${exportRatio} -> Safe Applied: ${safeExportRatio}`);
+            }
+
+            kImg.cache({ pixelRatio: safeExportRatio, imageSmoothingEnabled: false });
+          } else {
+            // RAW Passthrough - Dev logging confirmation
+            if (process.env.NODE_ENV === 'development') {
+              console.log(`[Export Processor] Raw Passthrough for ${el.id} | Zero slider values detected, cache bypassed.`);
+            }
           }
           
           if (hasAdj && el.photoAdjustments?.vignette && el.photoAdjustments.vignette !== 0) {
@@ -420,44 +434,56 @@ export async function exportToPDF(project: EditorProject, onProgress?: (current:
   });
   
   const total = project.spreads.length;
+  const safeTitle = project.title.replace(/[^a-z0-9_ -]/gi, '').trim().replace(/\s+/g, '_') || 'Album';
+  const hasMassiveSpreads = total > 30;
+  const safePixelMultiplier = hasMassiveSpreads ? 6 : 12; // ~150DPI fallback to protect browser ram on 30+ pages
   
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[Export Pipeline] Starting PDF Render: ${safeTitle}.pdf | Multiplier: ${safePixelMultiplier}x`);
+  }
+
   for (let i = 0; i < total; i++) {
     const spread = project.spreads[i];
     
-    // Scale 12x translates ~300 DPI high resolution 
-    const base64Jpg = await exportSpreadToJPG(project, spread, { size: project.size, pixelMultiplier: 12, quality: 1.0 });
+    // Memory Guard: Dynamically intercepting base multiplier based on volume limits
+    const base64Jpg = await exportSpreadToJPG(project, spread, { size: project.size, pixelMultiplier: safePixelMultiplier, quality: 1.0 });
     
     if (i > 0) doc.addPage([pdfW, pdfH], orientation);
     
     doc.addImage(base64Jpg, 'JPEG', 0, 0, pdfW, pdfH, undefined, 'FAST');
     
-    // Force aggressive GC cleanup manually helping browser RAM
-    // JS engine naturally drops base64 string referenced once loops clear but keeping it minimal ensures stability
     if (onProgress) onProgress(i + 1, total);
   }
   
-  const filename = `${project.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_print.pdf`;
+  const filename = `${safeTitle}.pdf`;
   doc.save(filename);
 }
 
 export async function exportToJPG(project: EditorProject, onProgress?: (current: number, total: number) => void): Promise<void> {
   const zip = new JSZip();
-  const safeTitle = project.title.replace(/[^a-z0-9_ -]/gi, '').trim() || 'Album';
+  const safeTitle = project.title.replace(/[^a-z0-9_ -]/gi, '').trim().replace(/\s+/g, '_') || 'Album';
   const folder = zip.folder(safeTitle) || zip;
   const total = project.spreads.length;
+  const hasMassiveSpreads = total > 30;
+  const safePixelMultiplier = hasMassiveSpreads ? 6 : 12;
   
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[Export Pipeline] Starting JPG Render Pack: ${safeTitle}.zip | Multiplier: ${safePixelMultiplier}x`);
+  }
+
   for (let i = 0; i < total; i++) {
     const spread = project.spreads[i];
-    const base64Jpg = await exportSpreadToJPG(project, spread, { size: project.size, pixelMultiplier: 12, quality: 1.0 });
+    const base64Jpg = await exportSpreadToJPG(project, spread, { size: project.size, pixelMultiplier: safePixelMultiplier, quality: 1.0 });
     
     const base64Data = base64Jpg.replace(/^data:image\/jpeg;base64,/, "");
-    const idxStr = String(i + 1).padStart(3, '0');
-    folder.file(`Spread_${idxStr}.jpg`, base64Data, { base64: true });
+    const idxStr = String(i + 1).padStart(2, '0');
+    // Mandated Exact Format: Maria_Wedding_Spread_01.jpg
+    folder.file(`${safeTitle}_Spread_${idxStr}.jpg`, base64Data, { base64: true });
     
     if (onProgress) onProgress(i + 1, total);
   }
   
   const content = await zip.generateAsync({ type: "blob" });
-  const filename = `${safeTitle.replace(/\s+/g, '_').toLowerCase()}_jpgs.zip`;
+  const filename = `${safeTitle}.zip`;
   saveAs(content, filename);
 }

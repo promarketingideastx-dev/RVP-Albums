@@ -437,17 +437,32 @@ const EditorImage = ({
         
         node.filters(filtersArray);
         
-        // SAFE PIXEL RATIO IMPLEMENTATION
+        // SAFE PIXEL RATIO IMPLEMENTATION WITH MEMORY LIMITERS
         const MAX_SAFE_RATIO = 2.5;
         const naturalWidth = image.naturalWidth || image.width;
+        const naturalHeight = image.naturalHeight || image.height;
         const renderedWidth = element.w_mm;
-        const computedPixelRatio = renderedWidth > 0 
+        
+        let computedPixelRatio = renderedWidth > 0 
            ? Math.max(1, Math.min(naturalWidth / renderedWidth, MAX_SAFE_RATIO)) 
            : 1;
+           
+        // Extreme Memory Safeguard for Live Canvas Preview
+        if (naturalWidth > 6000 || naturalHeight > 6000) {
+            computedPixelRatio = Math.min(computedPixelRatio, 1.5);
+        }
+
+        if (process.env.NODE_ENV === 'development') {
+           console.log(`[Preview Pipeline] Caching ${element.id} | Nat: ${naturalWidth} | Rendered: ${renderedWidth} | DevApplied Ratio: ${computedPixelRatio}`);
+        }
 
         node.cache({ pixelRatio: computedPixelRatio, imageSmoothingEnabled: false });
         node.getLayer()?.batchDraw();
       } else {
+        // RAW Passthrough - Clear entirely
+        if (process.env.NODE_ENV === 'development') {
+           if (node.isCached()) console.log(`[Preview Pipeline] Raw Passthrough ${element.id} -> Cache Cleared (Zero Values)`);
+        }
         node.clearCache();
         node.filters([]);
         node.getLayer()?.batchDraw();
