@@ -31,6 +31,11 @@ export interface EditorElement {
   groupId?: string; // Phase 7.G.6.C: Advanced generic nested folders
   isCollapsed?: boolean; // Phase 7.G.6.C: Folder structural bounds
   layerName?: string; // Phase 7.G.6.C: UI-level naming override
+  isAutoLayoutManaged?: boolean; // Phase 7.H: Managed by auto layout bounding box strictly
+  stageType?: 'staged' | 'layout' | 'free'; // Phase 8.D FIX: Explicit structural staging mode discriminator 
+  editorialRole?: 'hero' | 'supporting' | 'filler' | 'auto'; // Phase 7.J: User Control Override
+  assignmentReason?: string; // Phase 7.K: Explanable Editor Feedback
+  assetId?: string; // Phase 7.H: Primary connection to uploaded external image pool
   photoFilter?: string;
   filterIntensity?: number;
   text?: string;
@@ -73,12 +78,36 @@ export interface SpreadGuide {
   locked?: boolean;
 }
 
+export type LayoutFamily = 'hero-dominant' | 'balanced-story' | 'column-story' | 'mosaic' | 'geometric';
+
+export interface AutoLayoutSlot {
+  id: string; // Independent structural generic id
+  x_mm: number;
+  y_mm: number;
+  w_mm: number;
+  h_mm: number;
+  aspectRatio: number;
+  assignedAssetId?: string; // Phase 7.H: Connected image metadata decoupled
+  assignedElementId?: string; // Phase 7.H: Visual bridge mapping optional
+  role?: 'hero' | 'supporting' | 'filler'; // Phase 7.I: Intelligence hierarchy discriminator
+  assignmentReason?: string; // Phase 7.K: Exportable reason explaining algorithm decisions
+}
+
+export interface SpreadAutoLayout {
+  isActive: boolean;
+  variantId: string;
+  slots: AutoLayoutSlot[];
+  seed?: number;
+  mode?: 'geometric' | 'editorial';
+}
+
 export interface Spread {
   id: string;
   elements: EditorElement[];
   bg_color: string;
   bg_config?: SpreadBackgroundConfig; // Phase 7.G.9: Advanced Gradient spread backgrounds
   guides?: SpreadGuide[]; // Phase 7.G.12: Native alignment geometry boundaries
+  autoLayout?: SpreadAutoLayout; // Phase 7.H: Auto Layout Engine Structural bounds 
 }
 
 export interface Size {
@@ -89,12 +118,30 @@ export interface Size {
 export interface ProjectAsset {
   id: string;
   name: string;
-  previewUrl?: string;
+  previewUrl?: string; // local blob URL
   originalUrl?: string;
-  previewBlobId?: string;
+  previewBlobId?: string; // IndexedDB internal ref
   originalBlobId?: string;
   rating?: number; // 0-5 stars
   isFavorite?: boolean;
+  width?: number; // Phase 7.H: Extracted native photo dimensions
+  height?: number; // Phase 7.H: Extracted native photo dimensions
+  orientation?: 'landscape' | 'portrait' | 'square'; // Phase 7.H: Calculated auto layout logic parameter
+  aspectRatio?: number; // Phase 7.I: Intrinsic ratio preservation
+  visualWeight?: number; // Phase 7.I: Narrative mapping
+  isWide?: boolean;
+  isTall?: boolean;
+}
+
+export interface PhotoMetadata {
+  elementId: string;
+  width: number;
+  height: number;
+  aspectRatio: number;
+  orientation: 'landscape' | 'portrait' | 'square';
+  originalIndex: number;
+  visualWeight?: number;
+  editorialRole?: 'hero' | 'supporting' | 'filler' | 'auto';
 }
 
 export interface GlobalImageStyles {

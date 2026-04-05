@@ -35,6 +35,26 @@ export default function Toolbar() {
   const [isExporting, setIsExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
+  // Dynamic HUD Logic
+  const totalPages = project?.spreads.reduce((acc, spread) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pagesInSpread = (spread as any).pageCount || 2; 
+    return acc + pagesInSpread;
+  }, 0) || 0;
+
+  const totalAssets = project?.assets?.length || 0;
+  
+  // Calculate unique assets used across the entire project
+  const usedAssetIds = new Set<string>();
+  project?.spreads.forEach(spread => {
+    spread.elements.forEach(el => {
+      if (el.assetId) usedAssetIds.add(el.assetId);
+    });
+  });
+  
+  const uniquePhotosUsed = usedAssetIds.size;
+  const uniquePhotosUnused = Math.max(0, totalAssets - uniquePhotosUsed);
+
   // Pro Export UI States
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -338,8 +358,39 @@ export default function Toolbar() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10H11a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
                 </svg>
               </button>
-           </div>
-        </div>
+            </div>
+            
+            {/* Global HUD Stats */}
+            {project && (
+              <div className="flex items-center gap-4 border-l border-neutral-200 dark:border-neutral-800 pl-4 ml-4 text-xs font-mono tracking-tight">
+                 <div className="flex items-center gap-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded px-3 py-1">
+                    <div className="flex flex-col items-center" title="Total Pages">
+                       <span className="text-[9px] text-neutral-400 uppercase font-sans tracking-widest leading-none">Pgs</span>
+                       <span className="font-bold text-neutral-800 dark:text-neutral-200">{totalPages}</span>
+                    </div>
+                    <div className="flex flex-col items-center" title="Total Spreads">
+                       <span className="text-[9px] text-neutral-400 uppercase font-sans tracking-widest leading-none">Sprd</span>
+                       <span className="font-bold text-neutral-800 dark:text-neutral-200">{project.spreads.length}</span>
+                    </div>
+                 </div>
+
+                 <div className="flex items-center gap-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded px-3 py-1">
+                    <div className="flex flex-col items-center" title="Total Photos Uploaded">
+                       <span className="text-[9px] text-neutral-400 uppercase font-sans tracking-widest leading-none">Load</span>
+                       <span className="font-bold text-blue-600 dark:text-blue-400">{totalAssets}</span>
+                    </div>
+                    <div className="flex flex-col items-center" title="Unique Photos Used (Asset ID)">
+                       <span className="text-[9px] text-neutral-400 uppercase font-sans tracking-widest leading-none">Used</span>
+                       <span className="font-bold text-green-600 dark:text-green-400">{uniquePhotosUsed}</span>
+                    </div>
+                    <div className="flex flex-col items-center" title="Unused Photos">
+                       <span className="text-[9px] text-neutral-400 uppercase font-sans tracking-widest leading-none">Free</span>
+                       <span className="font-bold text-neutral-600 dark:text-neutral-400">{uniquePhotosUnused}</span>
+                    </div>
+                 </div>
+              </div>
+            )}
+         </div>
         </div>
         
         <div className="flex items-center gap-2">

@@ -256,8 +256,21 @@ const EditorImage = ({
   const previewOriginalPhotoId = useEditorStore((state) => state.previewOriginalPhotoId);
   const globalStyles = useEditorStore((state) => state.project?.globalImageStyles);
   const projectSize = useEditorStore((state) => state.project?.size) || { w_mm: 1000, h_mm: 1000 };
+  const prevSpreadId = useEditorStore((state) => {
+      const idx = state.project?.spreads.findIndex(s => s.id === spreadId) ?? -1;
+      return idx > 0 && state.project ? state.project.spreads[idx - 1].id : null;
+  });
+  const nextSpreadId = useEditorStore((state) => {
+      const idx = state.project?.spreads.findIndex(s => s.id === spreadId) ?? -1;
+      return idx !== -1 && state.project && idx < state.project.spreads.length - 1 ? state.project.spreads[idx + 1].id : null;
+  });
   
+  // Phase 8.B: Extract sequential logic strictly mapped inside Editor Store explicitly natively
+  const isStagingMode = element.stageType === 'staged';
+  const stagingIndex = isStagingMode ? elements.filter(e => e.type === 'image' && e.stageType === 'staged').findIndex(e => e.id === element.id) : -1;
+
   const [image] = useImage(element.previewUrl || element.src || 'https://via.placeholder.com/150');
+  const isSelectedStaged = useEditorStore(state => state.selectedStagedElementIds.includes(element.id));
 
   useEffect(() => {
     if (isSelected && trRef.current && groupRef.current) {
@@ -328,6 +341,34 @@ const EditorImage = ({
     }
   }, [element.photoFilter, image, element.filterIntensity, previewOriginalPhotoId, element.w_mm, element.h_mm, element.scale]);
 
+  // Phase 8.D: Apply Layout Hook Tracking Transition bridging semantic to geometric mapping natively
+  const prevIsManaged = useRef(element.isAutoLayoutManaged);
+  
+  useLayoutEffect(() => {
+    if (groupRef.current) {
+        if (!prevIsManaged.current && element.isAutoLayoutManaged) {
+            // Flash-Pop Design Transition Sequence (Native Konva Math)
+            const node = groupRef.current;
+            node.opacity(0); // Instantly conceal raw geometry 
+            node.scale({ x: 0.85, y: 0.85 }); // Contract aggressively for dramatic Snap-Out
+            
+            const tween = new Konva.Tween({
+               node: node,
+               duration: 0.35,
+               opacity: element.opacity !== undefined ? element.opacity : 1,
+               scaleX: 1,
+               scaleY: 1,
+               easing: Konva.Easings.EaseOut
+            });
+            tween.play();
+            
+            // Phase 8.D FIX: Native memory cleanup garbage collection properly handled interceptors smoothly
+            return () => { tween.destroy(); };
+        }
+    }
+    prevIsManaged.current = element.isAutoLayoutManaged;
+  }, [element.isAutoLayoutManaged, element.opacity]);
+
   const appliedShadowColor = element.shadowColor || (!element.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowColor || '#000000') : 'transparent');
   const appliedShadowBlur = element.shadowBlur ?? (!element.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowBlur ?? 0) : 0);
   const appliedShadowOffsetX = element.shadowOffsetX ?? (!element.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetX ?? 0) : 0);
@@ -369,12 +410,59 @@ const EditorImage = ({
         rotation={element.rotation_deg || 0}
         scaleX={element.scale || 1}
         scaleY={element.scale || 1}
-        draggable={isSelected && !element.locked}
-        onClick={onSelect}
-        onTap={onSelect}
+        draggable={isSelected && !element.locked || isSelectedStaged} // Allow drag if staged batch selected!
+        onClick={(e) => {
+           if (element.stageType === 'staged') {
+              if (e.evt.metaKey || e.evt.ctrlKey || e.evt.shiftKey) {
+                 useEditorStore.getState().toggleStagedElementSelection(element.id);
+                 return;
+              } else {
+                 const store = useEditorStore.getState();
+                 if (!store.selectedStagedElementIds.includes(element.id)) {
+                    store.setStagedSelection([element.id]);
+                 }
+              }
+           } else {
+              useEditorStore.getState().clearStagedSelection();
+           }
+           onSelect();
+        }}
+        onTap={(e) => {
+           if (element.stageType === 'staged') {
+              useEditorStore.getState().setStagedSelection([element.id]);
+           } else {
+              useEditorStore.getState().clearStagedSelection();
+           }
+           onSelect();
+        }}
         opacity={element.opacity !== undefined ? element.opacity : 1}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         globalCompositeOperation={(element.blendMode as any) || 'source-over'}
+        onDragStart={(e) => {
+           if (isStagingMode) {
+              useEditorStore.getState().setDraggingStagedElementId(element.id);
+           }
+        }}
+        onDragMove={(e) => {
+           if (isStagingMode) {
+              const dropX = e.target.x() + (element.w_mm / 2);
+              const dropY = e.target.y() + (element.h_mm / 2);
+              const stagingImages = elements.filter(el => el.type === 'image' && el.stageType === 'staged');
+              
+              const hoverElement = stagingImages.find(el => 
+                 el.id !== element.id &&
+                 dropX >= el.x_mm && dropX <= el.x_mm + el.w_mm &&
+                 dropY >= el.y_mm && dropY <= el.y_mm + el.h_mm
+              );
+              
+              if (hoverElement) {
+                  const hoverIdx = stagingImages.findIndex(el => el.id === hoverElement.id);
+                  useEditorStore.getState().setStagingDropPreviewIndex(hoverIdx);
+              } else {
+                  useEditorStore.getState().setStagingDropPreviewIndex(null);
+              }
+           }
+        }}
         onContextMenu={(e) => {
           e.evt.preventDefault();
           e.cancelBubble = true;
@@ -383,6 +471,38 @@ const EditorImage = ({
         }}
         onDragEnd={(e) => {
           smartGuidesEmitter.setGuides([]);
+
+          // Phase 8.B/F: Staging Reorder Interceptor (Batched!)
+          if (isStagingMode) {
+             useEditorStore.getState().setDraggingStagedElementId(null);
+             useEditorStore.getState().setStagingDropPreviewIndex(null);
+             
+             // Phase 8.C: Cross-Spread Native Traversal Target Math Context relative
+             const dropX = e.target.x() + (element.w_mm / 2);
+             const dropY = e.target.y() + (element.h_mm / 2);
+
+             if (dropX < 0 && prevSpreadId) {
+                 useEditorStore.getState().moveStagedPhotoAcrossSpreads(spreadId, prevSpreadId, element.id);
+                 return;
+             }
+             if (dropX > projectSize.w_mm && nextSpreadId) {
+                 useEditorStore.getState().moveStagedPhotoAcrossSpreads(spreadId, nextSpreadId, element.id);
+                 return;
+             }
+
+             const allImages = elements.filter(el => el.type === 'image' && el.stageType === 'staged');
+             
+             const targetElement = allImages.find(el => 
+                el.id !== element.id &&
+                dropX >= el.x_mm && dropX <= el.x_mm + el.w_mm &&
+                dropY >= el.y_mm && dropY <= el.y_mm + el.h_mm
+             );
+
+             // Trigger explicit semantic grid-reorder (recalculates all X/Y globally)
+             useEditorStore.getState().reorderStagedPhotos(spreadId, element.id, targetElement ? targetElement.id : element.id);
+             return; 
+          }
+
           updateElement(spreadId, element.id, {
             x_mm: e.target.x(),
             y_mm: e.target.y(),
@@ -433,6 +553,64 @@ const EditorImage = ({
             stroke={appliedStrokeWidth > 0 ? appliedStrokeColor : undefined}
             strokeWidth={appliedStrokeWidth * mmToPx}
           />
+        )}
+        
+        {/* Phase 8.B: Narrative Sequence Badge for Staging Mode */}
+        {isStagingMode && stagingIndex !== -1 && (
+          <Group x={10} y={10}>
+             <Rect 
+               width={24} height={24} 
+               cornerRadius={12} 
+               fill="#F59E0B" 
+               shadowColor="black" shadowBlur={4} shadowOpacity={0.3} shadowOffsetY={2}
+             />
+             <Text 
+               text={(stagingIndex + 1).toString()}
+               fill="white"
+               fontSize={11}
+               fontFamily="Inter"
+               fontStyle="bold"
+               align="center"
+               verticalAlign="middle"
+               width={24}
+               height={24}
+             />
+          </Group>
+        )}
+
+        {/* Phase 7.J: Visual Feedback for manual User Control logic Overrides */}
+        {element.editorialRole && element.editorialRole !== 'auto' && (
+          <Group x={10} y={10}>
+             {/* Backdrop preventing color bleeding */}
+             <Rect 
+               width={28} height={28} 
+               cornerRadius={6} 
+               fill="rgba(0,0,0,0.65)" 
+             />
+             <Text 
+               text={element.editorialRole === 'hero' ? 'H' : element.editorialRole === 'supporting' ? 'S' : 'F'}
+               fill="white"
+               fontSize={16}
+               fontFamily="Inter"
+               fontStyle="bold"
+               align="center"
+               verticalAlign="middle"
+               width={28}
+               height={28}
+             />
+          </Group>
+        )}
+
+        {/* Phase 8.F: Native Batch Selection Extractor UI */}
+        {isSelectedStaged && (
+           <Rect
+             width={element.w_mm}
+             height={element.h_mm}
+             stroke="#3b82f6"
+             strokeWidth={3}
+             fill="rgba(59, 130, 246, 0.25)"
+             listening={false}
+           />
         )}
       </Group>
       {isSelected && (
@@ -669,6 +847,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
   const activeSpreadId = useEditorStore((state) => state.activeSpreadId);
   const selectedElementId = useEditorStore((state) => state.selectedElementId);
   const setSelectedElement = useEditorStore((state) => state.setSelectedElement);
+  const stagingDropPreviewIndex = useEditorStore((state) => state.stagingDropPreviewIndex);
 
   const bringToFront = useEditorStore((state) => state.bringToFront);
   const bringForward = useEditorStore((state) => state.bringForward);
@@ -700,8 +879,13 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
 
   if (!project || !activeSpreadId) return null;
 
-  const spread = project.spreads.find((s) => s.id === activeSpreadId);
+  const spreadIndex = project.spreads.findIndex((s) => s.id === activeSpreadId);
+  const spread = project.spreads[spreadIndex];
   if (!spread) return null;
+
+  const prevSpreadId = spreadIndex > 0 ? project.spreads[spreadIndex - 1].id : null;
+  const nextSpreadId = spreadIndex < project.spreads.length - 1 ? project.spreads[spreadIndex + 1].id : null;
+  const draggingStagedElementId = useEditorStore((state) => state.draggingStagedElementId);
 
   // Sorting elements by zIndex to render properly
   const elements = [...spread.elements].sort((a, b) => a.zIndex - b.zIndex);
@@ -747,10 +931,12 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
         const clickedOnBackground = typeof e.target?.name === 'function' && e.target.name() === 'background-paper';
         if (clickedOnEmpty || clickedOnBackground) {
           setSelectedElement(null);
+          useEditorStore.getState().clearStagedSelection();
         }
       } else {
         if (typeof e.target?.tagName === 'string' && e.target.tagName.toUpperCase() !== 'CANVAS') {
           setSelectedElement(null);
+          useEditorStore.getState().clearStagedSelection();
         }
       }
     } catch (err) {
@@ -770,7 +956,39 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
       onDrop={(e) => {
         e.preventDefault();
         try {
-          const payload = JSON.parse(e.dataTransfer.getData('application/json'));
+           // Phase 8.A: Nondestructive Drop Interceptor - Native OS Files
+           if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+              const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+              if (files.length > 0) {
+                 const promises = files.map(file => {
+                    return new Promise<import('@/types/editor').ProjectAsset>((resolve) => {
+                       const objectUrl = URL.createObjectURL(file);
+                       const img = new window.Image();
+                       img.onload = () => {
+                          resolve({
+                             id: 'asset_' + Date.now() + '_' + Math.random().toString(36).substring(2,9),
+                             name: file.name,
+                             previewUrl: objectUrl,
+                             originalUrl: objectUrl,
+                             width: img.width,
+                             height: img.height,
+                             orientation: img.width > img.height ? 'landscape' : img.width < img.height ? 'portrait' : 'square'
+                          });
+                       };
+                       img.src = objectUrl;
+                    });
+                 });
+                 Promise.all(promises).then(newAssets => {
+                    useEditorStore.getState().ingestStagedPhotos(newAssets);
+                 });
+                 // Stop default JSON payload parsing for these raw payloads
+                 return; 
+              }
+           }
+
+          const rawPayload = e.dataTransfer.getData('application/json');
+          if (!rawPayload) return;
+          const payload = JSON.parse(rawPayload);
           
           if (payload) {
             let dropX = 20;
@@ -829,20 +1047,45 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
               }
 
               if (payload.type === 'image') {
-                useEditorStore.getState().addElement(activeSpreadId, {
-                  id: `el_${Date.now()}`,
-                  type: 'image',
-                  previewUrl: payload.previewUrl,
-                  originalUrl: payload.originalUrl,
-                  previewBlobId: payload.previewBlobId,
-                  originalBlobId: payload.originalBlobId,
-                  x_mm: dropX - (w / 2),
-                  y_mm: dropY - (h / 2),
-                  w_mm: w,
-                  h_mm: h,
-                  rotation_deg: 0,
-                  zIndex: 0
-                });
+                // Phase 7.H: Collision Swap Detection for Auto-Layout Constraints
+                let didSwap = false;
+                if (spread?.autoLayout?.isActive) {
+                  const targetManagedElement = spread.elements.find(el => 
+                     el.isAutoLayoutManaged &&
+                     dropX >= el.x_mm && dropX <= el.x_mm + el.w_mm &&
+                     dropY >= el.y_mm && dropY <= el.y_mm + el.h_mm
+                  );
+
+                  if (targetManagedElement) {
+                     // SWAP execution. Do NOT destroy AST geometry.
+                     useEditorStore.getState().updateElement(activeSpreadId, targetManagedElement.id, {
+                        previewUrl: payload.previewUrl,
+                        originalUrl: payload.originalUrl,
+                        previewBlobId: payload.previewBlobId,
+                        originalBlobId: payload.originalBlobId,
+                        assetId: payload.assetId
+                     });
+                     didSwap = true;
+                  }
+                }
+
+                if (!didSwap) {
+                  useEditorStore.getState().addElement(activeSpreadId, {
+                    id: `el_${Date.now()}`,
+                    type: 'image',
+                    previewUrl: payload.previewUrl,
+                    originalUrl: payload.originalUrl,
+                    previewBlobId: payload.previewBlobId,
+                    originalBlobId: payload.originalBlobId,
+                    assetId: payload.assetId, // Persistent generic linkage
+                    x_mm: dropX - (w / 2),
+                    y_mm: dropY - (h / 2),
+                    w_mm: w,
+                    h_mm: h,
+                    rotation_deg: 0,
+                    zIndex: 0
+                  });
+                }
               } else if (payload.type === 'decoration') {
                 useEditorStore.getState().addElement(activeSpreadId, {
                   id: `el_${Date.now()}`,
@@ -966,6 +1209,50 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
              verticalAlign="middle"
              listening={false}
            />
+        )}
+
+        {/* Phase 8.E Drop Preview Overlay Matrix Native Marker */}
+        {stagingDropPreviewIndex !== null && (
+           (() => {
+              const projectW = project.size.w_mm;
+              const thumbnailW = 40;
+              const thumbMaxH = 60;
+              const margin = 20;
+              const gap = 10;
+              const cols = Math.max(1, Math.floor((projectW - (margin * 2)) / (thumbnailW + gap)));
+              
+              const col = stagingDropPreviewIndex % cols;
+              const row = Math.floor(stagingDropPreviewIndex / cols);
+              
+              return (
+                 <Rect 
+                    x={margin + (col * (thumbnailW + gap)) - 4}
+                    y={margin + (row * (thumbMaxH + gap))}
+                    width={2}
+                    height={thumbMaxH}
+                    fill="#3b82f6"
+                    cornerRadius={2}
+                    shadowColor="#3b82f6"
+                    shadowBlur={4}
+                    shadowOpacity={0.6}
+                    listening={false}
+                 />
+              );
+           })()
+        )}
+
+        {/* Phase 8.C UI Edge Overlay Markers natively binding during native Konva drag instances */}
+        {draggingStagedElementId && prevSpreadId && (
+           <Group x={-45} y={0} opacity={0.8} listening={false}>
+              <Rect width={40} height={project.size.h_mm} fill="#3b82f6" cornerRadius={4} />
+              <Text x={8} y={project.size.h_mm / 2 + 60} text="← PREVIOUS SPREAD" fill="white" rotation={-90} align="center" fontStyle="bold" fontSize={14} letterSpacing={2} />
+           </Group>
+        )}
+        {draggingStagedElementId && nextSpreadId && (
+           <Group x={project.size.w_mm + 5} y={0} opacity={0.8} listening={false}>
+              <Rect width={40} height={project.size.h_mm} fill="#3b82f6" cornerRadius={4} />
+              <Text x={30} y={project.size.h_mm / 2 - 70} text="NEXT SPREAD →" fill="white" rotation={90} align="center" fontStyle="bold" fontSize={14} letterSpacing={2} />
+           </Group>
         )}
         
       {/* Print Guides Overlay separated safely from elements */}

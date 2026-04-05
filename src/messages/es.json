@@ -108,6 +108,18 @@
     "sort_stars": "(ESTRELLAS)",
     "filter_plus": "+MÁS",
     "inches": "PULGADAS",
-    "centimeters": "CM"
+    "centimeters": "CM",
+    "tab_layout": "Diseño",
+    "al_active": "Diseño Automático Activo",
+    "al_free": "Modo Libre",
+    "al_managed": "Gestionado por Diseño Automático",
+    "al_apply": "Aplicar Diseño Automático",
+    "al_next": "Siguiente Variante",
+    "al_warning": "Aplicar el Diseño Automático reconstruirá la estructura actual del pliego.",
+    "al_empty": "Varios activos necesarios.",
+    "al_one_variant": "Única variante compatible",
+    "al_excess_photos": "{placed} ubicadas, {remaining} libres",
+    "al_mode_geometric": "Geométrico",
+    "al_mode_editorial": "Editorial"
   }
 }

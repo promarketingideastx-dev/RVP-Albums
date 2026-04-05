@@ -189,10 +189,89 @@ export default function AppPage() {
         return;
       }
       
+      if (e.key === 'Escape') {
+         useEditorStore.getState().clearStagedSelection();
+         useEditorStore.getState().setSelectedElement(null);
+         return;
+      }
+      
+      const state = useEditorStore.getState();
+      const stgSel = state.selectedStagedElementIds;
+      const project = state.project;
+      
       if (e.key === 'Backspace' || e.key === 'Delete') {
-        if (activeSpreadId && selectedElementId) {
-          removeElement(activeSpreadId, selectedElementId);
+        if (activeSpreadId) {
+           if (selectedElementId) {
+             removeElement(activeSpreadId, selectedElementId);
+           } else if (stgSel.length > 0) {
+             stgSel.forEach(id => removeElement(activeSpreadId, id));
+             state.clearStagedSelection();
+           }
         }
+        return;
+      }
+
+      // Keyboard Navigation for Staging Phase 8.G!
+      if (activeSpreadId && project && (e.key.startsWith('Arrow'))) {
+         const spreadIndex = project.spreads.findIndex(s => s.id === activeSpreadId);
+         if (spreadIndex !== -1) {
+            const spread = project.spreads[spreadIndex];
+            const stagingImages = spread.elements.filter(el => el.type === 'image' && el.stageType === 'staged');
+            
+            if (stagingImages.length > 0) {
+               // Navigation
+               if (!e.metaKey && !e.ctrlKey) {
+                  // Standard Selection Nav
+                  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                     e.preventDefault();
+                     if (stgSel.length === 0) {
+                        state.setStagedSelection([stagingImages[0].id]);
+                     } else {
+                        const lastSel = stgSel[stgSel.length - 1];
+                        const currentIndex = stagingImages.findIndex(el => el.id === lastSel);
+                        if (currentIndex !== -1) {
+                           let nextIdx = e.key === 'ArrowRight' ? currentIndex + 1 : currentIndex - 1;
+                           if (nextIdx < 0) nextIdx = 0;
+                           if (nextIdx >= stagingImages.length) nextIdx = stagingImages.length - 1;
+                           
+                           if (e.shiftKey) {
+                              // Expand selection
+                              state.setStagedSelection(Array.from(new Set([...stgSel, stagingImages[nextIdx].id])));
+                           } else {
+                              state.setStagedSelection([stagingImages[nextIdx].id]);
+                           }
+                        }
+                     }
+                  }
+               } else {
+                  // Moving groups via Cmd/Ctrl + Arrow
+                  if (stgSel.length > 0) {
+                     e.preventDefault();
+                     const firstSel = stgSel[0];
+                     if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                        // Move within spread
+                        const currentIndex = stagingImages.findIndex(el => el.id === firstSel);
+                        let targetIdx = e.key === 'ArrowRight' ? currentIndex + stgSel.length : currentIndex - 1;
+                        if (targetIdx < 0) targetIdx = 0;
+                        if (targetIdx >= stagingImages.length) targetIdx = stagingImages.length - 1;
+                        
+                        const targetElement = stagingImages[targetIdx];
+                        if (targetElement) {
+                            state.reorderStagedPhotos(activeSpreadId, firstSel, targetElement.id);
+                        }
+                     } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { // Cross spread!
+                        const targetSpreadIdx = e.key === 'ArrowDown' ? spreadIndex + 1 : spreadIndex - 1;
+                        if (targetSpreadIdx >= 0 && targetSpreadIdx < project.spreads.length) {
+                             const tgtSpread = project.spreads[targetSpreadIdx];
+                             state.moveStagedPhotoAcrossSpreads(activeSpreadId, tgtSpread.id, firstSel);
+                             // Change active spread so camera follows natively
+                             state.setActiveSpread(tgtSpread.id);
+                        }
+                     }
+                  }
+               }
+            }
+         }
       }
     };
     

@@ -5,9 +5,10 @@ import { useTranslations } from 'next-intl';
 import { useEditorStore } from '@/store/useEditorStore';
 import { LUT_LIBRARY } from '@/lib/lut-presets';
 import TypographyPresetSelector from './editor/TypographyPresetSelector';
-import { AlignLeft, AlignCenter, AlignRight, Baseline, LetterText, Type, PaintBucket, TypeOutline, TextSelect, Layers, SlidersHorizontal, Globe, RotateCcw } from 'lucide-react';
+import { AlignLeft, AlignCenter, AlignRight, Baseline, LetterText, Type, PaintBucket, TypeOutline, TextSelect, Layers, SlidersHorizontal, Globe, RotateCcw, LayoutTemplate, Lock } from 'lucide-react';
 import LayersPanel from './editor/LayersPanel';
 import GlobalStylesPanel from './editor/GlobalStylesPanel';
+import AutoLayoutPanel from './editor/AutoLayoutPanel';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const LocalShadowPanel = ({ element, activeSpreadId, updateElement }: any) => {
@@ -124,7 +125,7 @@ export default function Inspector() {
   const [localH, setLocalH] = useState('');
   const [localRot, setLocalRot] = useState('');
   const [localFill, setLocalFill] = useState('#000000');
-  const [activeTab, setActiveTab] = useState<'properties' | 'layers' | 'global'>('properties');
+  const [activeTab, setActiveTab] = useState<'properties' | 'layout' | 'layers' | 'global'>('properties');
 
   const x_mm = element?.x_mm;
   const y_mm = element?.y_mm;
@@ -168,6 +169,9 @@ export default function Inspector() {
       <button onClick={() => setActiveTab('properties')} className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === 'properties' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'}`}>
         <SlidersHorizontal className="w-4 h-4" /> Prop.
       </button>
+      <button onClick={() => setActiveTab('layout')} className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === 'layout' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'}`}>
+        <LayoutTemplate className="w-4 h-4" /> Layout
+      </button>
       <button onClick={() => setActiveTab('global')} className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === 'global' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'}`}>
         <Globe className="w-4 h-4" /> Global
       </button>
@@ -182,6 +186,15 @@ export default function Inspector() {
       <aside className="w-64 shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full overflow-hidden">
         <TabsHeader />
         <GlobalStylesPanel />
+      </aside>
+    );
+  }
+
+  if (activeTab === 'layout') {
+    return (
+      <aside className="w-64 shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full overflow-hidden">
+        <TabsHeader />
+        <AutoLayoutPanel />
       </aside>
     );
   }
@@ -282,11 +295,20 @@ export default function Inspector() {
       
       <div className="flex-1 p-4 overflow-y-auto">
         <h2 className="text-sm font-semibold tracking-wider text-neutral-800 dark:text-neutral-200 mb-6 uppercase">{t('properties')}</h2>
-      <InputField label={t('x_pos')} value={localX} setter={setLocalX} step="0.1" onReset={() => updateElement(activeSpreadId, element.id, { x_mm: 50 })} />
-      <InputField label={t('y_pos')} value={localY} setter={setLocalY} step="0.1" onReset={() => updateElement(activeSpreadId, element.id, { y_mm: 50 })} />
-      <InputField label={t('width')} value={localW} setter={setLocalW} step="0.1" onReset={() => updateElement(activeSpreadId, element.id, { w_mm: 50 })} />
-      <InputField label={t('height')} value={localH} setter={setLocalH} step="0.1" onReset={() => updateElement(activeSpreadId, element.id, { h_mm: 50 })} />
-      <InputField label={t('rotation')} value={localRot} setter={setLocalRot} min={0} max={360} step="1" onReset={() => updateElement(activeSpreadId, element.id, { rotation_deg: 0 })} />
+      {element.isAutoLayoutManaged && activeSpread?.autoLayout?.isActive ? (
+         <div className="mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-3 rounded flex items-start gap-2">
+            <Lock className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+            <span className="text-xs text-blue-700 dark:text-blue-400 font-medium leading-tight">{t('al_managed')}</span>
+         </div>
+      ) : (
+        <>
+          <InputField label={t('x_pos')} value={localX} setter={setLocalX} step="0.1" onReset={() => updateElement(activeSpreadId, element.id, { x_mm: 50 })} />
+          <InputField label={t('y_pos')} value={localY} setter={setLocalY} step="0.1" onReset={() => updateElement(activeSpreadId, element.id, { y_mm: 50 })} />
+          <InputField label={t('width')} value={localW} setter={setLocalW} step="0.1" onReset={() => updateElement(activeSpreadId, element.id, { w_mm: 50 })} />
+          <InputField label={t('height')} value={localH} setter={setLocalH} step="0.1" onReset={() => updateElement(activeSpreadId, element.id, { h_mm: 50 })} />
+          <InputField label={t('rotation')} value={localRot} setter={setLocalRot} min={0} max={360} step="1" onReset={() => updateElement(activeSpreadId, element.id, { rotation_deg: 0 })} />
+        </>
+      )}
       <InputField 
         label={"Opacidad Global"} 
         value={element.opacity !== undefined ? (element.opacity * 100).toFixed(0) : '100'} 
@@ -364,6 +386,30 @@ export default function Inspector() {
 
       {element.type === 'image' && (
         <div className="pt-3 mt-3 border-t border-neutral-200 dark:border-neutral-800">
+           {/* Phase 7.J: User Control Override */}
+           <div className="mb-4 bg-orange-50 dark:bg-orange-900/10 p-3 rounded-lg border border-orange-200 dark:border-orange-800/50">
+             <div className="flex items-center justify-between mb-2">
+                 <h3 className="text-[10px] font-bold uppercase tracking-wider text-orange-800 dark:text-orange-200">Editorial Role</h3>
+             </div>
+             <select 
+               className="w-full bg-white dark:bg-neutral-950 border border-orange-200 dark:border-orange-800 rounded px-2 py-1.5 text-sm focus:outline-none transition-shadow mb-1 text-orange-900 dark:text-orange-100 font-medium"
+               value={element.editorialRole || 'auto'}
+               // eslint-disable-next-line @typescript-eslint/no-explicit-any
+               onChange={(e) => updateElement(activeSpreadId, element.id, { editorialRole: e.target.value as any })}
+             >
+                <option value="auto">System Auto</option>
+                <option value="hero">★ Forzar HERO</option>
+                <option value="supporting">■ Supporting</option>
+                <option value="filler">▼ Filler</option>
+             </select>
+             {element.assignmentReason && activeSpread?.autoLayout?.isActive && (
+                <p className="text-[10px] text-orange-800/80 dark:text-orange-200/80 leading-tight mt-1.5 border-t border-orange-200/50 dark:border-orange-800/50 pt-1.5">
+                   <strong className="block mb-0.5 opacity-75">Respuesta del Motor:</strong>
+                   {element.assignmentReason}
+                </p>
+             )}
+           </div>
+           
            <div className="flex items-center justify-between mb-2">
              <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-800 dark:text-neutral-200">Filtros Fotográficos</h3>
              {element.photoFilter && element.photoFilter !== 'none' && (

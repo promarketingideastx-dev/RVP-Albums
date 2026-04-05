@@ -108,6 +108,18 @@
     "sort_stars": "(STARS)",
     "filter_plus": "+PLUS",
     "inches": "INCHES",
-    "centimeters": "CM"
+    "centimeters": "CM",
+    "tab_layout": "Layout",
+    "al_active": "Auto Layout Active",
+    "al_free": "Free Mode",
+    "al_managed": "Managed by Auto Layout",
+    "al_apply": "Apply Auto Layout",
+    "al_next": "Next Layout",
+    "al_warning": "Applying Auto Layout will rebuild the current spread layout structure.",
+    "al_empty": "Multiple assets required.",
+    "al_one_variant": "Only 1 layout available",
+    "al_excess_photos": "{placed} placed, {remaining} unused",
+    "al_mode_geometric": "Geometric",
+    "al_mode_editorial": "Editorial"
   }
 }

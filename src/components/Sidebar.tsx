@@ -3,38 +3,54 @@
 import { useTranslations } from 'next-intl';
 import { useEditorStore } from '@/store/useEditorStore';
 import { v4 as uuidv4 } from 'uuid';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { ProjectAsset } from '@/types/editor';
 import AssetLibrary from './library/AssetLibrary';
 
 export default function Sidebar() {
   const [activeTab, setActiveTab] = useState<'photos' | 'decorations'>('photos');
   const t = useTranslations('Editor');
-  const addElement = useEditorStore((state) => state.addElement);
-  const activeSpreadId = useEditorStore((state) => state.activeSpreadId);
   const project = useEditorStore((state) => state.project);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const ingestStagedPhotos = useEditorStore((state) => state.ingestStagedPhotos);
   
-  const currentSpread = project?.spreads.find(s => s.id === activeSpreadId);
-  const currentElementsCount = currentSpread?.elements.length || 0;
-  
-  // Calculate a visual cascade offset (resetting every 10 elements so it doesn't leave the screen)
-  const getCascadeOffset = () => 20 + (currentElementsCount % 10) * 5;
+  const projectAssets = project?.assets || [];
 
-  const handleAddMockImage = () => {
-    if (!activeSpreadId) return;
-    const offset = getCascadeOffset();
-    addElement(activeSpreadId, {
-      id: uuidv4(),
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files);
+    
+    const newAssets: ProjectAsset[] = await Promise.all(files.map(file => {
+      return new Promise<ProjectAsset>((resolve) => {
+        const objectUrl = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+          resolve({
+            id: uuidv4(),
+            name: file.name,
+            previewUrl: objectUrl,
+            originalUrl: objectUrl,
+            width: img.width,
+            height: img.height,
+            orientation: img.width > img.height ? 'landscape' : img.width < img.height ? 'portrait' : 'square'
+          });
+        };
+        img.src = objectUrl;
+      });
+    }));
+    
+    // Phase 8.A: Nondestructive drop logic buffers assets into spreads sequentially gracefully
+    ingestStagedPhotos(newAssets);
+    if (e.target) e.target.value = '';
+  };
+
+  const handleDragStartPhoto = (e: React.DragEvent, asset: ProjectAsset) => {
+    e.dataTransfer.setData('application/json', JSON.stringify({
       type: 'image',
-      src: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=80',
-      previewUrl: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=80',
-      originalUrl: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=4000&q=100',
-      x_mm: offset,
-      y_mm: offset,
-      w_mm: 100,
-      h_mm: 66,
-      rotation_deg: 0,
-      zIndex: Date.now()
-    });
+      src: asset.previewUrl,
+      assetId: asset.id, // Phase 7.H structural bounding link
+    }));
+    e.dataTransfer.effectAllowed = 'copy';
   };
 
 
@@ -58,14 +74,37 @@ export default function Sidebar() {
 
       <div className={`p-4 flex flex-col gap-4 flex-1 overflow-y-auto ${activeTab === 'decorations' ? 'p-0' : ''}`}>
         {activeTab === 'photos' ? (
-          <>
-            <button onClick={handleAddMockImage} className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors">
+          <div className="flex flex-col h-full">
+            <input type="file" ref={fileInputRef} className="hidden" multiple accept="image/*" onChange={handlePhotoUpload} />
+            <button onClick={() => fileInputRef.current?.click()} className="w-full py-2 mb-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
               {t('add_image')}
             </button>
-            <div className="flex-1 border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded flex items-center justify-center text-xs text-neutral-400 text-center p-4">
-              Use the Asset Library below to upload multiple images and drag them here
+            <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
+              {projectAssets.length === 0 ? (
+                <div className="h-40 border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded-lg flex flex-col items-center justify-center text-xs text-neutral-400 text-center p-4">
+                  <svg className="w-8 h-8 mb-2 text-neutral-300 dark:text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                  Arrastra tus fotos aquí o haz clic en añadir
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  {projectAssets.map(asset => (
+                    <div 
+                      key={asset.id} 
+                      className="relative pt-[100%] rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800 cursor-grab active:cursor-grabbing group hover:shadow-md hover:border-blue-400 transition-all"
+                      draggable
+                      onDragStart={(e) => handleDragStartPhoto(e, asset)}
+                    >
+                      <div className="absolute inset-0 bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={asset.previewUrl} alt={asset.name} className="w-full h-full object-cover pointer-events-none group-hover:scale-105 transition-transform duration-300" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </>
+          </div>
         ) : (
           <div className="h-full -m-4">
             <AssetLibrary />
