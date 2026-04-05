@@ -56,21 +56,34 @@ export function generateFundyMasonryLayout(config: MasonryEngineConfig): Masonry
         }];
     }
 
-    // --- STEP 1: GREEDY PARTITION TESTER ---
+    // --- STEP 1.5: SEEDED PERMUTATION SHUFFLE ---
+    // Mathematically permuting the input array forces the greedy packer to generate 
+    // entirely different geometrical structures for the same seed, giving true variety.
+    let shuffledPhotos = [...photos];
+    if (variantSeed > 0) {
+        let rngSeed = (variantSeed * 16807) % 2147483647;
+        for (let i = shuffledPhotos.length - 1; i > 0; i--) {
+            rngSeed = (rngSeed * 16807) % 2147483647;
+            const j = rngSeed % (i + 1);
+            [shuffledPhotos[i], shuffledPhotos[j]] = [shuffledPhotos[j], shuffledPhotos[i]];
+        }
+    }
+
+    // --- STEP 2: GREEDY PARTITION TESTER ---
     // We try multiple "target row heights" to find all valid partition structures natively
     let validPartitions: { rows: MasonryPhotoInput[][], error: number, avgPhotosPerRow: number }[] = [];
 
-    const minH = H / photos.length;
+    const minH = H / shuffledPhotos.length;
     const maxH = H;
     const steps = 150; // High resolution sampling for math optimization
     const stepSize = (maxH - minH) / steps;
 
     for (let th = minH; th <= maxH; th += stepSize) {
-        const rows = packGreedy(photos, th, W, gap);
+        const rows = packGreedy(shuffledPhotos, th, W, gap);
         const hCalc = calculateTotalHeight(rows, W, gap);
         const error = Math.abs(hCalc - H);
         
-        validPartitions.push({ rows, error, avgPhotosPerRow: photos.length / rows.length });
+        validPartitions.push({ rows, error, avgPhotosPerRow: shuffledPhotos.length / rows.length });
     }
 
     // De-duplicate structurally equivalent partitions mathematically

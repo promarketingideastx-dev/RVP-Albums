@@ -149,7 +149,14 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
                         type="text" 
                         placeholder="Search" 
                         value={searchSize}
-                        onChange={(e) => setSearchSize(e.target.value)}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            setSearchSize(val);
+                            const updatedFiltered = ALBUM_SIZES.filter(s => s.toLowerCase().includes(val.toLowerCase()));
+                            if (updatedFiltered.length > 0 && !updatedFiltered.includes(albumSize)) {
+                                setAlbumSize(updatedFiltered[0]);
+                            }
+                        }}
                         className="w-full pl-3 pr-10 py-2 bg-white rounded border border-neutral-300 focus:outline-none" 
                       />
                       <span className="absolute right-3 top-2.5 text-neutral-400 font-bold text-xl">⚲</span>

@@ -92,8 +92,11 @@ export default function AutoLayoutPanel() {
                  spreadWidth: project.size.w_mm,
                  spreadHeight: project.size.h_mm,
                  photos: photosData.map(p => ({ id: p.elementId, aspectRatio: p.aspectRatio })),
-                 gap: 10,
-                 margin: 15
+                 gap: spread.autoLayout?.fundyGapMm || 10,
+                 margin: 15,
+                 variantSeed: nextSeed,
+                 strategy: spread.autoLayout?.fundyStrategy,
+                 flipHorizontal: spread.autoLayout?.fundyFlipHorizontal
              });
              
              const newElements = [...spread.elements];
@@ -333,13 +336,22 @@ export default function AutoLayoutPanel() {
                      />
                  </div>
 
-                 <button
-                    onClick={() => toggleFundyFlipHorizontal(activeSpreadId)}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 text-neutral-800 dark:text-neutral-200 text-sm font-semibold rounded transition-colors"
-                 >
-                    <ArrowLeftRight className="w-4 h-4 text-orange-500" />
-                    {t('al_fundy_flip')}
-                 </button>
+                 <div className="flex gap-2 w-full">
+                     <button 
+                        onClick={() => applyLayout(true, 'fundy-masonry-experimental')}
+                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-800 dark:text-neutral-200 text-xs font-semibold rounded transition-colors"
+                     >
+                        <RefreshCw className="w-3.5 h-3.5 text-blue-500" />
+                        {t('al_next')}
+                     </button>
+                     <button
+                        onClick={() => toggleFundyFlipHorizontal(activeSpreadId)}
+                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 text-neutral-800 dark:text-neutral-200 text-xs font-semibold rounded transition-colors"
+                     >
+                        <ArrowLeftRight className="w-3.5 h-3.5 text-orange-500" />
+                        {t('al_fundy_flip')}
+                     </button>
+                 </div>
               </div>
            ) : (
               <div className="flex flex-col gap-3">
