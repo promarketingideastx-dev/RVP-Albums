@@ -10,7 +10,6 @@ export default function GlobalStylesPanel() {
   const updateGlobalImageStyles = useEditorStore((state) => state.updateGlobalImageStyles);
   const updateProjectGlobalBackground = useEditorStore((state) => state.updateProjectGlobalBackground);
   const resetGlobalImageStyles = useEditorStore((state) => state.resetGlobalImageStyles);
-  const resetSpreadBackground = useEditorStore((state) => state.resetSpreadBackground);
   
   const t = useTranslations('Editor');
 
