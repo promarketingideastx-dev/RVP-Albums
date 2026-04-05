@@ -77,6 +77,7 @@ interface EditorState {
 
   updateGlobalImageStyles: (styles: Partial<GlobalImageStyles>) => void;
   updateSpreadBackground: (spreadId: string, config: Partial<SpreadBackgroundConfig>) => void;
+  updateProjectGlobalBackground: (config: Partial<SpreadBackgroundConfig>) => void;
   resetGlobalImageStyles: () => void;
   resetSpreadBackground: (spreadId: string) => void;
   resetAllGlobalStyles: () => void;
@@ -280,10 +281,38 @@ export const useEditorStore = create<EditorState>()(
 
   updateGlobalImageStyles: (styles) => set((state) => {
     if (!state.project) return state;
+
+    const newSpreads = state.project.spreads.map((spread) => {
+      const newElements = spread.elements.map((el) => {
+        if (el.type !== 'image' || el.isolateFromGlobalStyles) return el;
+        
+        const newEl = { ...el };
+
+        if (styles.borderRadius !== undefined || styles.borderRadiusEnabled !== undefined) {
+           delete newEl.borderRadius;
+        }
+        if (styles.strokeWidth !== undefined || styles.strokeColor !== undefined || styles.strokeEnabled !== undefined) {
+           delete newEl.strokeWidth;
+           delete newEl.strokeColor;
+        }
+        if (styles.shadowBlur !== undefined || styles.shadowColor !== undefined || styles.shadowOffsetX !== undefined || styles.shadowOffsetY !== undefined || styles.shadowOpacity !== undefined || styles.shadowEnabled !== undefined) {
+           delete newEl.shadowColor;
+           delete newEl.shadowBlur;
+           delete newEl.shadowOffsetX;
+           delete newEl.shadowOffsetY;
+           delete newEl.shadowOpacity;
+        }
+
+        return newEl;
+      });
+      return { ...spread, elements: newElements };
+    });
+
     return {
       project: {
         ...state.project,
-        globalImageStyles: { ...(state.project.globalImageStyles || {}), ...styles }
+        globalImageStyles: { ...(state.project.globalImageStyles || {}), ...styles },
+        spreads: newSpreads
       }
     };
   }),
@@ -297,10 +326,41 @@ export const useEditorStore = create<EditorState>()(
     return { project: { ...state.project, spreads: newSpreads } };
   }),
 
+  updateProjectGlobalBackground: (config) => set((state) => {
+    if (!state.project) return state;
+    const newSpreads = state.project.spreads.map((s) => {
+      return { ...s, bg_config: { ...(s.bg_config || { type: 'none' }), ...config } };
+    });
+    return { project: { ...state.project, spreads: newSpreads } };
+  }),
+
   resetGlobalImageStyles: () => set((state) => {
     if (!state.project) return state;
+
+    const newSpreads = state.project.spreads.map((spread) => {
+      const newElements = spread.elements.map((el) => {
+        if (el.type !== 'image' || el.isolateFromGlobalStyles) return el;
+        
+        const newEl = { ...el };
+        delete newEl.borderRadius;
+        delete newEl.strokeWidth;
+        delete newEl.strokeColor;
+        delete newEl.shadowColor;
+        delete newEl.shadowBlur;
+        delete newEl.shadowOffsetX;
+        delete newEl.shadowOffsetY;
+        delete newEl.shadowOpacity;
+        return newEl;
+      });
+      return { ...spread, elements: newElements };
+    });
+
     return {
-      project: { ...state.project, globalImageStyles: undefined }
+      project: { 
+        ...state.project, 
+        globalImageStyles: undefined,
+        spreads: newSpreads 
+      }
     };
   }),
 

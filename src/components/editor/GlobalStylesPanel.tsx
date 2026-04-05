@@ -8,7 +8,7 @@ export default function GlobalStylesPanel() {
   const activeSpreadId = useEditorStore((state) => state.activeSpreadId);
   
   const updateGlobalImageStyles = useEditorStore((state) => state.updateGlobalImageStyles);
-  const updateSpreadBackground = useEditorStore((state) => state.updateSpreadBackground);
+  const updateProjectGlobalBackground = useEditorStore((state) => state.updateProjectGlobalBackground);
   const resetGlobalImageStyles = useEditorStore((state) => state.resetGlobalImageStyles);
   const resetSpreadBackground = useEditorStore((state) => state.resetSpreadBackground);
   
@@ -32,7 +32,7 @@ export default function GlobalStylesPanel() {
             {t('page_background').includes('.') ? 'Fondo de Página' : t('page_background')}
           </h3>
           {bgConfig.type !== 'none' && (
-             <button onClick={() => resetSpreadBackground(activeSpreadId)} className="text-[10px] uppercase font-bold text-red-500 hover:text-red-600 transition-colors shrink-0 whitespace-nowrap px-2 py-1 bg-red-500/10 rounded-md">
+             <button onClick={() => updateProjectGlobalBackground({ type: 'none' })} className="text-[10px] uppercase font-bold text-red-500 hover:text-red-600 transition-colors shrink-0 whitespace-nowrap px-2 py-1 bg-red-500/10 rounded-md">
                Reset
              </button>
           )}
@@ -41,25 +41,25 @@ export default function GlobalStylesPanel() {
         <div className="flex bg-neutral-100 dark:bg-neutral-800 p-1 rounded-md mb-4 text-xs font-medium">
           <button 
             className={`flex-1 py-1.5 rounded text-center ${bgConfig.type === 'none' ? 'bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white' : 'text-neutral-500 dark:text-neutral-400'}`}
-            onClick={() => updateSpreadBackground(activeSpreadId, { type: 'none' })}
+            onClick={() => updateProjectGlobalBackground({ type: 'none' })}
           >
             None
           </button>
           <button 
             className={`flex-1 py-1.5 rounded text-center ${bgConfig.type === 'solid' ? 'bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white' : 'text-neutral-500 dark:text-neutral-400'}`}
-            onClick={() => updateSpreadBackground(activeSpreadId, { type: 'solid', color1: bgConfig.color1 || '#ffffff' })}
+            onClick={() => updateProjectGlobalBackground({ type: 'solid', color1: bgConfig.color1 || '#ffffff' })}
           >
             Solid
           </button>
           <button 
             className={`flex-1 py-1.5 rounded text-center ${bgConfig.type === 'linear' ? 'bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white' : 'text-neutral-500 dark:text-neutral-400'}`}
-            onClick={() => updateSpreadBackground(activeSpreadId, { type: 'linear', color1: bgConfig.color1 || '#ffffff', color2: bgConfig.color2 || '#e5e5e5' })}
+            onClick={() => updateProjectGlobalBackground({ type: 'linear', color1: bgConfig.color1 || '#ffffff', color2: bgConfig.color2 || '#e5e5e5' })}
           >
             Linear
           </button>
           <button 
             className={`flex-1 py-1.5 rounded text-center ${bgConfig.type === 'radial' ? 'bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white' : 'text-neutral-500 dark:text-neutral-400'}`}
-            onClick={() => updateSpreadBackground(activeSpreadId, { type: 'radial', color1: bgConfig.color1 || '#ffffff', color2: bgConfig.color2 || '#e5e5e5' })}
+            onClick={() => updateProjectGlobalBackground({ type: 'radial', color1: bgConfig.color1 || '#ffffff', color2: bgConfig.color2 || '#e5e5e5' })}
           >
             Radial
           </button>
@@ -72,7 +72,7 @@ export default function GlobalStylesPanel() {
               <input 
                 type="color" 
                 value={bgConfig.color1 || '#ffffff'}
-                onChange={(e) => updateSpreadBackground(activeSpreadId, { color1: e.target.value })}
+                onChange={(e) => updateProjectGlobalBackground({ color1: e.target.value })}
                 className="w-full h-8 rounded border border-neutral-200 dark:border-neutral-700 cursor-pointer"
               />
             </div>
@@ -83,7 +83,7 @@ export default function GlobalStylesPanel() {
                 <input 
                   type="color" 
                   value={bgConfig.color2 || '#e5e5e5'}
-                  onChange={(e) => updateSpreadBackground(activeSpreadId, { color2: e.target.value })}
+                  onChange={(e) => updateProjectGlobalBackground({ color2: e.target.value })}
                   className="w-full h-8 rounded border border-neutral-200 dark:border-neutral-700 cursor-pointer"
                 />
               </div>
@@ -101,14 +101,14 @@ export default function GlobalStylesPanel() {
                     min="0"
                     max="360"
                     value={bgConfig.gradientAngle || 0}
-                    onChange={(e) => updateSpreadBackground(activeSpreadId, { gradientAngle: parseInt(e.target.value, 10) })}
+                    onChange={(e) => updateProjectGlobalBackground({ gradientAngle: parseInt(e.target.value, 10) })}
                     className="w-full accent-teal-500"
                   />
                   <input 
                     type="number" 
                     className="w-12 bg-neutral-100 dark:bg-neutral-800 text-xs px-1 rounded border-none text-center outline-none" 
                     value={bgConfig.gradientAngle || 0}
-                    onChange={(e) => updateSpreadBackground(activeSpreadId, { gradientAngle: parseInt(e.target.value, 10) || 0 })}
+                    onChange={(e) => updateProjectGlobalBackground({ gradientAngle: parseInt(e.target.value, 10) || 0 })}
                   />
                 </div>
               </div>
@@ -127,14 +127,14 @@ export default function GlobalStylesPanel() {
                       min="10"
                       max="150"
                       value={bgConfig.radialSize || 50}
-                      onChange={(e) => updateSpreadBackground(activeSpreadId, { radialSize: parseInt(e.target.value, 10) })}
+                      onChange={(e) => updateProjectGlobalBackground({ radialSize: parseInt(e.target.value, 10) })}
                       className="w-full accent-teal-500"
                     />
                     <input 
                       type="number" 
                       className="w-12 bg-neutral-100 dark:bg-neutral-800 text-xs px-1 rounded border-none text-center outline-none" 
                       value={bgConfig.radialSize || 50}
-                      onChange={(e) => updateSpreadBackground(activeSpreadId, { radialSize: parseInt(e.target.value, 10) || 50 })}
+                      onChange={(e) => updateProjectGlobalBackground({ radialSize: parseInt(e.target.value, 10) || 50 })}
                     />
                   </div>
                 </div>
@@ -149,7 +149,7 @@ export default function GlobalStylesPanel() {
                       min="0"
                       max="100"
                       value={bgConfig.radialCenterX ?? 50}
-                      onChange={(e) => updateSpreadBackground(activeSpreadId, { radialCenterX: parseInt(e.target.value, 10) })}
+                      onChange={(e) => updateProjectGlobalBackground({ radialCenterX: parseInt(e.target.value, 10) })}
                       className="w-full accent-teal-500"
                     />
                   </div>
@@ -165,7 +165,7 @@ export default function GlobalStylesPanel() {
                       min="0"
                       max="100"
                       value={bgConfig.radialCenterY ?? 50}
-                      onChange={(e) => updateSpreadBackground(activeSpreadId, { radialCenterY: parseInt(e.target.value, 10) })}
+                      onChange={(e) => updateProjectGlobalBackground({ radialCenterY: parseInt(e.target.value, 10) })}
                       className="w-full accent-teal-500"
                     />
                   </div>
