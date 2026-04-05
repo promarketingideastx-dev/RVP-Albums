@@ -393,10 +393,36 @@ const EditorImage = ({
              node.contrast(Math.max(-100, Math.min(100, totalContrast))); 
           }
           
-          if (adj.saturation || adj.temperature || adj.tint) {
+          // Advanced Color: Vibrance and Saturation
+          if (adj.saturation || adj.vibrance) {
              if (!filtersArray.includes(Konva.Filters.HSL)) filtersArray.push(Konva.Filters.HSL);
-             if (adj.saturation) node.saturation(adj.saturation / 100); 
-             if (adj.temperature) node.hue((adj.temperature / 100) * 45); 
+             let totalSat = (adj.saturation || 0);
+             if (adj.vibrance) totalSat += (adj.vibrance * 0.6); // Vibrance maps as clamped soft saturation
+             node.saturation(Math.max(-2, Math.min(2, totalSat / 100))); 
+             node.hue(0);
+          }
+          
+          // Advanced Color: Temperature and Tint (Thermal Curves via RGB Additives)
+          if (adj.temperature || adj.tint) {
+             if (!filtersArray.includes(Konva.Filters.RGB)) filtersArray.push(Konva.Filters.RGB);
+             let r = 0, g = 0, b = 0;
+             if (adj.temperature) {
+                 const temp = adj.temperature;
+                 r += temp * 0.6;   // Add Red when warm, sub Red when cool
+                 g += temp * 0.15;  // Slight Yellow boost for warm
+                 b -= temp * 0.6;   // Sub Blue when warm, add Blue when cool
+             }
+             if (adj.tint) {
+                 const tint = adj.tint;
+                 r += tint * 0.35;  // Add Magenta (Red)
+                 b += tint * 0.35;  // Add Magenta (Blue)
+                 g -= tint * 0.5;   // Sub Green
+             }
+             if (typeof node.red === 'function') {
+                node.red(r);
+                node.green(g);
+                node.blue(b);
+             }
           }
           
           if (adj.grain) {

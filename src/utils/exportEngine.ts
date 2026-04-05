@@ -296,10 +296,36 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
                  kFilterImg.contrast(Math.max(-100, Math.min(100, totalContrast))); 
               }
               
-              if (adj.saturation || adj.temperature || adj.tint) {
+              // Advanced Color: Vibrance and Saturation
+              if (adj.saturation || adj.vibrance) {
                  if (!filtersArray.includes(Konva.Filters.HSL)) filtersArray.push(Konva.Filters.HSL);
-                 if (adj.saturation) kFilterImg.saturation(adj.saturation / 100); 
-                 if (adj.temperature) kFilterImg.hue((adj.temperature / 100) * 45); 
+                 let totalSat = (adj.saturation || 0);
+                 if (adj.vibrance) totalSat += (adj.vibrance * 0.6); 
+                 kFilterImg.saturation(Math.max(-2, Math.min(2, totalSat / 100))); 
+                 kFilterImg.hue(0);
+              }
+              
+              // Advanced Color: Temperature and Tint (Thermal Curves via RGB Additives)
+              if (adj.temperature || adj.tint) {
+                 if (!filtersArray.includes(Konva.Filters.RGB)) filtersArray.push(Konva.Filters.RGB);
+                 let r = 0, g = 0, b = 0;
+                 if (adj.temperature) {
+                     const temp = adj.temperature;
+                     r += temp * 0.6;   
+                     g += temp * 0.15;  
+                     b -= temp * 0.6;   
+                 }
+                 if (adj.tint) {
+                     const tint = adj.tint;
+                     r += tint * 0.35;  
+                     b += tint * 0.35;  
+                     g -= tint * 0.5;   
+                 }
+                 if (typeof kFilterImg.red === 'function') {
+                    kFilterImg.red(r);
+                    kFilterImg.green(g);
+                    kFilterImg.blue(b);
+                 }
               }
               
               if (adj.grain) {
