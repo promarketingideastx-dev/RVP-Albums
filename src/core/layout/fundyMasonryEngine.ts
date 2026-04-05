@@ -59,7 +59,7 @@ export function generateFundyMasonryLayout(config: MasonryEngineConfig): Masonry
     // --- STEP 1.5: SEEDED PERMUTATION SHUFFLE ---
     // Mathematically permuting the input array forces the greedy packer to generate 
     // entirely different geometrical structures for the same seed, giving true variety.
-    let shuffledPhotos = [...photos];
+    const shuffledPhotos = [...photos];
     if (variantSeed > 0) {
         let rngSeed = (variantSeed * 16807) % 2147483647;
         for (let i = shuffledPhotos.length - 1; i > 0; i--) {
