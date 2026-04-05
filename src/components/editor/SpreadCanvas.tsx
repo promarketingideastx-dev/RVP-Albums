@@ -20,8 +20,6 @@ interface SpreadCanvasProps {
   spreadIdOverride?: string;
 }
 
-const mmToPx = 3.779527559;
-
 export const smartGuidesEmitter = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   listeners: [] as any[],

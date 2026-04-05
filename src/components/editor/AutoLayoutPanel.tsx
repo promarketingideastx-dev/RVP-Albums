@@ -5,7 +5,7 @@ import { useEditorStore } from '@/store/useEditorStore';
 import { generateAutoLayout } from '@/lib/autoLayoutLibrary';
 import { resolveEditorialAssignment, analyzePhotoSet } from '@/lib/editorialAssignmentEngine';
 import { PhotoMetadata } from '@/types/editor';
-import { LayoutTemplate, Wand2, RefreshCw, Lock, AlertTriangle, AlertCircle, Sparkles, Grid, CheckCircle2, Sliders, ArrowLeftRight } from 'lucide-react';
+import { LayoutTemplate, Wand2, RefreshCw, Lock, AlertTriangle, AlertCircle, Sparkles, CheckCircle2, Sliders, ArrowLeftRight } from 'lucide-react';
 
 export default function AutoLayoutPanel() {
   const t = useTranslations('Editor');
