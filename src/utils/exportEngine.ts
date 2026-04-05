@@ -21,10 +21,9 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
     (Konva.Filters as any).ColorShift = function (this: any, imageData: ImageData) {
       const data = imageData.data;
       const nPixels = data.length;
-      const self = this as unknown as Record<string, () => number>;
-      const rShift = self.redShift?.() || 0;
-      const gShift = self.greenShift?.() || 0;
-      const bShift = self.blueShift?.() || 0;
+      const rShift = this.getAttr('redShift') || 0;
+      const gShift = this.getAttr('greenShift') || 0;
+      const bShift = this.getAttr('blueShift') || 0;
 
       for (let i = 0; i < nPixels; i += 4) {
         data[i] = Math.max(0, Math.min(255, data[i] + rShift));
@@ -32,13 +31,6 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
         data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + bShift));
       }
     };
-    
-    // @ts-expect-error - Dynamic registration
-    Konva.Factory.addGetterSetter(Konva.Node, 'redShift', 0);
-    // @ts-expect-error - Dynamic registration
-    Konva.Factory.addGetterSetter(Konva.Node, 'greenShift', 0);
-    // @ts-expect-error - Dynamic registration
-    Konva.Factory.addGetterSetter(Konva.Node, 'blueShift', 0);
   }
   
   const container = document.createElement('div');
@@ -337,12 +329,9 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
                      b = b + tintNormalized * (TINT_STRENGTH * 0.25);   
                  }
                  
-                 const kNode = kImg as unknown as Record<string, (val: number) => void>;
-                 if (typeof kNode.redShift === 'function') {
-                    kNode.redShift(r);
-                    kNode.greenShift(g);
-                    kNode.blueShift(b);
-                 }
+                 kImg.setAttr('redShift', r);
+                 kImg.setAttr('greenShift', g);
+                 kImg.setAttr('blueShift', b);
               }
               
               if (adj.grain) {

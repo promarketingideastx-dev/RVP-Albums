@@ -15,27 +15,19 @@ import useImage from 'use-image';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 if (typeof window !== 'undefined' && !(Konva.Filters as any).ColorShift) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (Konva.Filters as any).ColorShift = function (imageData: ImageData) {
+  (Konva.Filters as any).ColorShift = function (this: any, imageData: ImageData) {
     const data = imageData.data;
     const nPixels = data.length;
-    const self = this as unknown as Record<string, () => number>;
-    const rShift = self.redShift?.() || 0;
-    const gShift = self.greenShift?.() || 0;
-    const bShift = self.blueShift?.() || 0;
+    const rShift = this.getAttr('redShift') || 0;
+    const gShift = this.getAttr('greenShift') || 0;
+    const bShift = this.blueShift ? this.getAttr('blueShift') : (this.attrs ? this.attrs.blueShift || 0 : 0);
 
     for (let i = 0; i < nPixels; i += 4) {
       data[i] = Math.max(0, Math.min(255, data[i] + rShift));
       data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + gShift));
-      data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + bShift));
+      data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + (this.getAttr('blueShift') || 0)));
     }
   };
-  
-  // @ts-expect-error - Dynamic registration
-  Konva.Factory.addGetterSetter(Konva.Node, 'redShift', 0);
-  // @ts-expect-error - Dynamic registration
-  Konva.Factory.addGetterSetter(Konva.Node, 'greenShift', 0);
-  // @ts-expect-error - Dynamic registration
-  Konva.Factory.addGetterSetter(Konva.Node, 'blueShift', 0);
 }
 interface SpreadCanvasProps {
   stageWidth: number;
@@ -451,12 +443,9 @@ const EditorImage = ({
                  b = b + tintNormalized * (TINT_STRENGTH * 0.25);
              }
              
-             const kNode = node as unknown as Record<string, (val: number) => void>;
-             if (typeof kNode.redShift === 'function') {
-                kNode.redShift(r);
-                kNode.greenShift(g);
-                kNode.blueShift(b);
-             }
+             node.setAttr('redShift', r);
+             node.setAttr('greenShift', g);
+             node.setAttr('blueShift', b);
           }
           
           if (adj.grain) {
