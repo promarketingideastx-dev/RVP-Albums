@@ -2,14 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { useEditorStore } from '@/store/useEditorStore';
-import { LUT_LIBRARY } from '@/lib/lut-presets';
 import TypographyPresetSelector from './editor/TypographyPresetSelector';
 import { AlignLeft, AlignCenter, AlignRight, Baseline, LetterText, Type, PaintBucket, TypeOutline, TextSelect, Layers, SlidersHorizontal, Globe, RotateCcw, LayoutTemplate, Lock } from 'lucide-react';
 import LayersPanel from './editor/LayersPanel';
 import GlobalStylesPanel from './editor/GlobalStylesPanel';
 import AutoLayoutPanel from './editor/AutoLayoutPanel';
 import CameraRawPanel from './editor/CameraRawPanel';
+import { useEditorStore } from '@/store/useEditorStore';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const LocalShadowPanel = ({ element, activeSpreadId, updateElement }: any) => {

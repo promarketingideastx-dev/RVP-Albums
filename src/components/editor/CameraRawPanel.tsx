@@ -97,8 +97,9 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
   };
   
   const renderHslSlider = (label: string, colorKey: string, channel: 'h'|'s'|'l', bgGradient: string) => {
-    const currentHsl = currentAdj.hsl || {} as any;
-    const value = currentHsl[colorKey]?.[channel] ?? 0;
+    const currentHsl = currentAdj.hsl || {} as Record<string, { h: number, s: number, l: number }>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const value = (currentHsl as any)[colorKey]?.[channel] ?? 0;
     
     return (
       <div className="mb-3 px-3">
@@ -283,7 +284,7 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
                 <button 
                   key={tab}
                   className={`text-[10px] pb-1 ${mixerTab === tab ? 'text-white border-b-2 border-white' : 'text-[#888] hover:text-[#bbb]'}`}
-                  onClick={() => setMixerTab(tab as any)}
+                  onClick={() => setMixerTab(tab as 'Hue' | 'Saturation' | 'Luminance' | 'All')}
                 >
                   {tab}
                 </button>

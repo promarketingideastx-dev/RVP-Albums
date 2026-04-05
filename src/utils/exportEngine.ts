@@ -202,9 +202,11 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
           kGroup.add(kBaseImg);
 
           // Handle Photo Filters Headless Dual Layer
-          if (el.photoFilter && el.photoFilter !== 'none') {
+          const hasLegacyFilter = el.photoFilter && el.photoFilter !== 'none';
+          const hasAdj = el.photoAdjustments && Object.values(el.photoAdjustments).some(v => typeof v === 'number' && v !== 0);
+
+          if (hasLegacyFilter || hasAdj) {
             const { LUT_LIBRARY } = await import('@/lib/lut-presets');
-            const lut = LUT_LIBRARY.find(l => l.id === el.photoFilter);
 
             const kFilterImg = new Konva.Image({
               image: imgObj,
@@ -222,52 +224,81 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const filtersArray: any[] = [];
             
-            if (lut) {
-               if (lut.contrast && lut.contrast !== 0) {
-                  filtersArray.push(Konva.Filters.Contrast);
-                  kFilterImg.contrast(lut.contrast);
-               }
-               if (lut.brightness && lut.brightness !== 0) {
-                  filtersArray.push(Konva.Filters.Brighten);
-                  kFilterImg.brightness(lut.brightness);
-               }
-               if (lut.grayscale) filtersArray.push(Konva.Filters.Grayscale);
-               if (lut.sepia) filtersArray.push(Konva.Filters.Sepia);
-               if (lut.invert) filtersArray.push(Konva.Filters.Invert);
-               
-               if (lut.hue !== undefined || lut.saturation !== undefined || lut.luminance !== undefined) {
-                  filtersArray.push(Konva.Filters.HSL);
-                  if (lut.hue !== undefined) kFilterImg.hue(lut.hue);
-                  if (lut.saturation !== undefined) kFilterImg.saturation(lut.saturation);
-                  if (lut.luminance !== undefined) kFilterImg.luminance(lut.luminance);
-               }
-            } else {
-               switch(el.photoFilter) {
-                 case 'sepia': filtersArray.push(Konva.Filters.Sepia); break;
-                 case 'grayscale': filtersArray.push(Konva.Filters.Grayscale); break;
-                 case 'invert': filtersArray.push(Konva.Filters.Invert); break;
-                 case 'blur': 
-                   filtersArray.push(Konva.Filters.Blur); 
-                   kFilterImg.blurRadius(el.filterIntensity !== undefined ? el.filterIntensity : 5); 
-                   break;
-                 case 'noise': 
-                   filtersArray.push(Konva.Filters.Noise); 
-                   kFilterImg.noise(el.filterIntensity !== undefined ? el.filterIntensity : 1); 
-                   break;
-                 case 'brighten': 
-                   filtersArray.push(Konva.Filters.Brighten); 
-                   kFilterImg.brightness(el.filterIntensity !== undefined ? el.filterIntensity : 0.5); 
-                   break;
-                 case 'contrast': 
-                   filtersArray.push(Konva.Filters.Contrast); 
-                   kFilterImg.contrast(el.filterIntensity !== undefined ? el.filterIntensity : 20); 
-                   break;
-                 case 'posterize': 
-                   filtersArray.push(Konva.Filters.Posterize); 
-                   kFilterImg.levels(el.filterIntensity !== undefined ? el.filterIntensity : 4); 
-                   break;
+            if (hasLegacyFilter) {
+               const lut = LUT_LIBRARY.find(l => l.id === el.photoFilter);
+               if (lut) {
+                  if (lut.contrast && lut.contrast !== 0) {
+                     filtersArray.push(Konva.Filters.Contrast);
+                     kFilterImg.contrast(lut.contrast);
+                  }
+                  if (lut.brightness && lut.brightness !== 0) {
+                     filtersArray.push(Konva.Filters.Brighten);
+                     kFilterImg.brightness(lut.brightness);
+                  }
+                  if (lut.grayscale) filtersArray.push(Konva.Filters.Grayscale);
+                  if (lut.sepia) filtersArray.push(Konva.Filters.Sepia);
+                  if (lut.invert) filtersArray.push(Konva.Filters.Invert);
+                  
+                  if (lut.hue !== undefined || lut.saturation !== undefined || lut.luminance !== undefined) {
+                     filtersArray.push(Konva.Filters.HSL);
+                     if (lut.hue !== undefined) kFilterImg.hue(lut.hue);
+                     if (lut.saturation !== undefined) kFilterImg.saturation(lut.saturation);
+                     if (lut.luminance !== undefined) kFilterImg.luminance(lut.luminance);
+                  }
+               } else {
+                  switch(el.photoFilter) {
+                    case 'sepia': filtersArray.push(Konva.Filters.Sepia); break;
+                    case 'grayscale': filtersArray.push(Konva.Filters.Grayscale); break;
+                    case 'invert': filtersArray.push(Konva.Filters.Invert); break;
+                    case 'blur': 
+                      filtersArray.push(Konva.Filters.Blur); 
+                      kFilterImg.blurRadius(el.filterIntensity !== undefined ? el.filterIntensity : 5); 
+                      break;
+                    case 'noise': 
+                      filtersArray.push(Konva.Filters.Noise); 
+                      kFilterImg.noise(el.filterIntensity !== undefined ? el.filterIntensity : 1); 
+                      break;
+                    case 'brighten': 
+                      filtersArray.push(Konva.Filters.Brighten); 
+                      kFilterImg.brightness(el.filterIntensity !== undefined ? el.filterIntensity : 0.5); 
+                      break;
+                    case 'contrast': 
+                      filtersArray.push(Konva.Filters.Contrast); 
+                      kFilterImg.contrast(el.filterIntensity !== undefined ? el.filterIntensity : 20); 
+                      break;
+                    case 'posterize': 
+                      filtersArray.push(Konva.Filters.Posterize); 
+                      kFilterImg.levels(el.filterIntensity !== undefined ? el.filterIntensity : 4); 
+                      break;
+                  }
                }
             }
+
+            if (hasAdj) {
+              const adj = el.photoAdjustments!;
+              if (adj.exposure) {
+                 filtersArray.push(Konva.Filters.Brighten);
+                 kFilterImg.brightness(adj.exposure / 5);
+              }
+              if (adj.lightContrast) {
+                 filtersArray.push(Konva.Filters.Contrast);
+                 kFilterImg.contrast(adj.lightContrast); 
+              }
+              if (adj.saturation || adj.temperature || adj.tint) {
+                 filtersArray.push(Konva.Filters.HSL);
+                 if (adj.saturation) kFilterImg.saturation(adj.saturation / 100); 
+                 if (adj.temperature) kFilterImg.hue((adj.temperature / 100) * 45); 
+              }
+              if (adj.grain) {
+                 filtersArray.push(Konva.Filters.Noise);
+                 kFilterImg.noise(adj.grain / 100);
+              }
+              if (adj.blur) {
+                 filtersArray.push(Konva.Filters.Blur);
+                 kFilterImg.blurRadius(adj.blur);
+              }
+            }
+
             kFilterImg.filters(filtersArray);
             kFilterImg.cache();
           }
