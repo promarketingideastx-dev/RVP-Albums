@@ -626,6 +626,8 @@ const EditorImage = ({
           shadowOffsetX={appliedShadowOffsetX}
           shadowOffsetY={appliedShadowOffsetY}
           shadowOpacity={appliedShadowOpacity}
+          imageSmoothingEnabled={true}
+          imageSmoothingQuality="high"
         />
         {element.photoFilter && element.photoFilter !== 'none' && element.id !== previewOriginalPhotoId && (
           <KonvaImage 
@@ -638,7 +640,9 @@ const EditorImage = ({
             opacity={element.filterIntensity !== undefined ? element.filterIntensity : 1}
             cornerRadius={appliedBorderRadius}
             stroke={appliedStrokeWidth > 0 ? appliedStrokeColor : undefined}
-            strokeWidth={appliedStrokeWidth * mmToPx}
+            strokeWidth={appliedStrokeWidth}
+            imageSmoothingEnabled={true}
+            imageSmoothingQuality="high"
           />
         )}
         
@@ -1280,6 +1284,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
       <Stage
         width={stageWidth}
         height={stageHeight}
+        pixelRatio={typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1}
         onMouseDown={checkDeselect}
         onTouchStart={checkDeselect}
         style={{ boxShadow: '0px 10px 30px rgba(0,0,0,0.1)' }}
