@@ -15,16 +15,16 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
   const { get: idbGet } = await import('idb-keyval');
 
   // Register Global Custom WebGL ColorShift Filter for Additive Raw Math (Headless Export)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (typeof window !== 'undefined' && !(Konva.Filters as any).ColorShift) {
-    (Konva.Filters as any).ColorShift = function (imageData: ImageData) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (Konva.Filters as any).ColorShift = function (this: any, imageData: ImageData) {
       const data = imageData.data;
       const nPixels = data.length;
-      // @ts-ignore
-      const rShift = this.redShift() || 0;
-      // @ts-ignore
-      const gShift = this.greenShift() || 0;
-      // @ts-ignore
-      const bShift = this.blueShift() || 0;
+      const self = this as unknown as Record<string, () => number>;
+      const rShift = self.redShift?.() || 0;
+      const gShift = self.greenShift?.() || 0;
+      const bShift = self.blueShift?.() || 0;
 
       for (let i = 0; i < nPixels; i += 4) {
         data[i] = Math.max(0, Math.min(255, data[i] + rShift));
@@ -33,11 +33,11 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
       }
     };
     
-    // @ts-ignore
+    // @ts-expect-error - Dynamic registration
     Konva.Factory.addGetterSetter(Konva.Node, 'redShift', 0);
-    // @ts-ignore
+    // @ts-expect-error - Dynamic registration
     Konva.Factory.addGetterSetter(Konva.Node, 'greenShift', 0);
-    // @ts-ignore
+    // @ts-expect-error - Dynamic registration
     Konva.Factory.addGetterSetter(Konva.Node, 'blueShift', 0);
   }
   
@@ -318,6 +318,7 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
               if (adj.temperature || adj.tint) {
                  // CRITICAL FIX: Custom WebGL Filter used to securely add offsets to pixel color natively 
                  // avoiding RGBA solid overlaps and avoiding RGB luminance grayscale blackouts.
+                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                  if (!filtersArray.includes((Konva.Filters as any).ColorShift)) filtersArray.push((Konva.Filters as any).ColorShift);
                  
                  let r = 0, g = 0, b = 0;
@@ -336,14 +337,11 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
                      b = b + tintNormalized * (TINT_STRENGTH * 0.25);   
                  }
                  
-                 // @ts-ignore
-                 if (typeof kImg.redShift === 'function') {
-                    // @ts-ignore
-                    kImg.redShift(r);
-                    // @ts-ignore
-                    kImg.greenShift(g);
-                    // @ts-ignore
-                    kImg.blueShift(b);
+                 const kNode = kImg as unknown as Record<string, (val: number) => void>;
+                 if (typeof kNode.redShift === 'function') {
+                    kNode.redShift(r);
+                    kNode.greenShift(g);
+                    kNode.blueShift(b);
                  }
               }
               

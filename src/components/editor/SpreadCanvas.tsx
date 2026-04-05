@@ -12,16 +12,16 @@ import { extractAssetMetadataFromFile } from '@/utils/metadataEngine';
 import useImage from 'use-image';
 
 // Register Global Custom WebGL ColorShift Filter for Additive Raw Math (Replaces luminance-based RGB / painter RGBA)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 if (typeof window !== 'undefined' && !(Konva.Filters as any).ColorShift) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (Konva.Filters as any).ColorShift = function (imageData: ImageData) {
     const data = imageData.data;
     const nPixels = data.length;
-    // @ts-ignore
-    const rShift = this.redShift() || 0;
-    // @ts-ignore
-    const gShift = this.greenShift() || 0;
-    // @ts-ignore
-    const bShift = this.blueShift() || 0;
+    const self = this as unknown as Record<string, () => number>;
+    const rShift = self.redShift?.() || 0;
+    const gShift = self.greenShift?.() || 0;
+    const bShift = self.blueShift?.() || 0;
 
     for (let i = 0; i < nPixels; i += 4) {
       data[i] = Math.max(0, Math.min(255, data[i] + rShift));
@@ -30,11 +30,11 @@ if (typeof window !== 'undefined' && !(Konva.Filters as any).ColorShift) {
     }
   };
   
-  // @ts-ignore
+  // @ts-expect-error - Dynamic registration
   Konva.Factory.addGetterSetter(Konva.Node, 'redShift', 0);
-  // @ts-ignore
+  // @ts-expect-error - Dynamic registration
   Konva.Factory.addGetterSetter(Konva.Node, 'greenShift', 0);
-  // @ts-ignore
+  // @ts-expect-error - Dynamic registration
   Konva.Factory.addGetterSetter(Konva.Node, 'blueShift', 0);
 }
 interface SpreadCanvasProps {
@@ -432,6 +432,7 @@ const EditorImage = ({
           if (adj.temperature || adj.tint) {
              // CRITICAL FIX: Custom WebGL Filter used to securely add offsets to pixel color natively 
              // avoiding RGBA solid overlaps and avoiding RGB luminance grayscale blackouts.
+             // eslint-disable-next-line @typescript-eslint/no-explicit-any
              if (!filtersArray.includes((Konva.Filters as any).ColorShift)) filtersArray.push((Konva.Filters as any).ColorShift);
              
              let r = 0, g = 0, b = 0;
@@ -450,14 +451,11 @@ const EditorImage = ({
                  b = b + tintNormalized * (TINT_STRENGTH * 0.25);
              }
              
-             // @ts-ignore
-             if (typeof node.redShift === 'function') {
-                // @ts-ignore
-                node.redShift(r);
-                // @ts-ignore
-                node.greenShift(g);
-                // @ts-ignore
-                node.blueShift(b);
+             const kNode = node as unknown as Record<string, (val: number) => void>;
+             if (typeof kNode.redShift === 'function') {
+                kNode.redShift(r);
+                kNode.greenShift(g);
+                kNode.blueShift(b);
              }
           }
           
@@ -505,7 +503,7 @@ const EditorImage = ({
         node.getLayer()?.batchDraw();
       }
     }
-  }, [element.photoFilter, element.photoAdjustments, image, element.filterIntensity, previewOriginalPhotoId, element.w_mm, element.h_mm, element.scale]);
+  }, [element.id, element.photoFilter, element.photoAdjustments, image, element.filterIntensity, previewOriginalPhotoId, element.w_mm, element.h_mm, element.scale]);
 
   // Phase 8.D: Apply Layout Hook Tracking Transition bridging semantic to geometric mapping natively
   const prevIsManaged = useRef(element.isAutoLayoutManaged);
