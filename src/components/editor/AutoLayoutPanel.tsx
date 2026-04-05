@@ -28,7 +28,8 @@ export default function AutoLayoutPanel() {
 
   const currentVariantId = spread.autoLayout?.variantId || 'none';
   const currentSeed = spread.autoLayout?.seed || 0;
-  const currentMode = spread.autoLayout?.mode || 'geometric';
+  const rawMode = spread.autoLayout?.mode;
+  const currentMode = (!rawMode || rawMode === 'geometric') ? 'fundy-masonry-experimental' : rawMode;
   const isCompleted = spread.status === 'completed';
 
   // Extract metrics natively providing isolated inputs separating engines flawlessly
@@ -214,16 +215,6 @@ export default function AutoLayoutPanel() {
       
       {/* Engine Mode Toggle */}
       <div className="flex bg-neutral-100 dark:bg-neutral-800 p-1 rounded-lg mb-6 gap-1">
-        <button
-          onClick={() => applyLayout(false, 'geometric')}
-          className={`flex-1 flex items-center justify-center py-1.5 text-xs font-medium rounded-md transition-all gap-1.5 ${
-            currentMode === 'geometric' ? 'bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white' : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
-          }`}
-          title="Legacy Strict Grid Mode"
-        >
-          <Grid className="w-3 h-3" />
-          Base
-        </button>
         <button
           onClick={() => applyLayout(false, 'editorial')}
           className={`flex-1 flex items-center justify-center py-1.5 text-xs font-medium rounded-md transition-all gap-1.5 ${
