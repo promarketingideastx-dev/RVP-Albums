@@ -11,6 +11,32 @@ import { EditorElement } from '@/types/editor';
 import { extractAssetMetadataFromFile } from '@/utils/metadataEngine';
 import useImage from 'use-image';
 
+// Register Global Custom WebGL ColorShift Filter for Additive Raw Math (Replaces luminance-based RGB / painter RGBA)
+if (typeof window !== 'undefined' && !(Konva.Filters as any).ColorShift) {
+  (Konva.Filters as any).ColorShift = function (imageData: ImageData) {
+    const data = imageData.data;
+    const nPixels = data.length;
+    // @ts-ignore
+    const rShift = this.redShift() || 0;
+    // @ts-ignore
+    const gShift = this.greenShift() || 0;
+    // @ts-ignore
+    const bShift = this.blueShift() || 0;
+
+    for (let i = 0; i < nPixels; i += 4) {
+      data[i] = Math.max(0, Math.min(255, data[i] + rShift));
+      data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + gShift));
+      data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + bShift));
+    }
+  };
+  
+  // @ts-ignore
+  Konva.Factory.addGetterSetter(Konva.Node, 'redShift', 0);
+  // @ts-ignore
+  Konva.Factory.addGetterSetter(Konva.Node, 'greenShift', 0);
+  // @ts-ignore
+  Konva.Factory.addGetterSetter(Konva.Node, 'blueShift', 0);
+}
 interface SpreadCanvasProps {
   stageWidth: number;
   stageHeight: number;
@@ -402,15 +428,13 @@ const EditorImage = ({
              node.hue(0);
           }
           
-          // Advanced Color: Temperature and Tint (Thermal Curves via Linear Normalized RGBA Multipliers)
+          // Advanced Color: Temperature and Tint (Thermal Curves via Custom Additive ColorShift)
           if (adj.temperature || adj.tint) {
-             // CRITICAL FIX: Konva.Filters.RGB is a luminance tinter (turns image black natively).
-             // Must use Konva.Filters.RGBA to preserve native hue through multiplicative offsets.
-             if (!filtersArray.includes(Konva.Filters.RGBA)) filtersArray.push(Konva.Filters.RGBA);
+             // CRITICAL FIX: Custom WebGL Filter used to securely add offsets to pixel color natively 
+             // avoiding RGBA solid overlaps and avoiding RGB luminance grayscale blackouts.
+             if (!filtersArray.includes((Konva.Filters as any).ColorShift)) filtersArray.push((Konva.Filters as any).ColorShift);
              
-             // RGBA natively multiplies channels against a baseline of 255.
-             let r = 255, g = 255, b = 255;
-             
+             let r = 0, g = 0, b = 0;
              const TEMP_STRENGTH = 15;
              const TINT_STRENGTH = 10;
              
@@ -426,12 +450,14 @@ const EditorImage = ({
                  b = b + tintNormalized * (TINT_STRENGTH * 0.25);
              }
              
-             if (typeof node.red === 'function') {
-                // MANDATORY CLAMP (CRITICAL) - no negative clipping, max strictly 255.
-                node.red(Math.max(0, Math.min(255, r)));
-                node.green(Math.max(0, Math.min(255, g)));
-                node.blue(Math.max(0, Math.min(255, b)));
-                node.alpha(1);
+             // @ts-ignore
+             if (typeof node.redShift === 'function') {
+                // @ts-ignore
+                node.redShift(r);
+                // @ts-ignore
+                node.greenShift(g);
+                // @ts-ignore
+                node.blueShift(b);
              }
           }
           
