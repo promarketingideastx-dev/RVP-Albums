@@ -182,6 +182,9 @@ export default function AppPage() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Phase 8.G Fix: Key Repeat Storm Guard
+      if (e.repeat) return;
+      
       if (
         ['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName) ||
         (e.target as HTMLElement).isContentEditable
@@ -190,8 +193,12 @@ export default function AppPage() {
       }
       
       if (e.key === 'Escape') {
-         useEditorStore.getState().clearStagedSelection();
-         useEditorStore.getState().setSelectedElement(null);
+         const store = useEditorStore.getState();
+         if (store.selectedStagedElementIds.length > 0 || store.selectedElementId) {
+            e.stopPropagation();
+            store.clearStagedSelection();
+            store.setSelectedElement(null);
+         }
          return;
       }
       
@@ -222,21 +229,38 @@ export default function AppPage() {
                // Navigation
                if (!e.metaKey && !e.ctrlKey) {
                   // Standard Selection Nav
-                  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                  if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
                      e.preventDefault();
+                     
+                     // Compute valid effective columns natively (Phase 8.G Fix Vertical)
+                     const projectW = project.size.w_mm;
+                     const targetCols = Math.max(1, Math.floor((projectW - 40) / 50)); 
+
                      if (stgSel.length === 0) {
                         state.setStagedSelection([stagingImages[0].id]);
                      } else {
                         const lastSel = stgSel[stgSel.length - 1];
                         const currentIndex = stagingImages.findIndex(el => el.id === lastSel);
                         if (currentIndex !== -1) {
-                           let nextIdx = e.key === 'ArrowRight' ? currentIndex + 1 : currentIndex - 1;
+                           let nextIdx = currentIndex;
+                           if (e.key === 'ArrowRight') nextIdx += 1;
+                           if (e.key === 'ArrowLeft') nextIdx -= 1;
+                           if (e.key === 'ArrowDown') nextIdx += targetCols;
+                           if (e.key === 'ArrowUp') nextIdx -= targetCols;
+                           
                            if (nextIdx < 0) nextIdx = 0;
                            if (nextIdx >= stagingImages.length) nextIdx = stagingImages.length - 1;
                            
                            if (e.shiftKey) {
-                              // Expand selection
-                              state.setStagedSelection(Array.from(new Set([...stgSel, stagingImages[nextIdx].id])));
+                              // Proper range anchoring Phase 8.G Fix: Bidirectional Array Segment!
+                              const firstSelIdx = stagingImages.findIndex(el => el.id === stgSel[0]);
+                              const start = Math.min(firstSelIdx, nextIdx);
+                              const end = Math.max(firstSelIdx, nextIdx);
+                              const newSelection = [];
+                              for(let i = start; i <= end; i++) {
+                                 newSelection.push(stagingImages[i].id);
+                              }
+                              state.setStagedSelection(newSelection);
                            } else {
                               state.setStagedSelection([stagingImages[nextIdx].id]);
                            }
@@ -251,13 +275,18 @@ export default function AppPage() {
                      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
                         // Move within spread
                         const currentIndex = stagingImages.findIndex(el => el.id === firstSel);
-                        let targetIdx = e.key === 'ArrowRight' ? currentIndex + stgSel.length : currentIndex - 1;
-                        if (targetIdx < 0) targetIdx = 0;
-                        if (targetIdx >= stagingImages.length) targetIdx = stagingImages.length - 1;
-                        
-                        const targetElement = stagingImages[targetIdx];
-                        if (targetElement) {
-                            state.reorderStagedPhotos(activeSpreadId, firstSel, targetElement.id);
+                        if (e.key === 'ArrowRight') {
+                           const targetIdx = currentIndex + stgSel.length + 1;
+                           if (targetIdx >= stagingImages.length) {
+                              state.reorderStagedPhotos(activeSpreadId, firstSel, "end");
+                           } else {
+                              state.reorderStagedPhotos(activeSpreadId, firstSel, stagingImages[targetIdx] ? stagingImages[targetIdx].id : "end");
+                           }
+                        } else {
+                           const targetIdx = currentIndex - 1;
+                           if (targetIdx >= 0) {
+                              state.reorderStagedPhotos(activeSpreadId, firstSel, stagingImages[targetIdx].id);
+                           }
                         }
                      } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { // Cross spread!
                         const targetSpreadIdx = e.key === 'ArrowDown' ? spreadIndex + 1 : spreadIndex - 1;

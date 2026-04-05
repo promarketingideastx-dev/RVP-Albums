@@ -427,7 +427,7 @@ const EditorImage = ({
            }
            onSelect();
         }}
-        onTap={(e) => {
+        onTap={() => {
            if (element.stageType === 'staged') {
               useEditorStore.getState().setStagedSelection([element.id]);
            } else {
@@ -438,7 +438,7 @@ const EditorImage = ({
         opacity={element.opacity !== undefined ? element.opacity : 1}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         globalCompositeOperation={(element.blendMode as any) || 'source-over'}
-        onDragStart={(e) => {
+        onDragStart={() => {
            if (isStagingMode) {
               useEditorStore.getState().setDraggingStagedElementId(element.id);
            }
@@ -877,6 +877,8 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
     ).join('\n');
   }, [project?.typographyPresetId]);
 
+  const draggingStagedElementId = useEditorStore((state) => state.draggingStagedElementId);
+
   if (!project || !activeSpreadId) return null;
 
   const spreadIndex = project.spreads.findIndex((s) => s.id === activeSpreadId);
@@ -885,7 +887,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
 
   const prevSpreadId = spreadIndex > 0 ? project.spreads[spreadIndex - 1].id : null;
   const nextSpreadId = spreadIndex < project.spreads.length - 1 ? project.spreads[spreadIndex + 1].id : null;
-  const draggingStagedElementId = useEditorStore((state) => state.draggingStagedElementId);
+
 
   // Sorting elements by zIndex to render properly
   const elements = [...spread.elements].sort((a, b) => a.zIndex - b.zIndex);

@@ -497,16 +497,32 @@ export const useEditorStore = create<EditorState>()(
      const stagingImages = elements.filter(e => e.type === 'image' && e.stageType === 'staged');
      const otherElements = elements.filter(e => !(e.type === 'image' && e.stageType === 'staged'));
 
-     const srcIdx = stagingImages.findIndex(e => e.id === sourceId);
-     const tgtIdx = stagingImages.findIndex(e => e.id === targetId);
+     // Determine elements to move mathematically tracking explicit batch subsets
+     const stgSel = state.selectedStagedElementIds;
+     const idsToMove = (stgSel.length > 0 && stgSel.includes(sourceId)) ? stgSel : [sourceId];
      
-     if (srcIdx !== -1 && tgtIdx !== -1) {
-        const [moved] = stagingImages.splice(srcIdx, 1);
-        stagingImages.splice(tgtIdx, 0, moved);
+     const extractElements = [];
+     for (const id of idsToMove) {
+        const idx = stagingImages.findIndex(e => e.id === id);
+        if (idx !== -1) {
+           extractElements.push(stagingImages.splice(idx, 1)[0]);
+        }
+     }
+     
+     if (extractElements.length > 0) {
+        if (targetId === 'end') {
+           stagingImages.push(...extractElements);
+        } else {
+           const tgtIdx = stagingImages.findIndex(e => e.id === targetId);
+           if (tgtIdx !== -1) {
+              stagingImages.splice(tgtIdx, 0, ...extractElements);
+           } else {
+              stagingImages.push(...extractElements); // Fallback Append
+           }
+        }
      }
 
      const projectW = state.project.size.w_mm;
-     const projectH = state.project.size.h_mm;
      const thumbnailW = 40;
      const thumbMaxH = 60; 
      const margin = 20;
@@ -537,7 +553,7 @@ export const useEditorStore = create<EditorState>()(
      const sourceSpread = { ...newSpreads[sIdx] };
      const targetSpread = { ...newSpreads[tIdx] };
 
-     let sourceElements = [...sourceSpread.elements];
+     const sourceElements = [...sourceSpread.elements];
      let targetElements = [...targetSpread.elements];
 
      const elIndex = sourceElements.findIndex(e => e.id === elementId);

@@ -48,7 +48,7 @@ export function generateAutoLayout({
     role
   });
 
-  let variantsList: LayoutVariant[] = [];
+  const variantsList: LayoutVariant[] = [];
 
   if (countToUse === 1 || countToUse === 0) {
     variantsList.push(
