@@ -18,7 +18,6 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
     detail: true
   });
   
-  const [mixerTab, setMixerTab] = useState<'Hue' | 'Saturation' | 'Luminance' | 'All'>('Saturation');
 
   const toggleSection = (section: string) => {
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
@@ -35,23 +34,7 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
     });
   };
 
-  const handleHslUpdate = (color: string, channel: 'h'|'s'|'l', value: number) => {
-    const currentHsl = currentAdj.hsl || {
-      reds: {h:0,s:0,l:0}, oranges: {h:0,s:0,l:0}, yellows: {h:0,s:0,l:0}, greens: {h:0,s:0,l:0},
-      aquas: {h:0,s:0,l:0}, blues: {h:0,s:0,l:0}, purples: {h:0,s:0,l:0}, magentas: {h:0,s:0,l:0}
-    };
-    
-    updateElement(activeSpreadId, element.id, {
-      photoAdjustments: {
-        ...currentAdj,
-        hsl: {
-          ...currentHsl,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          [color]: { ...(currentHsl as any)[color], [channel]: value }
-        }
-      }
-    });
-  };
+
 
   const renderSlider = (label: string, key: keyof PhotoAdjustments, min: number, max: number, defaultValue: number = 0, trackGradient?: string) => {
     const value = currentAdj[key] as number ?? defaultValue;
@@ -96,46 +79,6 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
     );
   };
   
-  const renderHslSlider = (label: string, colorKey: string, channel: 'h'|'s'|'l', bgGradient: string) => {
-    const currentHsl = currentAdj.hsl || {} as Record<string, { h: number, s: number, l: number }>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const value = (currentHsl as any)[colorKey]?.[channel] ?? 0;
-    
-    return (
-      <div className="mb-3 px-3">
-        <div className="flex justify-between items-center mb-1">
-          <span className="text-[11px] font-medium text-[#d1d1d1]">{label}</span>
-          <input 
-            type="text" 
-            value={value.toFixed(0)} 
-            readOnly
-            className="w-12 bg-[#333333] border border-[#222] text-[#d1d1d1] text-right px-1 py-0.5 text-[10px] rounded focus:outline-none"
-          />
-        </div>
-        <div className="relative h-4 flex items-center group">
-          <div 
-            className="absolute w-full h-[3px] rounded opacity-80"
-            style={{ background: bgGradient }}
-          />
-          <input
-            type="range"
-            min={-100}
-            max={100}
-            value={value}
-            onChange={(e) => handleHslUpdate(colorKey, channel, parseFloat(e.target.value))}
-            className="absolute w-full h-full opacity-0 cursor-pointer z-10"
-          />
-          <div 
-            className="absolute w-2 h-3 bg-[#c8c8c8] group-hover:bg-white border border-[#333] shadow-sm transform -translate-x-1/2 pointer-events-none"
-            style={{ 
-              left: `${((value - -100) / (200)) * 100}%`,
-              clipPath: 'polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%)'
-            }}
-          />
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="bg-[#2d2d2d] border border-[#1e1e1e] rounded-md overflow-hidden select-none font-sans text-left mt-4" style={{ color: '#d1d1d1' }}>
