@@ -313,18 +313,18 @@ const EditorImage = ({
     }
   }
 
-  // Handle Photo Filters Natively via Dual-Layer
+  // Handle Photo Filters Natively via SINGLE LAYER pipeline
   useLayoutEffect(() => {
     if (filterLayerRef.current && image) {
       const node = filterLayerRef.current;
       const hasLegacyFilter = element.photoFilter && element.photoFilter !== 'none';
       const hasAdj = element.photoAdjustments && Object.values(element.photoAdjustments).some(v => typeof v === 'number' && v !== 0);
       
-      if (hasLegacyFilter || hasAdj) {
-        node.clearCache();
-        node.cache();
+      if ((hasLegacyFilter || hasAdj) && element.id !== previewOriginalPhotoId) {
+        node.clearCache(); // NEVER reprocess cached image - clear first
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const filtersArray: any[] = [];
+        const intensity = element.filterIntensity !== undefined ? element.filterIntensity : 1;
         
         if (hasLegacyFilter) {
           const lut = LUT_LIBRARY.find(l => l.id === element.photoFilter);
@@ -332,11 +332,11 @@ const EditorImage = ({
           if (lut) {
              if (lut.contrast && lut.contrast !== 0) {
                 filtersArray.push(Konva.Filters.Contrast);
-                node.contrast(lut.contrast);
+                node.contrast(lut.contrast * intensity);
              }
              if (lut.brightness && lut.brightness !== 0) {
                 filtersArray.push(Konva.Filters.Brighten);
-                node.brightness(lut.brightness);
+                node.brightness(lut.brightness * intensity);
              }
              if (lut.grayscale) filtersArray.push(Konva.Filters.Grayscale);
              if (lut.sepia) filtersArray.push(Konva.Filters.Sepia);
@@ -344,9 +344,9 @@ const EditorImage = ({
              
              if (lut.hue !== undefined || lut.saturation !== undefined || lut.luminance !== undefined) {
                 filtersArray.push(Konva.Filters.HSL);
-                if (lut.hue !== undefined) node.hue(lut.hue);
-                if (lut.saturation !== undefined) node.saturation(lut.saturation);
-                if (lut.luminance !== undefined) node.luminance(lut.luminance);
+                if (lut.hue !== undefined) node.hue(lut.hue * intensity);
+                if (lut.saturation !== undefined) node.saturation(Math.max(-2, Math.min(2, lut.saturation * intensity)));
+                if (lut.luminance !== undefined) node.luminance(lut.luminance * intensity);
              }
           } else {
              // Fallback for legacy basic filters
@@ -356,15 +356,15 @@ const EditorImage = ({
                case 'invert': filtersArray.push(Konva.Filters.Invert); break;
                case 'blur': 
                  filtersArray.push(Konva.Filters.Blur); 
-                 node.blurRadius(element.filterIntensity !== undefined ? element.filterIntensity : 5); 
+                 node.blurRadius(intensity * 5); 
                  break;
                case 'noise': 
                  filtersArray.push(Konva.Filters.Noise); 
-                 node.noise(element.filterIntensity !== undefined ? element.filterIntensity : 1); 
+                 node.noise(intensity); 
                  break;
                case 'posterize': 
                  filtersArray.push(Konva.Filters.Posterize); 
-                 node.levels(element.filterIntensity !== undefined ? element.filterIntensity : 4); 
+                 node.levels(intensity * 4); 
                  break;
              }
           }
@@ -376,8 +376,6 @@ const EditorImage = ({
           
           if (adj.exposure || adj.highlights || adj.shadows || adj.whites || adj.blacks) {
              filtersArray.push(Konva.Filters.Brighten);
-             // Sliders go -100 to 100. Konva brightness goes -1 to 1.
-             // exposure 100 should be 0.5 (very bright). So / 200.
              let totalBrightness = (adj.exposure || 0) / 200;
              if (adj.highlights) totalBrightness += (adj.highlights / 100) * 0.15;
              if (adj.whites) totalBrightness += (adj.whites / 100) * 0.08;
@@ -388,7 +386,6 @@ const EditorImage = ({
           
           if (adj.lightContrast || adj.clarity || adj.dehaze || adj.texture) {
              filtersArray.push(Konva.Filters.Contrast);
-             // Contrast -100 to 100. Konva goes -100 to 100 but feels extreme! Mapped softer.
              let totalContrast = (adj.lightContrast || 0) * 0.6;
              if (adj.clarity) totalContrast += (adj.clarity / 100) * 20;
              if (adj.dehaze) totalContrast += (adj.dehaze / 100) * 15;
@@ -405,22 +402,20 @@ const EditorImage = ({
              node.hue(0);
           }
           
-          // Advanced Color: Temperature and Tint (Thermal Curves via RGB Additives)
+          // Advanced Color: Temperature and Tint (Thermal Curves via Linear Normalized RGB)
           if (adj.temperature || adj.tint) {
              if (!filtersArray.includes(Konva.Filters.RGB)) filtersArray.push(Konva.Filters.RGB);
-             // RGB goes from -255 to 255 in additive blending. Scale to micro-levels.
              let r = 0, g = 0, b = 0;
              if (adj.temperature) {
-                 const temp = adj.temperature; // -100 to 100
-                 r += temp * 0.05;   
-                 g += temp * 0.015;  
-                 b -= temp * 0.05;   
+                 const tempNormalized = adj.temperature / 100;
+                 r += tempNormalized * 20;   
+                 b -= tempNormalized * 20;   
              }
              if (adj.tint) {
-                 const tint = adj.tint; // -100 to 100
-                 r += tint * 0.03;  
-                 b += tint * 0.03;  
-                 g -= tint * 0.04;   
+                 const tintNormalized = adj.tint / 100;
+                 r += tintNormalized * 10;
+                 b += tintNormalized * 10;
+                 g -= tintNormalized * 20; 
              }
              if (typeof node.red === 'function') {
                 node.red(Math.max(-255, Math.min(255, r)));
@@ -431,16 +426,26 @@ const EditorImage = ({
           
           if (adj.grain) {
              filtersArray.push(Konva.Filters.Noise);
-             node.noise(Math.max(0, (adj.grain / 100) * 0.5)); // Soften grain scale
+             node.noise(Math.max(0, (adj.grain / 100) * 0.5)); 
           }
           
           if (adj.blur) {
              filtersArray.push(Konva.Filters.Blur);
-             node.blurRadius(Math.max(0, adj.blur / 5)); // Soften blur map
+             node.blurRadius(Math.max(0, adj.blur / 5)); 
           }
         }
         
         node.filters(filtersArray);
+        
+        // SAFE PIXEL RATIO IMPLEMENTATION
+        const MAX_SAFE_RATIO = 2.5;
+        const naturalWidth = image.naturalWidth || image.width;
+        const renderedWidth = element.w_mm;
+        const computedPixelRatio = renderedWidth > 0 
+           ? Math.max(1, Math.min(naturalWidth / renderedWidth, MAX_SAFE_RATIO)) 
+           : 1;
+
+        node.cache({ pixelRatio: computedPixelRatio, imageSmoothingEnabled: false });
         node.getLayer()?.batchDraw();
       } else {
         node.clearCache();
@@ -686,6 +691,7 @@ const EditorImage = ({
         }}
       >
         <KonvaImage 
+          ref={filterLayerRef}
           image={image} 
           x={0} y={0}
           width={element.w_mm} 
@@ -699,25 +705,9 @@ const EditorImage = ({
           shadowOffsetX={appliedShadowOffsetX}
           shadowOffsetY={appliedShadowOffsetY}
           shadowOpacity={appliedShadowOpacity}
-          imageSmoothingEnabled={true}
+          imageSmoothingEnabled={false}
           imageSmoothingQuality="high"
         />
-        {((element.photoFilter && element.photoFilter !== 'none') || (element.photoAdjustments && Object.values(element.photoAdjustments).some(v => typeof v === 'number' && v !== 0))) && element.id !== previewOriginalPhotoId && (
-          <KonvaImage 
-            ref={filterLayerRef}
-            image={image} 
-            x={0} y={0}
-            width={element.w_mm} 
-            height={element.h_mm} 
-            crop={computedCrop}
-            opacity={element.filterIntensity !== undefined ? element.filterIntensity : 1}
-            cornerRadius={appliedBorderRadius}
-            stroke={appliedStrokeWidth > 0 ? appliedStrokeColor : undefined}
-            strokeWidth={appliedStrokeWidth}
-            imageSmoothingEnabled={true}
-            imageSmoothingQuality="high"
-          />
-        )}
         
         {/* Pro Vignette Overlay */}
         {element.photoAdjustments?.vignette && element.photoAdjustments.vignette !== 0 ? (

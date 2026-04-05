@@ -189,7 +189,8 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
             shadowOpacity: appliedShadowOpacity,
           });
 
-          const kBaseImg = new Konva.Image({
+          // Single Layer Image Render for uncompromising High Fidelity Export Pipeline
+          const kImg = new Konva.Image({
             image: imgObj,
             x: 0,
             y: 0,
@@ -198,42 +199,31 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
             cornerRadius: appliedBorderRadius * mmToPx,
             stroke: appliedStrokeWidth > 0 ? appliedStrokeColor : undefined,
             strokeWidth: appliedStrokeWidth * mmToPx,
+            imageSmoothingEnabled: false // Export pipeline guarantee
           });
-          kGroup.add(kBaseImg);
+          kGroup.add(kImg);
 
-          // Handle Photo Filters Headless Dual Layer
+          // Handle Photo Filters Headless Single Layer
           const hasLegacyFilter = el.photoFilter && el.photoFilter !== 'none';
           const hasAdj = el.photoAdjustments && Object.values(el.photoAdjustments).some(v => typeof v === 'number' && v !== 0);
 
           if (hasLegacyFilter || hasAdj) {
             const { LUT_LIBRARY } = await import('@/lib/lut-presets');
-
-            const kFilterImg = new Konva.Image({
-              image: imgObj,
-              x: 0,
-              y: 0,
-              width: (el.w_mm * CONSTANT_SPREAD_SCALAR) * mmToPx,
-              height: (el.h_mm * CONSTANT_SPREAD_SCALAR) * mmToPx,
-              opacity: el.filterIntensity !== undefined ? el.filterIntensity : 1,
-              cornerRadius: appliedBorderRadius * mmToPx,
-              stroke: appliedStrokeWidth > 0 ? appliedStrokeColor : undefined,
-              strokeWidth: appliedStrokeWidth * mmToPx,
-            });
-            kGroup.add(kFilterImg);
             
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const filtersArray: any[] = [];
+            const intensity = el.filterIntensity !== undefined ? el.filterIntensity : 1;
             
             if (hasLegacyFilter) {
                const lut = LUT_LIBRARY.find(l => l.id === el.photoFilter);
                if (lut) {
                   if (lut.contrast && lut.contrast !== 0) {
                      filtersArray.push(Konva.Filters.Contrast);
-                     kFilterImg.contrast(lut.contrast);
+                     kImg.contrast(lut.contrast * intensity);
                   }
                   if (lut.brightness && lut.brightness !== 0) {
                      filtersArray.push(Konva.Filters.Brighten);
-                     kFilterImg.brightness(lut.brightness);
+                     kImg.brightness(lut.brightness * intensity);
                   }
                   if (lut.grayscale) filtersArray.push(Konva.Filters.Grayscale);
                   if (lut.sepia) filtersArray.push(Konva.Filters.Sepia);
@@ -241,9 +231,9 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
                   
                   if (lut.hue !== undefined || lut.saturation !== undefined || lut.luminance !== undefined) {
                      filtersArray.push(Konva.Filters.HSL);
-                     if (lut.hue !== undefined) kFilterImg.hue(lut.hue);
-                     if (lut.saturation !== undefined) kFilterImg.saturation(lut.saturation);
-                     if (lut.luminance !== undefined) kFilterImg.luminance(lut.luminance);
+                     if (lut.hue !== undefined) kImg.hue(lut.hue * intensity);
+                     if (lut.saturation !== undefined) kImg.saturation(Math.max(-2, Math.min(2, lut.saturation * intensity)));
+                     if (lut.luminance !== undefined) kImg.luminance(lut.luminance * intensity);
                   }
                } else {
                   switch(el.photoFilter) {
@@ -252,23 +242,15 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
                     case 'invert': filtersArray.push(Konva.Filters.Invert); break;
                     case 'blur': 
                       filtersArray.push(Konva.Filters.Blur); 
-                      kFilterImg.blurRadius(el.filterIntensity !== undefined ? el.filterIntensity : 5); 
+                      kImg.blurRadius(intensity * 5); 
                       break;
                     case 'noise': 
                       filtersArray.push(Konva.Filters.Noise); 
-                      kFilterImg.noise(el.filterIntensity !== undefined ? el.filterIntensity : 1); 
-                      break;
-                    case 'brighten': 
-                      filtersArray.push(Konva.Filters.Brighten); 
-                      kFilterImg.brightness(el.filterIntensity !== undefined ? el.filterIntensity : 0.5); 
-                      break;
-                    case 'contrast': 
-                      filtersArray.push(Konva.Filters.Contrast); 
-                      kFilterImg.contrast(el.filterIntensity !== undefined ? el.filterIntensity : 20); 
+                      kImg.noise(intensity); 
                       break;
                     case 'posterize': 
                       filtersArray.push(Konva.Filters.Posterize); 
-                      kFilterImg.levels(el.filterIntensity !== undefined ? el.filterIntensity : 4); 
+                      kImg.levels(intensity * 4); 
                       break;
                   }
                }
@@ -284,7 +266,7 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
                  if (adj.whites) totalBrightness += (adj.whites / 100) * 0.08;
                  if (adj.shadows) totalBrightness += (adj.shadows / 100) * 0.15;
                  if (adj.blacks) totalBrightness += (adj.blacks / 100) * 0.08;
-                 kFilterImg.brightness(Math.max(-1, Math.min(1, totalBrightness)));
+                 kImg.brightness(Math.max(-1, Math.min(1, totalBrightness)));
               }
               
               if (adj.lightContrast || adj.clarity || adj.dehaze || adj.texture) {
@@ -293,7 +275,7 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
                  if (adj.clarity) totalContrast += (adj.clarity / 100) * 20;
                  if (adj.dehaze) totalContrast += (adj.dehaze / 100) * 15;
                  if (adj.texture) totalContrast += (adj.texture / 100) * 10;
-                 kFilterImg.contrast(Math.max(-100, Math.min(100, totalContrast))); 
+                 kImg.contrast(Math.max(-100, Math.min(100, totalContrast))); 
               }
               
               // Advanced Color: Vibrance and Saturation
@@ -301,47 +283,48 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
                  if (!filtersArray.includes(Konva.Filters.HSL)) filtersArray.push(Konva.Filters.HSL);
                  let totalSat = (adj.saturation || 0);
                  if (adj.vibrance) totalSat += (adj.vibrance * 0.5); 
-                 kFilterImg.saturation(Math.max(-2, Math.min(2, totalSat / 100))); 
-                 kFilterImg.hue(0);
+                 kImg.saturation(Math.max(-2, Math.min(2, totalSat / 100))); 
+                 kImg.hue(0);
               }
               
-              // Advanced Color: Temperature and Tint (Thermal Curves via RGB Additives)
+              // Advanced Color: Temperature and Tint (Thermal Curves via Linear Normalized RGB)
               if (adj.temperature || adj.tint) {
                  if (!filtersArray.includes(Konva.Filters.RGB)) filtersArray.push(Konva.Filters.RGB);
-                 // RGB goes from -255 to 255 in additive blending. Scale to micro-levels.
                  let r = 0, g = 0, b = 0;
                  if (adj.temperature) {
-                     const temp = adj.temperature;
-                     r += temp * 0.05;   
-                     g += temp * 0.015;  
-                     b -= temp * 0.05;   
+                     const tempNormalized = adj.temperature / 100;
+                     r += tempNormalized * 20;   
+                     b -= tempNormalized * 20;   
                  }
                  if (adj.tint) {
-                     const tint = adj.tint;
-                     r += tint * 0.03;  
-                     b += tint * 0.03;  
-                     g -= tint * 0.04;   
+                     const tintNormalized = adj.tint / 100;
+                     r += tintNormalized * 10;  
+                     b += tintNormalized * 10;  
+                     g -= tintNormalized * 20;   
                  }
-                 if (typeof kFilterImg.red === 'function') {
-                    kFilterImg.red(Math.max(-255, Math.min(255, r)));
-                    kFilterImg.green(Math.max(-255, Math.min(255, g)));
-                    kFilterImg.blue(Math.max(-255, Math.min(255, b)));
+                 if (typeof kImg.red === 'function') {
+                    kImg.red(Math.max(-255, Math.min(255, r)));
+                    kImg.green(Math.max(-255, Math.min(255, g)));
+                    kImg.blue(Math.max(-255, Math.min(255, b)));
                  }
               }
               
               if (adj.grain) {
                  filtersArray.push(Konva.Filters.Noise);
-                 kFilterImg.noise(Math.max(0, (adj.grain / 100) * 0.5));
+                 kImg.noise(Math.max(0, (adj.grain / 100) * 0.5));
               }
               
               if (adj.blur) {
                  filtersArray.push(Konva.Filters.Blur);
-                 kFilterImg.blurRadius(Math.max(0, adj.blur / 5));
+                 kImg.blurRadius(Math.max(0, adj.blur / 5));
               }
             }
 
-            kFilterImg.filters(filtersArray);
-            kFilterImg.cache();
+            kImg.filters(filtersArray);
+            
+            // EXPORT PIPELINE GUARANTEE: Full Native Resolution Cache Locking
+            const exportRatio = Math.max(1, imgObj.naturalWidth / ((el.w_mm * CONSTANT_SPREAD_SCALAR) * mmToPx));
+            kImg.cache({ pixelRatio: exportRatio, imageSmoothingEnabled: false });
           }
           
           if (hasAdj && el.photoAdjustments?.vignette && el.photoAdjustments.vignette !== 0) {
