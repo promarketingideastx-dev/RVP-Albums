@@ -376,20 +376,23 @@ const EditorImage = ({
           
           if (adj.exposure || adj.highlights || adj.shadows || adj.whites || adj.blacks) {
              filtersArray.push(Konva.Filters.Brighten);
-             let totalBrightness = (adj.exposure || 0) / 5;
-             if (adj.highlights) totalBrightness += (adj.highlights / 100) * 0.25;
-             if (adj.whites) totalBrightness += (adj.whites / 100) * 0.15;
-             if (adj.shadows) totalBrightness += (adj.shadows / 100) * 0.25;
-             if (adj.blacks) totalBrightness += (adj.blacks / 100) * 0.15;
+             // Sliders go -100 to 100. Konva brightness goes -1 to 1.
+             // exposure 100 should be 0.5 (very bright). So / 200.
+             let totalBrightness = (adj.exposure || 0) / 200;
+             if (adj.highlights) totalBrightness += (adj.highlights / 100) * 0.15;
+             if (adj.whites) totalBrightness += (adj.whites / 100) * 0.08;
+             if (adj.shadows) totalBrightness += (adj.shadows / 100) * 0.15;
+             if (adj.blacks) totalBrightness += (adj.blacks / 100) * 0.08;
              node.brightness(Math.max(-1, Math.min(1, totalBrightness)));
           }
           
           if (adj.lightContrast || adj.clarity || adj.dehaze || adj.texture) {
              filtersArray.push(Konva.Filters.Contrast);
-             let totalContrast = (adj.lightContrast || 0);
-             if (adj.clarity) totalContrast += (adj.clarity / 100) * 30;
-             if (adj.dehaze) totalContrast += (adj.dehaze / 100) * 20;
-             if (adj.texture) totalContrast += (adj.texture / 100) * 15;
+             // Contrast -100 to 100. Konva goes -100 to 100 but feels extreme! Mapped softer.
+             let totalContrast = (adj.lightContrast || 0) * 0.6;
+             if (adj.clarity) totalContrast += (adj.clarity / 100) * 20;
+             if (adj.dehaze) totalContrast += (adj.dehaze / 100) * 15;
+             if (adj.texture) totalContrast += (adj.texture / 100) * 10;
              node.contrast(Math.max(-100, Math.min(100, totalContrast))); 
           }
           
@@ -397,7 +400,7 @@ const EditorImage = ({
           if (adj.saturation || adj.vibrance) {
              if (!filtersArray.includes(Konva.Filters.HSL)) filtersArray.push(Konva.Filters.HSL);
              let totalSat = (adj.saturation || 0);
-             if (adj.vibrance) totalSat += (adj.vibrance * 0.6); // Vibrance maps as clamped soft saturation
+             if (adj.vibrance) totalSat += (adj.vibrance * 0.5); 
              node.saturation(Math.max(-2, Math.min(2, totalSat / 100))); 
              node.hue(0);
           }
@@ -405,34 +408,35 @@ const EditorImage = ({
           // Advanced Color: Temperature and Tint (Thermal Curves via RGB Additives)
           if (adj.temperature || adj.tint) {
              if (!filtersArray.includes(Konva.Filters.RGB)) filtersArray.push(Konva.Filters.RGB);
+             // RGB goes from 0-256 usually in additive mode. Scale very softly.
              let r = 0, g = 0, b = 0;
              if (adj.temperature) {
-                 const temp = adj.temperature;
-                 r += temp * 0.6;   // Add Red when warm, sub Red when cool
-                 g += temp * 0.15;  // Slight Yellow boost for warm
-                 b -= temp * 0.6;   // Sub Blue when warm, add Blue when cool
+                 const temp = adj.temperature; // -100 to 100
+                 r += temp * 0.3;   
+                 g += temp * 0.08;  
+                 b -= temp * 0.3;   
              }
              if (adj.tint) {
-                 const tint = adj.tint;
-                 r += tint * 0.35;  // Add Magenta (Red)
-                 b += tint * 0.35;  // Add Magenta (Blue)
-                 g -= tint * 0.5;   // Sub Green
+                 const tint = adj.tint; // -100 to 100
+                 r += tint * 0.15;  
+                 b += tint * 0.15;  
+                 g -= tint * 0.25;   
              }
              if (typeof node.red === 'function') {
-                node.red(r);
-                node.green(g);
-                node.blue(b);
+                node.red(Math.max(-255, Math.min(255, r)));
+                node.green(Math.max(-255, Math.min(255, g)));
+                node.blue(Math.max(-255, Math.min(255, b)));
              }
           }
           
           if (adj.grain) {
              filtersArray.push(Konva.Filters.Noise);
-             node.noise(adj.grain / 100);
+             node.noise(Math.max(0, (adj.grain / 100) * 0.5)); // Soften grain scale
           }
           
           if (adj.blur) {
              filtersArray.push(Konva.Filters.Blur);
-             node.blurRadius(adj.blur);
+             node.blurRadius(Math.max(0, adj.blur / 5)); // Soften blur map
           }
         }
         

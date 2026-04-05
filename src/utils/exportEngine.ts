@@ -279,20 +279,20 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
               
               if (adj.exposure || adj.highlights || adj.shadows || adj.whites || adj.blacks) {
                  filtersArray.push(Konva.Filters.Brighten);
-                 let totalBrightness = (adj.exposure || 0) / 5;
-                 if (adj.highlights) totalBrightness += (adj.highlights / 100) * 0.25;
-                 if (adj.whites) totalBrightness += (adj.whites / 100) * 0.15;
-                 if (adj.shadows) totalBrightness += (adj.shadows / 100) * 0.25;
-                 if (adj.blacks) totalBrightness += (adj.blacks / 100) * 0.15;
+                 let totalBrightness = (adj.exposure || 0) / 200;
+                 if (adj.highlights) totalBrightness += (adj.highlights / 100) * 0.15;
+                 if (adj.whites) totalBrightness += (adj.whites / 100) * 0.08;
+                 if (adj.shadows) totalBrightness += (adj.shadows / 100) * 0.15;
+                 if (adj.blacks) totalBrightness += (adj.blacks / 100) * 0.08;
                  kFilterImg.brightness(Math.max(-1, Math.min(1, totalBrightness)));
               }
               
               if (adj.lightContrast || adj.clarity || adj.dehaze || adj.texture) {
                  filtersArray.push(Konva.Filters.Contrast);
-                 let totalContrast = (adj.lightContrast || 0);
-                 if (adj.clarity) totalContrast += (adj.clarity / 100) * 30;
-                 if (adj.dehaze) totalContrast += (adj.dehaze / 100) * 20;
-                 if (adj.texture) totalContrast += (adj.texture / 100) * 15;
+                 let totalContrast = (adj.lightContrast || 0) * 0.6;
+                 if (adj.clarity) totalContrast += (adj.clarity / 100) * 20;
+                 if (adj.dehaze) totalContrast += (adj.dehaze / 100) * 15;
+                 if (adj.texture) totalContrast += (adj.texture / 100) * 10;
                  kFilterImg.contrast(Math.max(-100, Math.min(100, totalContrast))); 
               }
               
@@ -300,7 +300,7 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
               if (adj.saturation || adj.vibrance) {
                  if (!filtersArray.includes(Konva.Filters.HSL)) filtersArray.push(Konva.Filters.HSL);
                  let totalSat = (adj.saturation || 0);
-                 if (adj.vibrance) totalSat += (adj.vibrance * 0.6); 
+                 if (adj.vibrance) totalSat += (adj.vibrance * 0.5); 
                  kFilterImg.saturation(Math.max(-2, Math.min(2, totalSat / 100))); 
                  kFilterImg.hue(0);
               }
@@ -311,31 +311,31 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
                  let r = 0, g = 0, b = 0;
                  if (adj.temperature) {
                      const temp = adj.temperature;
-                     r += temp * 0.6;   
-                     g += temp * 0.15;  
-                     b -= temp * 0.6;   
+                     r += temp * 0.3;   
+                     g += temp * 0.08;  
+                     b -= temp * 0.3;   
                  }
                  if (adj.tint) {
                      const tint = adj.tint;
-                     r += tint * 0.35;  
-                     b += tint * 0.35;  
-                     g -= tint * 0.5;   
+                     r += tint * 0.15;  
+                     b += tint * 0.15;  
+                     g -= tint * 0.25;   
                  }
                  if (typeof kFilterImg.red === 'function') {
-                    kFilterImg.red(r);
-                    kFilterImg.green(g);
-                    kFilterImg.blue(b);
+                    kFilterImg.red(Math.max(-255, Math.min(255, r)));
+                    kFilterImg.green(Math.max(-255, Math.min(255, g)));
+                    kFilterImg.blue(Math.max(-255, Math.min(255, b)));
                  }
               }
               
               if (adj.grain) {
                  filtersArray.push(Konva.Filters.Noise);
-                 kFilterImg.noise(adj.grain / 100);
+                 kFilterImg.noise(Math.max(0, (adj.grain / 100) * 0.5));
               }
               
               if (adj.blur) {
                  filtersArray.push(Konva.Filters.Blur);
-                 kFilterImg.blurRadius(adj.blur);
+                 kFilterImg.blurRadius(Math.max(0, adj.blur / 5));
               }
             }
 
