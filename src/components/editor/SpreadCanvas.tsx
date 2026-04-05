@@ -438,22 +438,22 @@ const EditorImage = ({
         node.filters(filtersArray);
         
         // SAFE PIXEL RATIO IMPLEMENTATION WITH MEMORY LIMITERS
-        const MAX_SAFE_RATIO = 2.5;
         const naturalWidth = image.naturalWidth || image.width;
-        const naturalHeight = image.naturalHeight || image.height;
-        const renderedWidth = element.w_mm;
+        const logicalWidth = element.w_mm;
         
-        let computedPixelRatio = renderedWidth > 0 
-           ? Math.max(1, Math.min(naturalWidth / renderedWidth, MAX_SAFE_RATIO)) 
-           : 1;
+        // Since logicalWidth is in geometric mm, ratio must scale perfectly to reach native resolution.
+        // A hard limiter of 2.5 is disastrous here (mm coordinates are tiny).
+        let computedPixelRatio = logicalWidth > 0 ? (naturalWidth / logicalWidth) : 1;
            
-        // Extreme Memory Safeguard for Live Canvas Preview
-        if (naturalWidth > 6000 || naturalHeight > 6000) {
-            computedPixelRatio = Math.min(computedPixelRatio, 1.5);
+        // Extreme Memory Safeguard: Cap the maximum absolute cache coordinate bound
+        // This ensures a 16K image doesn't crash DOM arrays, but targets ultra HD (4000-6000px).
+        const MAX_CACHE_BOUND = 4500; 
+        if (logicalWidth * computedPixelRatio > MAX_CACHE_BOUND) {
+            computedPixelRatio = MAX_CACHE_BOUND / logicalWidth;
         }
 
         if (process.env.NODE_ENV === 'development') {
-           console.log(`[Preview Pipeline] Caching ${element.id} | Nat: ${naturalWidth} | Rendered: ${renderedWidth} | DevApplied Ratio: ${computedPixelRatio}`);
+           console.log(`[Preview Pipeline] Caching ${element.id} | Nat: ${naturalWidth} | Logical DOM mm: ${logicalWidth} | Adjusted Safe Ratio: ${computedPixelRatio}`);
         }
 
         node.cache({ pixelRatio: computedPixelRatio, imageSmoothingEnabled: false });
