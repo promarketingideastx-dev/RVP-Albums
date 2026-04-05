@@ -20,12 +20,12 @@ if (typeof window !== 'undefined' && !(Konva.Filters as any).ColorShift) {
     const nPixels = data.length;
     const rShift = this.getAttr('redShift') || 0;
     const gShift = this.getAttr('greenShift') || 0;
-    const bShift = this.blueShift ? this.getAttr('blueShift') : (this.attrs ? this.attrs.blueShift || 0 : 0);
+    const bShift = this.getAttr('blueShift') || 0;
 
     for (let i = 0; i < nPixels; i += 4) {
       data[i] = Math.max(0, Math.min(255, data[i] + rShift));
       data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + gShift));
-      data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + (this.getAttr('blueShift') || 0)));
+      data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + bShift));
     }
   };
 }
