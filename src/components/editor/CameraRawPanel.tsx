@@ -25,7 +25,7 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
 
   const currentAdj = element.photoAdjustments || {};
 
-  const handleUpdate = (key: keyof PhotoAdjustments, value: number) => {
+  const handleUpdate = (key: keyof PhotoAdjustments, value: number | boolean) => {
     updateElement(activeSpreadId, element.id, {
       photoAdjustments: {
         ...currentAdj,
@@ -34,6 +34,23 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
     });
   };
 
+  const handleResetSection = (section: 'light' | 'color' | 'effects') => {
+    let payload = {};
+    if (section === 'light') {
+       payload = { exposure: 0, lightContrast: 0, highlights: 0, shadows: 0, whites: 0, blacks: 0, bypassLight: false };
+    } else if (section === 'color') {
+       payload = { temperature: 0, tint: 0, vibrance: 0, saturation: 0, bypassColor: false };
+    } else if (section === 'effects') {
+       payload = { texture: 0, clarity: 0, dehaze: 0, vignette: 0, grain: 0, blur: 0, bypassEffects: false };
+    }
+    
+    updateElement(activeSpreadId, element.id, {
+      photoAdjustments: {
+        ...currentAdj,
+        ...payload
+      }
+    });
+  };
 
 
   const renderSlider = (label: string, key: keyof PhotoAdjustments, min: number, max: number, defaultValue: number = 0, trackGradient?: string) => {
@@ -107,8 +124,24 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
             {openSections.light ? '▼' : '▶'}
           </span>
           <span className="text-[12px] font-semibold">Light</span>
-          <div className="ml-auto text-[#777]">
-             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+          <div className="ml-auto flex items-center gap-2 text-[#777]">
+             <div 
+                 className={`p-1 ${currentAdj.bypassLight ? 'text-[#444]' : 'hover:text-white'}`}
+                 onClick={(e) => { e.stopPropagation(); handleUpdate('bypassLight', !currentAdj.bypassLight); }}
+             >
+                {currentAdj.bypassLight ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                )}
+             </div>
+             <div 
+                 className="p-1 hover:text-white"
+                 title="Reset Light"
+                 onClick={(e) => { e.stopPropagation(); handleResetSection('light'); }}
+             >
+                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+             </div>
           </div>
         </div>
         {openSections.light && (
@@ -131,8 +164,24 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
         >
           <span className="text-[10px] mr-2 text-[#a1a1a1]">{openSections.color ? '▼' : '▶'}</span>
           <span className="text-[12px] font-semibold">Color</span>
-          <div className="ml-auto text-[#777]">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+          <div className="ml-auto flex items-center gap-2 text-[#777]">
+             <div 
+                 className={`p-1 ${currentAdj.bypassColor ? 'text-[#444]' : 'hover:text-white'}`}
+                 onClick={(e) => { e.stopPropagation(); handleUpdate('bypassColor', !currentAdj.bypassColor); }}
+             >
+                {currentAdj.bypassColor ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                )}
+             </div>
+             <div 
+                 className="p-1 hover:text-white"
+                 title="Reset Color"
+                 onClick={(e) => { e.stopPropagation(); handleResetSection('color'); }}
+             >
+                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+             </div>
           </div>
         </div>
         {openSections.color && (
@@ -165,8 +214,24 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
         >
           <span className="text-[10px] mr-2 text-[#a1a1a1]">{openSections.effects ? '▼' : '▶'}</span>
           <span className="text-[12px] font-semibold">Effects</span>
-          <div className="ml-auto text-[#777]">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+          <div className="ml-auto flex items-center gap-2 text-[#777]">
+             <div 
+                 className={`p-1 ${currentAdj.bypassEffects ? 'text-[#444]' : 'hover:text-white'}`}
+                 onClick={(e) => { e.stopPropagation(); handleUpdate('bypassEffects', !currentAdj.bypassEffects); }}
+             >
+                {currentAdj.bypassEffects ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                )}
+             </div>
+             <div 
+                 className="p-1 hover:text-white"
+                 title="Reset Effects"
+                 onClick={(e) => { e.stopPropagation(); handleResetSection('effects'); }}
+             >
+                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+             </div>
           </div>
         </div>
         {openSections.effects && (

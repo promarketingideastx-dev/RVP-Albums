@@ -278,36 +278,58 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
             if (hasAdj) {
               const adj = el.photoAdjustments!;
               
-              if (adj.exposure || adj.highlights || adj.shadows || adj.whites || adj.blacks) {
+              const bypassLight = adj.bypassLight || false;
+              const bypassColor = adj.bypassColor || false;
+              const bypassEffects = adj.bypassEffects || false;
+
+              const exposure = !bypassLight ? (adj.exposure || 0) : 0;
+              const lightContrast = !bypassLight ? (adj.lightContrast || 0) : 0;
+              const highlights = !bypassLight ? (adj.highlights || 0) : 0;
+              const shadows = !bypassLight ? (adj.shadows || 0) : 0;
+              const whites = !bypassLight ? (adj.whites || 0) : 0;
+              const blacks = !bypassLight ? (adj.blacks || 0) : 0;
+
+              const temperature = !bypassColor ? (adj.temperature || 0) : 0;
+              const tint = !bypassColor ? (adj.tint || 0) : 0;
+              const vibrance = !bypassColor ? (adj.vibrance || 0) : 0;
+              const saturation = !bypassColor ? (adj.saturation || 0) : 0;
+
+              const texture = !bypassEffects ? (adj.texture || 0) : 0;
+              const clarity = !bypassEffects ? (adj.clarity || 0) : 0;
+              const dehaze = !bypassEffects ? (adj.dehaze || 0) : 0;
+              const grain = !bypassEffects ? (adj.grain || 0) : 0;
+              const blur = !bypassEffects ? (adj.blur || 0) : 0;
+
+              if (exposure || highlights || shadows || whites || blacks) {
                  filtersArray.push(Konva.Filters.Brighten);
-                 let totalBrightness = (adj.exposure || 0) / 200;
-                 if (adj.highlights) totalBrightness += (adj.highlights / 100) * 0.15;
-                 if (adj.whites) totalBrightness += (adj.whites / 100) * 0.08;
-                 if (adj.shadows) totalBrightness += (adj.shadows / 100) * 0.15;
-                 if (adj.blacks) totalBrightness += (adj.blacks / 100) * 0.08;
+                 let totalBrightness = exposure / 200;
+                 if (highlights) totalBrightness += (highlights / 100) * 0.15;
+                 if (whites) totalBrightness += (whites / 100) * 0.08;
+                 if (shadows) totalBrightness += (shadows / 100) * 0.15;
+                 if (blacks) totalBrightness += (blacks / 100) * 0.08;
                  kImg.brightness(Math.max(-1, Math.min(1, totalBrightness)));
               }
               
-              if (adj.lightContrast || adj.clarity || adj.dehaze || adj.texture) {
+              if (lightContrast || clarity || dehaze || texture) {
                  filtersArray.push(Konva.Filters.Contrast);
-                 let totalContrast = (adj.lightContrast || 0) * 0.6;
-                 if (adj.clarity) totalContrast += (adj.clarity / 100) * 20;
-                 if (adj.dehaze) totalContrast += (adj.dehaze / 100) * 15;
-                 if (adj.texture) totalContrast += (adj.texture / 100) * 10;
+                 let totalContrast = lightContrast * 0.6;
+                 if (clarity) totalContrast += (clarity / 100) * 20;
+                 if (dehaze) totalContrast += (dehaze / 100) * 15;
+                 if (texture) totalContrast += (texture / 100) * 10;
                  kImg.contrast(Math.max(-100, Math.min(100, totalContrast))); 
               }
               
               // Advanced Color: Vibrance and Saturation
-              if (adj.saturation || adj.vibrance) {
+              if (saturation || vibrance) {
                  if (!filtersArray.includes(Konva.Filters.HSL)) filtersArray.push(Konva.Filters.HSL);
-                 let totalSat = (adj.saturation || 0);
-                 if (adj.vibrance) totalSat += (adj.vibrance * 0.5); 
+                 let totalSat = saturation;
+                 if (vibrance) totalSat += (vibrance * 0.5); 
                  kImg.saturation(Math.max(-2, Math.min(2, totalSat / 100))); 
                  kImg.hue(0);
               }
               
               // Advanced Color: Temperature and Tint (Thermal Curves via Custom Additive ColorShift)
-              if (adj.temperature || adj.tint) {
+              if (temperature || tint) {
                  // CRITICAL FIX: Custom WebGL Filter used to securely add offsets to pixel color natively 
                  // avoiding RGBA solid overlaps and avoiding RGB luminance grayscale blackouts.
                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -317,13 +339,13 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
                  const TEMP_STRENGTH = 15;
                  const TINT_STRENGTH = 10;
                  
-                 if (adj.temperature) {
-                     const tempNormalized = adj.temperature / 100;
+                 if (temperature) {
+                     const tempNormalized = temperature / 100;
                      r = r + tempNormalized * TEMP_STRENGTH;   
                      b = b - tempNormalized * TEMP_STRENGTH;   
                  }
-                 if (adj.tint) {
-                     const tintNormalized = adj.tint / 100;
+                 if (tint) {
+                     const tintNormalized = tint / 100;
                      g = g + tintNormalized * TINT_STRENGTH;  
                      r = r + tintNormalized * (TINT_STRENGTH * 0.25);  
                      b = b + tintNormalized * (TINT_STRENGTH * 0.25);   
@@ -334,14 +356,14 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
                  kImg.setAttr('blueShift', b);
               }
               
-              if (adj.grain) {
+              if (grain) {
                  filtersArray.push(Konva.Filters.Noise);
-                 kImg.noise(Math.max(0, (adj.grain / 100) * 0.5));
+                 kImg.noise(Math.max(0, (grain / 100) * 0.5));
               }
               
-              if (adj.blur) {
+              if (blur) {
                  filtersArray.push(Konva.Filters.Blur);
-                 kImg.blurRadius(Math.max(0, adj.blur / 5));
+                 kImg.blurRadius(Math.max(0, blur / 5));
               }
             }
 

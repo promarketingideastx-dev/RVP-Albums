@@ -17,6 +17,9 @@ export interface PhotoAdjustments {
    vignette: number;
    grain: number;
    blur?: number;
+   bypassLight?: boolean;
+   bypassColor?: boolean;
+   bypassEffects?: boolean;
    hsl: {
       reds: { h: number; s: number; l: number };
       oranges: { h: number; s: number; l: number };
