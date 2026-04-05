@@ -28,14 +28,20 @@ export default function AssetTray() {
 
   // Advanced Fundy Logic States
   const [filterRating, setFilterRating] = useState<number>(0);
+  const [filterFavorite, setFilterFavorite] = useState<boolean>(false);
   const [sortMode, setSortMode] = useState<'newest' | 'rating'>('newest');
 
   const assets = project?.assets || [];
 
   const visibleAssets = useMemo(() => {
     let filtered = [...assets];
+    
+    if (filterFavorite) {
+      filtered = filtered.filter(a => a.isFavorite);
+    }
+    
     if (filterRating > 0) {
-      filtered = filtered.filter(a => (a.rating || 0) === filterRating);
+      filtered = filtered.filter(a => (a.rating || 0) >= filterRating);
     }
     
     if (sortMode === 'rating') {
@@ -43,7 +49,7 @@ export default function AssetTray() {
     }
     return filtered;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project?.assets, filterRating, sortMode]);
+  }, [project?.assets, filterFavorite, filterRating, sortMode]);
 
 
           
@@ -202,13 +208,25 @@ export default function AssetTray() {
           {/* Interactive Star Filter Group */}
           <div className="flex items-center bg-orange-600 rounded-full px-5 py-1 gap-1 border border-orange-500 shadow-sm">
             <span className="text-white text-sm font-bold tracking-wide mr-2 hidden sm:inline">{t('filter_label')}</span>
-            <div className="flex gap-1.5 text-lg leading-none">
+            
+            {/* Heart Filter */}
+            <span 
+              onClick={() => setFilterFavorite(!filterFavorite)}
+              className={`cursor-pointer ${filterFavorite ? 'text-red-300 drop-shadow-md scale-110' : 'text-orange-900'} hover:text-red-200 transition-all text-xl leading-none mr-2 font-bold`}
+              title="Filter by Favorites"
+            >
+              {filterFavorite ? '♥' : '♡'}
+            </span>
+            <div className="w-px h-5 bg-orange-700 mx-1"></div>
+
+            {/* Stars Filter */}
+            <div className="flex gap-1.5 text-xl leading-none">
               {[1, 2, 3, 4, 5].map(star => (
                 <span 
                   key={star}
                   onClick={() => setFilterRating(filterRating === star ? 0 : star)}
-                  className={`cursor-pointer ${star === filterRating ? 'text-white' : 'text-orange-900'} hover:text-orange-200 transition-colors drop-shadow-sm`}
-                  title={`Filter exactly ${star} stars (Click to toggle)`}
+                  className={`cursor-pointer ${star <= filterRating ? 'text-white' : 'text-orange-900'} hover:text-orange-200 transition-colors drop-shadow-sm`}
+                  title={`Filter ${star} stars and above`}
                 >
                   ★
                 </span>
@@ -405,13 +423,13 @@ export default function AssetTray() {
               </div>
               
               {/* Metadata Control Strip */}
-              <div className="h-6 bg-white dark:bg-neutral-800 flex items-center justify-between px-1.5 shrink-0 border-t border-neutral-100 dark:border-neutral-700">
-                 <div className="flex gap-0.5 text-[10px] tracking-tighter">
+              <div className="h-10 bg-[#1c1c1c] flex items-center justify-between px-2 shrink-0 border-t border-black">
+                 <div className="flex gap-1 text-[20px] tracking-tighter">
                    {[1, 2, 3, 4, 5].map(star => (
                      <span 
                        key={star}
                        onClick={(e) => setRating(e, asset.id, currentRating === star ? 0 : star)}
-                       className={`cursor-pointer ${star <= currentRating ? 'text-orange-500' : 'text-neutral-300 dark:text-neutral-600'} hover:text-orange-400 leading-none`}
+                       className={`cursor-pointer ${star <= currentRating ? 'text-[#ffb800] drop-shadow-md' : 'text-neutral-600'} hover:text-[#ffca3a] leading-none mb-1`}
                      >
                        ★
                      </span>
@@ -419,7 +437,7 @@ export default function AssetTray() {
                  </div>
                  <div 
                    onClick={(e) => toggleFavorite(e, asset)}
-                   className={`${asset.isFavorite ? 'text-red-500' : 'text-neutral-300 dark:text-neutral-600'} hover:text-red-500 cursor-pointer text-[12px] font-bold leading-none`}
+                   className={`${asset.isFavorite ? 'text-red-500 drop-shadow-md' : 'text-neutral-600'} hover:text-red-400 cursor-pointer text-[26px] font-bold leading-none -mt-1`}
                  >
                    {asset.isFavorite ? '♥' : '♡'}
                  </div>
