@@ -132,7 +132,7 @@ export function NavigatorWidget({ scale, autoScale }: NavigatorProps) {
   const currentPercentage = Math.round((scale / autoScale) * 100);
 
   return (
-    <div className="absolute bottom-6 right-6 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-2xl overflow-hidden z-40 flex flex-col w-[202px]">
+    <div className="absolute bottom-6 left-6 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-2xl overflow-hidden z-40 flex flex-col w-[202px]">
       <div className="px-3 py-2 bg-neutral-100 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-700 font-semibold text-xs text-neutral-600 dark:text-neutral-300 flex items-center justify-between">
         <span>Navigator</span>
         <span className="font-mono">{currentPercentage}%</span>
