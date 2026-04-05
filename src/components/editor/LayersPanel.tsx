@@ -173,20 +173,20 @@ export default function LayersPanel() {
                      setSelectedElement(el.id);
                      setContextMenu({ x: e.clientX, y: e.clientY, elementId: el.id });
                    }}
-                   className={`group flex items-center justify-between py-1.5 px-2 cursor-pointer text-xs transition-colors border-l-2 ${
+                   className={`group flex items-center justify-between py-1 px-1 cursor-pointer text-xs transition-colors ${
                      isSelected 
-                       ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 text-blue-700 dark:text-blue-300' 
-                       : 'bg-transparent border-transparent text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800/50'
+                       ? 'bg-[#e0e0e0] dark:bg-[#323232] text-neutral-900 dark:text-neutral-100' 
+                       : 'bg-transparent text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                    } ${!isVisible ? 'opacity-50' : 'opacity-100'}`}
                    style={{ marginLeft: el.groupId ? '1.25rem' : '0' }}
                  >
                    <div className="flex items-center gap-2 overflow-hidden w-full">
-                      {/* VISIBILITY TOGGLE */}
+                      {/* VISIBILITY TOGGLE (PHOTOSHOP EYE) */}
                       <button 
                         onClick={(e) => { e.stopPropagation(); updateElement(spread.id, el.id, { visible: !isVisible }); }}
-                        className={`p-1 rounded shrink-0 pointer-events-auto transition-colors ${isVisible ? 'text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300' : 'text-neutral-300 dark:text-neutral-600'}`}
+                        className={`w-6 h-6 flex items-center justify-center shrink-0 pointer-events-auto transition-colors rounded ${isVisible ? 'text-neutral-600 dark:text-neutral-300' : 'text-neutral-200 dark:text-neutral-700 hover:text-neutral-400'}`}
                       >
-                        {isVisible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                        {isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 opacity-0 group-hover:opacity-100" />}
                       </button>
 
                       <div 
@@ -205,16 +205,16 @@ export default function LayersPanel() {
                             const src = el.previewUrl || el.src;
                             if ((type === 'photo' || type === 'image' || type === 'background' || type === 'overlay') && src && src.length > 5) {
                                // eslint-disable-next-line @next/next/no-img-element
-                               return <img src={src} className="w-7 h-7 object-cover rounded-[2px] border border-neutral-300 dark:border-neutral-600 bg-neutral-200 shadow-sm pointer-events-none shrink-0" alt="" />;
+                               return <img src={src} className="w-[48px] h-[36px] object-cover rounded-[2px] border border-neutral-300 dark:border-neutral-600 shadow-sm pointer-events-none shrink-0" alt="" />;
                             }
                             
                             if (type === 'text') {
-                               return <div className="w-7 h-7 shrink-0 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-[2px] flex items-center justify-center font-serif text-[14px] font-bold text-neutral-800 dark:text-neutral-200 shadow-sm pointer-events-none leading-none">T</div>;
+                               return <div className="w-[48px] h-[36px] shrink-0 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-[2px] flex items-center justify-center font-serif text-[18px] font-bold text-neutral-800 dark:text-neutral-200 shadow-sm pointer-events-none leading-none">T</div>;
                             }
                             
                             if (type === 'shape') {
-                               return <div className="w-7 h-7 shrink-0 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-[2px] flex items-center justify-center shadow-sm pointer-events-none">
-                                  <div className="w-3.5 h-3.5 bg-neutral-400" style={{ borderRadius: el.shapeType === 'ellipse' ? '50%' : '0' }}></div>
+                               return <div className="w-[48px] h-[36px] shrink-0 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-[2px] flex items-center justify-center shadow-sm pointer-events-none">
+                                  <div className="w-4 h-4 bg-neutral-400" style={{ borderRadius: el.shapeType === 'ellipse' ? '50%' : '0' }}></div>
                                </div>;
                             }
                             
@@ -223,7 +223,7 @@ export default function LayersPanel() {
                       </div>
                       
                       <span 
-                         className="truncate flex-1 font-medium select-none text-[11px]"
+                         className="truncate flex-1 font-medium select-none text-[12px] ml-1"
                          onDoubleClick={(e) => {
                            e.stopPropagation();
                            const newName = window.prompt('Rename Layer:', getLayerName(el));
