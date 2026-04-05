@@ -406,21 +406,26 @@ const EditorImage = ({
           if (adj.temperature || adj.tint) {
              if (!filtersArray.includes(Konva.Filters.RGB)) filtersArray.push(Konva.Filters.RGB);
              let r = 0, g = 0, b = 0;
+             
+             const TEMP_STRENGTH = 15;
+             const TINT_STRENGTH = 10;
+             
              if (adj.temperature) {
                  const tempNormalized = adj.temperature / 100;
-                 r += tempNormalized * 20;   
-                 b -= tempNormalized * 20;   
+                 r = r + tempNormalized * TEMP_STRENGTH;
+                 b = b - tempNormalized * TEMP_STRENGTH;
              }
              if (adj.tint) {
                  const tintNormalized = adj.tint / 100;
-                 r += tintNormalized * 10;
-                 b += tintNormalized * 10;
-                 g -= tintNormalized * 20; 
+                 g = g + tintNormalized * TINT_STRENGTH;
+                 r = r + tintNormalized * (TINT_STRENGTH * 0.25);
+                 b = b + tintNormalized * (TINT_STRENGTH * 0.25);
              }
              if (typeof node.red === 'function') {
-                node.red(Math.max(-255, Math.min(255, r)));
-                node.green(Math.max(-255, Math.min(255, g)));
-                node.blue(Math.max(-255, Math.min(255, b)));
+                // MANDATORY CLAMP (CRITICAL) - no negative clipping
+                node.red(Math.max(0, Math.min(255, r)));
+                node.green(Math.max(0, Math.min(255, g)));
+                node.blue(Math.max(0, Math.min(255, b)));
              }
           }
           
