@@ -110,7 +110,6 @@ export default function Inspector() {
   const activeSpreadId = useEditorStore((state) => state.activeSpreadId);
   const selectedElementId = useEditorStore((state) => state.selectedElementId);
   const updateElement = useEditorStore((state) => state.updateElement);
-  const setPreviewOriginalPhotoId = useEditorStore((state) => state.setPreviewOriginalPhotoId);
   const bringForward = useEditorStore((state) => state.bringForward);
   const sendBackward = useEditorStore((state) => state.sendBackward);
   const removeElement = useEditorStore((state) => state.removeElement);
