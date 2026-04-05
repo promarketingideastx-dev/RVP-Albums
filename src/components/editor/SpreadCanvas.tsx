@@ -672,7 +672,7 @@ const EditorImage = ({
           imageSmoothingEnabled={true}
           imageSmoothingQuality="high"
         />
-        {element.photoFilter && element.photoFilter !== 'none' && element.id !== previewOriginalPhotoId && (
+        {((element.photoFilter && element.photoFilter !== 'none') || (element.photoAdjustments && Object.values(element.photoAdjustments).some(v => typeof v === 'number' && v !== 0))) && element.id !== previewOriginalPhotoId && (
           <KonvaImage 
             ref={filterLayerRef}
             image={image} 

@@ -455,8 +455,17 @@ export default function Inspector() {
                 <option value="posterize">Posterizar</option>
               </optgroup>
            </select>
+           {element.photoFilter && element.photoFilter !== 'none' && (
+              <InputField 
+                label={element.photoFilter?.startsWith('lut_') ? "Intensidad LUT & Fade" : "Nivel del Filtro"} 
+                value={element.filterIntensity !== undefined ? element.filterIntensity.toString() : (element.photoFilter === 'posterize' ? '4' : '1')} 
+                setter={(val) => updateElement(activeSpreadId, element.id, { filterIntensity: parseFloat(val) })} 
+                min={0} max={element.photoFilter?.startsWith('lut_') ? 1 : (element.photoFilter === 'posterize' ? 10 : (element.photoFilter === 'blur' ? 20 : (element.photoFilter === 'contrast' ? 100 : 1)))}
+                step={element.photoFilter?.startsWith('lut_') ? '0.01' : (element.photoFilter === 'posterize' ? '1' : '0.1')}
+              />
+           )}
 
-           <div className="flex items-center justify-between mb-2">
+           <div className="flex items-center justify-between mb-2 mt-4">
              <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-800 dark:text-neutral-200">Camera Raw Pro</h3>
            </div>
            
