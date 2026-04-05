@@ -308,18 +308,19 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
               // Advanced Color: Temperature and Tint (Thermal Curves via RGB Additives)
               if (adj.temperature || adj.tint) {
                  if (!filtersArray.includes(Konva.Filters.RGB)) filtersArray.push(Konva.Filters.RGB);
+                 // RGB goes from -255 to 255 in additive blending. Scale to micro-levels.
                  let r = 0, g = 0, b = 0;
                  if (adj.temperature) {
                      const temp = adj.temperature;
-                     r += temp * 0.3;   
-                     g += temp * 0.08;  
-                     b -= temp * 0.3;   
+                     r += temp * 0.05;   
+                     g += temp * 0.015;  
+                     b -= temp * 0.05;   
                  }
                  if (adj.tint) {
                      const tint = adj.tint;
-                     r += tint * 0.15;  
-                     b += tint * 0.15;  
-                     g -= tint * 0.25;   
+                     r += tint * 0.03;  
+                     b += tint * 0.03;  
+                     g -= tint * 0.04;   
                  }
                  if (typeof kFilterImg.red === 'function') {
                     kFilterImg.red(Math.max(-255, Math.min(255, r)));
@@ -342,6 +343,31 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
             kFilterImg.filters(filtersArray);
             kFilterImg.cache();
           }
+          
+          if (hasAdj && el.photoAdjustments?.vignette && el.photoAdjustments.vignette !== 0) {
+              const vigW = (el.w_mm * CONSTANT_SPREAD_SCALAR) * mmToPx;
+              const vigH = (el.h_mm * CONSTANT_SPREAD_SCALAR) * mmToPx;
+              const vignetteLayer = new Konva.Rect({
+                  x: 0,
+                  y: 0,
+                  width: vigW,
+                  height: vigH,
+                  cornerRadius: appliedBorderRadius * mmToPx,
+                  listening: false,
+                  fillRadialGradientStartPoint: { x: vigW / 2, y: vigH / 2 },
+                  fillRadialGradientStartRadius: Math.min(vigW, vigH) * 0.2,
+                  fillRadialGradientEndPoint: { x: vigW / 2, y: vigH / 2 },
+                  fillRadialGradientEndRadius: Math.max(vigW, vigH) * 0.75,
+                  fillRadialGradientColorStops: [
+                     0, 'rgba(0,0,0,0)',
+                     1, el.photoAdjustments.vignette < 0 
+                         ? `rgba(0,0,0,${Math.min(1, Math.abs(el.photoAdjustments.vignette) / 100)})`
+                         : `rgba(255,255,255,${Math.min(1, el.photoAdjustments.vignette / 100)})`
+                  ]
+              });
+              kGroup.add(vignetteLayer);
+          }
+
 
           layer.add(kGroup);
         } catch (e) {

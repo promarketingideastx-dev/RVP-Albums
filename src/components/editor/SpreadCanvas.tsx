@@ -408,19 +408,19 @@ const EditorImage = ({
           // Advanced Color: Temperature and Tint (Thermal Curves via RGB Additives)
           if (adj.temperature || adj.tint) {
              if (!filtersArray.includes(Konva.Filters.RGB)) filtersArray.push(Konva.Filters.RGB);
-             // RGB goes from 0-256 usually in additive mode. Scale very softly.
+             // RGB goes from -255 to 255 in additive blending. Scale to micro-levels.
              let r = 0, g = 0, b = 0;
              if (adj.temperature) {
                  const temp = adj.temperature; // -100 to 100
-                 r += temp * 0.3;   
-                 g += temp * 0.08;  
-                 b -= temp * 0.3;   
+                 r += temp * 0.05;   
+                 g += temp * 0.015;  
+                 b -= temp * 0.05;   
              }
              if (adj.tint) {
                  const tint = adj.tint; // -100 to 100
-                 r += tint * 0.15;  
-                 b += tint * 0.15;  
-                 g -= tint * 0.25;   
+                 r += tint * 0.03;  
+                 b += tint * 0.03;  
+                 g -= tint * 0.04;   
              }
              if (typeof node.red === 'function') {
                 node.red(Math.max(-255, Math.min(255, r)));
@@ -718,6 +718,26 @@ const EditorImage = ({
             imageSmoothingQuality="high"
           />
         )}
+        
+        {/* Pro Vignette Overlay */}
+        {element.photoAdjustments?.vignette && element.photoAdjustments.vignette !== 0 ? (
+           <Rect
+             x={0} y={0}
+             width={element.w_mm} height={element.h_mm}
+             cornerRadius={appliedBorderRadius}
+             listening={false}
+             fillRadialGradientStartPoint={{ x: element.w_mm / 2, y: element.h_mm / 2 }}
+             fillRadialGradientStartRadius={Math.min(element.w_mm, element.h_mm) * 0.2}
+             fillRadialGradientEndPoint={{ x: element.w_mm / 2, y: element.h_mm / 2 }}
+             fillRadialGradientEndRadius={Math.max(element.w_mm, element.h_mm) * 0.75}
+             fillRadialGradientColorStops={[
+               0, 'rgba(0,0,0,0)',
+               1, element.photoAdjustments.vignette < 0 
+                   ? `rgba(0,0,0,${Math.min(1, Math.abs(element.photoAdjustments.vignette) / 100)})`
+                   : `rgba(255,255,255,${Math.min(1, element.photoAdjustments.vignette / 100)})`
+             ]}
+           />
+        ) : null}
         
         {/* Phase 8.B: Narrative Sequence Badge for Staging Mode */}
         {isStagingMode && stagingIndex !== -1 && (
