@@ -98,21 +98,39 @@ export interface SpreadAutoLayout {
   variantId: string;
   slots: AutoLayoutSlot[];
   seed?: number;
-  mode?: 'geometric' | 'editorial';
+  mode?: 'geometric' | 'editorial' | 'fundy-masonry-experimental'; // Phase 9A/10/11 Extension
+  fundyStrategy?: 'PRIORITIZE_HEIGHT' | 'PRIORITIZE_WIDTH' | 'FORCE_TWO_COLUMNS' | 'CHAOTIC_BALANCED';
+  fundyGapMm?: number;
+  fundyFlipHorizontal?: boolean;
 }
 
 export interface Spread {
   id: string;
   elements: EditorElement[];
   bg_color: string;
+  autoBookManaged?: boolean; // Phase 14: Discriminates pristine autobook layouts from manually handcrafted spaces
   bg_config?: SpreadBackgroundConfig; // Phase 7.G.9: Advanced Gradient spread backgrounds
   guides?: SpreadGuide[]; // Phase 7.G.12: Native alignment geometry boundaries
   autoLayout?: SpreadAutoLayout; // Phase 7.H: Auto Layout Engine Structural bounds 
+  status?: 'empty' | 'staging' | 'designed' | 'completed'; // Phase Final A: Explict Structural Pagination Status
 }
 
 export interface Size {
   w_mm: number;
   h_mm: number;
+}
+
+export interface AssetMetadata {
+   fileName?: string;
+   fileType?: string;
+   widthPx?: number;
+   heightPx?: number;
+   orientation?: 'landscape' | 'portrait' | 'square';
+   aspectRatio?: number;
+   captureTimestamp?: number; // Fetched from EXIF/lastModified
+   sourceOrderIndex: number;
+   manualPriority?: number;
+   metadataStatus?: 'raw' | 'enriched' | 'failed';
 }
 
 export interface ProjectAsset {
@@ -131,6 +149,7 @@ export interface ProjectAsset {
   visualWeight?: number; // Phase 7.I: Narrative mapping
   isWide?: boolean;
   isTall?: boolean;
+  metadata?: AssetMetadata; // Phase 15: Sequencing Intelligence Layer
 }
 
 export interface PhotoMetadata {
@@ -173,8 +192,10 @@ export interface EditorProject {
   safe_zone_mm: number;
   typographyPresetId?: string; // Phase 7.I: Document-scope active typography pattern
   globalImageStyles?: GlobalImageStyles; // Phase 7.G.9: Project-level cascading default styles
+  totalSpreads?: number; // Phase Final A: Fixed album capacity bounds natively
   spreads: Spread[];
   assets?: ProjectAsset[];
+  sequenceMode?: 'ORIGINAL_ORDER' | 'CHRONOLOGICAL' | 'MANUAL_PRIORITY'; // Phase 16
 }
 
 export type CustomCategory = {

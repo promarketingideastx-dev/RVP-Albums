@@ -20,6 +20,7 @@ export default function EditorWorkspace() {
   const workspaceZoom = useEditorStore((state) => state.workspaceZoom);
   const workspacePan = useEditorStore((state) => state.workspacePan);
   const setWorkspacePan = useEditorStore((state) => state.setWorkspacePan);
+  const editorViewMode = useEditorStore((state) => state.editorViewMode);
 
   // Auto-inject Google Fonts globally so preset fonts don't break when sidebar unmounts
   const fontLinks = React.useMemo(() => {
@@ -100,7 +101,7 @@ export default function EditorWorkspace() {
       className="flex-1 overflow-hidden bg-neutral-200 dark:bg-neutral-900 relative w-full h-full"
       onWheel={(e) => {
          // Intercept MouseWheel / Trackpad sweeps to pan the Konva layer physically mimicking hardware physics
-         if (workspaceZoom !== null) {
+         if (workspaceZoom !== null && editorViewMode === 'SINGLE') {
             setWorkspacePan((prev) => ({ x: prev.x - e.deltaX, y: prev.y - e.deltaY }));
          }
       }}

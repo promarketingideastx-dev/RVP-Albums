@@ -1,7 +1,7 @@
 {
   "Editor": {
     "title": "Diseñador de Álbumes Pro",
-    "add_image": "Añadir Imagen Mock",
+
     "upload_image": "Subir Fotografía",
     "error_type": "Formato inválido (Solo JPEG/PNG/WEBP)",
     "error_size": "Imagen muy pesada (Máximo 10MB)",
@@ -29,7 +29,6 @@
     "add_ellipse": "Generar Elipse",
     "fill_color": "Color de Fondo",
     "export": "Exportar JPG",
-    "exporting": "Renderizando Alta Calidad... ⌛",
     "x_pos": "X (mm)",
     "y_pos": "Y (mm)",
     "width": "Ancho (mm)",
@@ -105,7 +104,22 @@
     "export_modal_confirm": "Exportar JPG",
     "filter_label": "FILTRO:",
     "sort": "ORDEN",
+    "sortMode": "Modo de Orden",
+    "originalOrder": "Orden Original",
+    "chronological": "Orden Cronológico",
+    "sortingOriginal": "Ordenando: Orden Original",
+    "sortingChronological": "Ordenando: Orden Cronológico",
+    "priority": "Prioridad",
+    "newProject": "Nuevo Proyecto",
+    "open": "Abrir",
+    "delete": "Eliminar",
+    "save": "Guardar",
+    "myProjects": "Mis Proyectos",
+    "noProjects": "No hay proyectos.",
     "sort_stars": "(ESTRELLAS)",
+    "exportPDF": "Exportar PDF (Imprenta)",
+    "exportJPG": "Exportar JPG (Probar)",
+    "exporting": "Exportando Alta Calidad...",
     "filter_plus": "+MÁS",
     "inches": "PULGADAS",
     "centimeters": "CM",
@@ -120,6 +134,15 @@
     "al_one_variant": "Única variante compatible",
     "al_excess_photos": "{placed} ubicadas, {remaining} libres",
     "al_mode_geometric": "Geométrico",
-    "al_mode_editorial": "Editorial"
+    "al_mode_editorial": "Editorial",
+    "al_mode_fundy": "Fundy",
+    "al_mode_fundy_tooltip": "Fundy Dynamic Masonry Engine (Fotos ilimitadas)",
+    "auto_book_btn": "AUTO MAQUETAR",
+    "auto_book_title": "Auto-Book Builder",
+    "photos_per_spread": "Fotos por pliego",
+    "rebalance_album": "Rebalancear Álbum",
+    "reb_compact": "Compactar",
+    "reb_balanced": "Balancear",
+    "reb_airy": "Airear"
   }
 }

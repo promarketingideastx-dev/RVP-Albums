@@ -1,4 +1,7 @@
 import { EditorProject, Spread } from '@/types/editor';
+import { jsPDF } from 'jspdf';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 // Project Metadata structure subset
 interface ExportMeta {
@@ -22,13 +25,15 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
   let pxW = physicalW * multiplier;
   let pxH = physicalH * multiplier;
   
-  // Desktop canvas limits are generally 16384x16384, but Safari caps area. 8192 is safe for Desktop Print.
-  const maxDim = 8192; 
+  // Desktop canvas limits are generally 16384x16384, but Safari caps area strictly to ~16.7 million pixels (16MB).
+  // A safe max dimension constraint that respects the area limit is approx 4096. 
+  // Let's ensure the total area never exceeds 16,000,000 to be perfectly stable across all browsers.
   
-  if (pxW > maxDim || pxH > maxDim) {
-    const scale = Math.min(maxDim / pxW, maxDim / pxH);
-    pxW *= scale;
-    pxH *= scale;
+  const maxArea = 16000000;
+  if ((pxW * pxH) > maxArea) {
+     const areaScale = Math.sqrt(maxArea / (pxW * pxH));
+     pxW *= areaScale;
+     pxH *= areaScale;
   }
 
   const mmToPx = pxW / physicalW; // unified dynamic scalar
@@ -313,11 +318,66 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
 }
 
 function loadHtmlImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((res, rej) => {
+  return new Promise((res) => {
     const img = new Image();
     img.crossOrigin = 'Anonymous'; // Evitate Tainted Canvas
     img.onload = () => res(img);
-    img.onerror = rej;
     img.src = src;
   });
+}
+
+export async function exportToPDF(project: EditorProject, onProgress?: (current: number, total: number) => void): Promise<void> {
+  const pdfW = project.size.w_mm;
+  const pdfH = project.size.h_mm;
+  
+  // Init jsPDF natively mapped to physical bounds
+  // Use orientation strictly derived from actual aspect ratio
+  const orientation = pdfW > pdfH ? 'l' : 'p';
+  const doc = new jsPDF({
+    orientation: orientation,
+    unit: 'mm',
+    format: [pdfW, pdfH] 
+  });
+  
+  const total = project.spreads.length;
+  
+  for (let i = 0; i < total; i++) {
+    const spread = project.spreads[i];
+    
+    // Scale 12x translates ~300 DPI high resolution 
+    const base64Jpg = await exportSpreadToJPG(project, spread, { size: project.size, pixelMultiplier: 12, quality: 1.0 });
+    
+    if (i > 0) doc.addPage([pdfW, pdfH], orientation);
+    
+    doc.addImage(base64Jpg, 'JPEG', 0, 0, pdfW, pdfH, undefined, 'FAST');
+    
+    // Force aggressive GC cleanup manually helping browser RAM
+    // JS engine naturally drops base64 string referenced once loops clear but keeping it minimal ensures stability
+    if (onProgress) onProgress(i + 1, total);
+  }
+  
+  const filename = `${project.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_print.pdf`;
+  doc.save(filename);
+}
+
+export async function exportToJPG(project: EditorProject, onProgress?: (current: number, total: number) => void): Promise<void> {
+  const zip = new JSZip();
+  const safeTitle = project.title.replace(/[^a-z0-9_ -]/gi, '').trim() || 'Album';
+  const folder = zip.folder(safeTitle) || zip;
+  const total = project.spreads.length;
+  
+  for (let i = 0; i < total; i++) {
+    const spread = project.spreads[i];
+    const base64Jpg = await exportSpreadToJPG(project, spread, { size: project.size, pixelMultiplier: 12, quality: 1.0 });
+    
+    const base64Data = base64Jpg.replace(/^data:image\/jpeg;base64,/, "");
+    const idxStr = String(i + 1).padStart(3, '0');
+    folder.file(`Spread_${idxStr}.jpg`, base64Data, { base64: true });
+    
+    if (onProgress) onProgress(i + 1, total);
+  }
+  
+  const content = await zip.generateAsync({ type: "blob" });
+  const filename = `${safeTitle.replace(/\s+/g, '_').toLowerCase()}_jpgs.zip`;
+  saveAs(content, filename);
 }

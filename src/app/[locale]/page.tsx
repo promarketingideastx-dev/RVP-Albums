@@ -9,9 +9,9 @@ import Toolbar from '@/components/Toolbar';
 import Inspector from '@/components/Inspector';
 import EditorWorkspace from '@/components/editor/EditorWorkspace';
 import AssetTray from '@/components/AssetTray';
-import ProjectPicker from '@/components/project/ProjectPicker';
+import ProjectManager from '@/components/ProjectManager';
 import SetupModal from '@/components/project/SetupModal';
-import { storage } from '@/storage';
+import { projectStorage } from '@/utils/projectStorage';
 import { EditorProject } from '@/types/editor';
 
 export default function AppPage() {
@@ -35,43 +35,92 @@ export default function AppPage() {
   useEffect(() => {
     if (!mounted || init) return;
 
-    storage.listProjects().then(async (list) => {
-      const lastSessionId = localStorage.getItem('rvp_last_open_project_id');
-      if (lastSessionId) {
-        const recoveringProject = await storage.openProject(lastSessionId);
-        if (recoveringProject) {
-          localStorage.removeItem('rvp_last_open_project_id');
-          loadProject(recoveringProject);
-          setViewMode('editor');
-          setInit(true);
-          return;
-        }
-      }
+    const bootSequence = async () => {
+      try {
+        const list = projectStorage.getAllProjects();
+        const lastSessionId = localStorage.getItem('rvp_last_open_project_id');
+        
+        if (lastSessionId) {
+          let recoveringProject = projectStorage.loadProject(lastSessionId);
+          
+          if (recoveringProject) {
+            // Attempt full hydration if blobs exist
+            try {
+               const { loadProjectFromDB } = await import('@/utils/persistence');
+               const hydratedDB = await loadProjectFromDB(lastSessionId);
+               if (hydratedDB) recoveringProject = hydratedDB;
+               
+               // Memory patching for initial boot
+               const { get: idbGet } = await import('idb-keyval');
 
-      if (list.length > 0) {
-        setViewMode('picker');
-      } else {
-        // Fallback check for legacy untracked 'rvp_editor_project'
-        const legacyProj = await storage.openProject('proj_genesis');
-        if (legacyProj) {
-          // If a legacy project exists, forcefully index it by saving it again securely
-          await storage.saveProject(legacyProj);
+               // Patch assets
+               if (recoveringProject.assets) {
+                  recoveringProject.assets = await Promise.all(recoveringProject.assets.map(async (asset) => {
+                     const newAsset = { ...asset };
+                     if (!newAsset.previewUrl && newAsset.previewBlobId) {
+                         const blob = await idbGet<Blob>(newAsset.previewBlobId);
+                         if (blob) newAsset.previewUrl = URL.createObjectURL(blob);
+                     }
+                     return newAsset;
+                  }));
+               }
+
+               // Patch spread elements
+               recoveringProject.spreads = await Promise.all(recoveringProject.spreads.map(async (spread) => {
+                  const hydratedElements = await Promise.all(spread.elements.map(async (el) => {
+                     if (el.type === 'image' && !el.previewUrl && el.previewBlobId) {
+                         const newEl = { ...el };
+                         const blob = await idbGet<Blob>(el.previewBlobId);
+                         if (blob) newEl.previewUrl = URL.createObjectURL(blob);
+                         return newEl;
+                     }
+                     return el;
+                  }));
+                  return { ...spread, elements: hydratedElements };
+               }));
+            } catch (e) {
+               console.warn("Hydration boot upgrade bypassed.", e);
+            }
+
+            localStorage.removeItem('rvp_last_open_project_id');
+            loadProject(recoveringProject);
+            setViewMode('editor');
+            setInit(true);
+            return;
+          }
+        }
+
+        if (list.length > 0) {
           setViewMode('picker');
         } else {
-          // Absolute clean slate
           setViewMode('picker');
           setShowSetup(true);
         }
+      } catch (e) {
+        console.error(e);
+        setViewMode('picker');
       }
       setInit(true);
-    }).catch(console.error);
+    };
+
+    bootSequence();
   }, [mounted, init, loadProject]);
 
   // LOAD PROJECT HANDLER
   const handleOpenProject = async (id: string) => {
     setViewMode('initializing');
     try {
-      const projectToLoad = await storage.openProject(id);
+      let projectToLoad = projectStorage.loadProject(id);
+      
+      // Attempt full hydration if blobs exist
+      try {
+         const { loadProjectFromDB } = await import('@/utils/persistence');
+         const hydratedDB = await loadProjectFromDB(id);
+         if (hydratedDB) projectToLoad = hydratedDB;
+      } catch (e) {
+         console.warn("Hydration upgrade bypassed.", e);
+      }
+
       if (projectToLoad) {
         // GUARD: Healing missing attributes
         if (!projectToLoad.size || !projectToLoad.size.w_mm || typeof projectToLoad.size.w_mm === 'undefined') {
@@ -91,6 +140,34 @@ export default function AppPage() {
           elements: s.elements || []
         }));
 
+        // In-memory memory patching for missing blobs!
+        const { get: idbGet } = await import('idb-keyval');
+        
+        if (projectToLoad.assets) {
+            projectToLoad.assets = await Promise.all(projectToLoad.assets.map(async (asset) => {
+               const newAsset = { ...asset };
+               if (!newAsset.previewUrl && newAsset.previewBlobId) {
+                   const blob = await idbGet<Blob>(newAsset.previewBlobId);
+                   if (blob) newAsset.previewUrl = URL.createObjectURL(blob);
+               }
+               return newAsset;
+            }));
+        }
+
+        // Patch spread elements
+        projectToLoad.spreads = await Promise.all(projectToLoad.spreads.map(async (spread) => {
+            const hydratedElements = await Promise.all(spread.elements.map(async (el) => {
+               if (el.type === 'image' && !el.previewUrl && el.previewBlobId) {
+                   const newEl = { ...el };
+                   const blob = await idbGet<Blob>(el.previewBlobId);
+                   if (blob) newEl.previewUrl = URL.createObjectURL(blob);
+                   return newEl;
+               }
+               return el;
+            }));
+            return { ...spread, elements: hydratedElements };
+        }));
+
         loadProject(projectToLoad);
         setViewMode('editor');
       } else {
@@ -103,7 +180,7 @@ export default function AppPage() {
   };
 
   // CREATE PROJECT HANDLER
-  const handleCreateProject = async (name: string, bookLine: string, labPresetId: string, sizeStr?: string) => {
+  const handleCreateProject = (name: string, bookLine: string, labPresetId: string, sizeStr?: string) => {
     // Dynamic Geometry Extraction parsing the selected size string. e.g "Flushmount 10x10" or "Custom 12x12in"
     let w_mm = 508;
     let h_mm = 254;
@@ -158,7 +235,7 @@ export default function AppPage() {
       ]
     };
 
-    await storage.saveProject(newProject);
+    projectStorage.saveProject(newProject);
     setShowSetup(false);
     handleOpenProject(newId);
   };
@@ -173,8 +250,9 @@ export default function AppPage() {
     if (pStr === lastSavedStr.current) return; // Prevent unnecessary DB calls
     lastSavedStr.current = pStr;
     
-    // Real IDB Save (Asynchronous local save)
-    storage.saveProject(p).catch(console.error);
+    // Real DB Save is handled globally by Zustand subscribe in useEditorStore!
+    // To be safe we can force an explicit LocalStorage backup just for the active hook:
+    projectStorage.saveProject(p);
 
     setSaveStatus(t('save_success'));
     setTimeout(() => setSaveStatus(''), 2000);
@@ -327,7 +405,7 @@ export default function AppPage() {
   if (viewMode === 'picker') {
     return (
       <>
-        <ProjectPicker 
+        <ProjectManager 
           onOpenProject={handleOpenProject} 
           onNewProject={() => setShowSetup(true)} 
         />

@@ -8,6 +8,7 @@ import { LUT_LIBRARY } from '@/lib/lut-presets';
 import { TYPOGRAPHY_PRESETS } from '@/lib/typography-presets';
 import { useEditorStore } from '@/store/useEditorStore';
 import { EditorElement } from '@/types/editor';
+import { extractAssetMetadataFromFile } from '@/utils/metadataEngine';
 import useImage from 'use-image';
 
 interface SpreadCanvasProps {
@@ -16,6 +17,7 @@ interface SpreadCanvasProps {
   scale: number;
   panX: number;
   panY: number;
+  spreadIdOverride?: string;
 }
 
 const mmToPx = 3.779527559;
@@ -252,6 +254,8 @@ const EditorImage = ({
   const filterLayerRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const trRef = useRef<any>(null);
+  const lastSwapTimeRef = useRef<number>(0);
+  const lastSwappedIdRef = useRef<string | null>(null);
   const updateElement = useEditorStore((state) => state.updateElement);
   const previewOriginalPhotoId = useEditorStore((state) => state.previewOriginalPhotoId);
   const globalStyles = useEditorStore((state) => state.project?.globalImageStyles);
@@ -278,6 +282,38 @@ const EditorImage = ({
       trRef.current.getLayer().batchDraw();
     }
   }, [isSelected]);
+
+  // Object-Fit Cover Math for Layouts
+  let computedCrop = undefined;
+  if (image) {
+    const imgW = image.width;
+    const imgH = image.height;
+    const imgRatio = imgW / imgH;
+    const boxRatio = element.w_mm / element.h_mm;
+
+    // Tolerance for float rounding
+    if (Math.abs(imgRatio - boxRatio) > 0.005) {
+      if (imgRatio > boxRatio) {
+        // Image is wider than target box
+        const newW = imgH * boxRatio;
+        computedCrop = {
+          x: (imgW - newW) / 2,
+          y: 0,
+          width: newW,
+          height: imgH
+        };
+      } else {
+        // Image is taller than target box
+        const newH = imgW / boxRatio;
+        computedCrop = {
+          x: 0,
+          y: (imgH - newH) / 2,
+          width: imgW,
+          height: newH
+        };
+      }
+    }
+  }
 
   // Handle Photo Filters Natively via Dual-Layer
   useLayoutEffect(() => {
@@ -461,6 +497,45 @@ const EditorImage = ({
               } else {
                   useEditorStore.getState().setStagingDropPreviewIndex(null);
               }
+           } else if (element.stageType === 'layout') {
+               // Phase 10: Dynamic Collision Detection for Fundy Live Swap
+               const dropX = e.target.x() + (element.w_mm / 2);
+               const dropY = e.target.y() + (element.h_mm / 2);
+               const layoutImages = elements.filter(el => el.type === 'image' && el.stageType === 'layout');
+               
+               let candidateId: string | null = null;
+               for (const neighbor of layoutImages) {
+                   if (neighbor.id === element.id) continue;
+                   
+                   const nX = neighbor.x_mm + neighbor.w_mm / 2;
+                   const nY = neighbor.y_mm + neighbor.h_mm / 2;
+                   const dist = Math.hypot(dropX - nX, dropY - nY);
+                   
+                   // Math proximity threshold (Center distance close to another element's center)
+                   // Using 30mm or significant overlap area
+                   const intersectX = Math.max(0, Math.min(e.target.x() + element.w_mm, neighbor.x_mm + neighbor.w_mm) - Math.max(e.target.x(), neighbor.x_mm));
+                   const intersectY = Math.max(0, Math.min(e.target.y() + element.h_mm, neighbor.y_mm + neighbor.h_mm) - Math.max(e.target.y(), neighbor.y_mm));
+                   const overlapArea = intersectX * intersectY;
+                   const neighborArea = neighbor.w_mm * neighbor.h_mm;
+                   
+                   // 40% area penetration or extreme center center proximity (<35mm)
+                   if (overlapArea > neighborArea * 0.4 || dist < 35) {
+                        candidateId = neighbor.id;
+                        break;
+                   }
+               }
+
+               const now = Date.now();
+               if (candidateId) {
+                   const isReciprocalLoop = candidateId === lastSwappedIdRef.current;
+                   const cooldown = isReciprocalLoop ? 1000 : 300; // Hardened anti-loop throttle
+
+                   if (now - lastSwapTimeRef.current > cooldown) {
+                       lastSwapTimeRef.current = now;
+                       lastSwappedIdRef.current = candidateId;
+                       useEditorStore.getState().swapFundyMasonryElements(spreadId, element.id, candidateId);
+                   }
+               }
            }
         }}
         onContextMenu={(e) => {
@@ -503,6 +578,16 @@ const EditorImage = ({
              return; 
           }
 
+          // Phase 10: Enforce strict Grid Locks for mathematical tracking
+          const currentSpread = useEditorStore.getState().project?.spreads.find(s => s.id === spreadId);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          if (element.stageType === 'layout' && (currentSpread?.autoLayout?.mode as any) === 'fundy-masonry-experimental') {
+               e.target.x(element.x_mm);
+               e.target.y(element.y_mm);
+               trRef.current?.getLayer()?.batchDraw();
+               return;
+          }
+
           updateElement(spreadId, element.id, {
             x_mm: e.target.x(),
             y_mm: e.target.y(),
@@ -532,6 +617,7 @@ const EditorImage = ({
           x={0} y={0}
           width={element.w_mm} 
           height={element.h_mm} 
+          crop={computedCrop}
           cornerRadius={appliedBorderRadius}
           stroke={appliedStrokeWidth > 0 ? appliedStrokeColor : undefined}
           strokeWidth={appliedStrokeWidth}
@@ -548,6 +634,7 @@ const EditorImage = ({
             x={0} y={0}
             width={element.w_mm} 
             height={element.h_mm} 
+            crop={computedCrop}
             opacity={element.filterIntensity !== undefined ? element.filterIntensity : 1}
             cornerRadius={appliedBorderRadius}
             stroke={appliedStrokeWidth > 0 ? appliedStrokeColor : undefined}
@@ -842,9 +929,10 @@ const EditorText = ({ element, elements, spreadId, isSelected, onSelect, onConte
   );
 };
 
-export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, panY }: SpreadCanvasProps) {
+export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, panY, spreadIdOverride }: SpreadCanvasProps) {
   const project = useEditorStore((state) => state.project);
-  const activeSpreadId = useEditorStore((state) => state.activeSpreadId);
+  const _activeSpreadId = useEditorStore((state) => state.activeSpreadId);
+  const activeSpreadId = spreadIdOverride ?? _activeSpreadId;
   const selectedElementId = useEditorStore((state) => state.selectedElementId);
   const setSelectedElement = useEditorStore((state) => state.setSelectedElement);
   const stagingDropPreviewIndex = useEditorStore((state) => state.stagingDropPreviewIndex);
@@ -857,6 +945,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
   const t = useTranslations('Editor');
 
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, elementId: string } | null>(null);
+  const [isDraggingOverCanvas, setIsDraggingOverCanvas] = useState(false);
 
   useEffect(() => {
     const handleGlobalClick = () => { if (contextMenu) setContextMenu(null); };
@@ -954,19 +1043,43 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
         e.preventDefault();
         setContextMenu(null);
       }}
-      onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }}
+      onDragEnter={() => setIsDraggingOverCanvas(true)}
+      onDragLeave={(e) => {
+          // Prevent child elements from falsely triggering drag leave
+          if (e.currentTarget === e.target) setIsDraggingOverCanvas(false);
+      }}
+      onDragOver={(e) => { 
+         e.preventDefault(); 
+         e.dataTransfer.dropEffect = 'copy'; 
+         if (!isDraggingOverCanvas) setIsDraggingOverCanvas(true);
+      }}
       onDrop={(e) => {
         e.preventDefault();
+        setIsDraggingOverCanvas(false);
         try {
-           // Phase 8.A: Nondestructive Drop Interceptor - Native OS Files
+          let dropX = 20;
+          let dropY = 20;
+          const canvasWrapper = document.querySelector('.konvajs-content');
+          if (canvasWrapper) {
+              const rect = canvasWrapper.getBoundingClientRect();
+              dropX = (e.clientX - rect.left - panX) / scale;
+              dropY = (e.clientY - rect.top - panY) / scale;
+          }
+          
+          const spreadIndex = project.spreads.findIndex((s) => s.id === activeSpreadId);
+          const isLastSpread = spreadIndex === project.spreads.length - 1;
+          const isGhostDrop = isLastSpread && dropX > project.size.w_mm + 25;
+
+           // Phase 8.A / Phase 12: Nondestructive Drop Interceptor - Native OS Files
            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
               const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
               if (files.length > 0) {
-                 const promises = files.map(file => {
+                 const promises = files.map((file, i) => {
                     return new Promise<import('@/types/editor').ProjectAsset>((resolve) => {
                        const objectUrl = URL.createObjectURL(file);
                        const img = new window.Image();
                        img.onload = () => {
+                          const md = extractAssetMetadataFromFile(file, (useEditorStore.getState().project?.assets?.length || 0) + i, { w: img.width, h: img.height });
                           resolve({
                              id: 'asset_' + Date.now() + '_' + Math.random().toString(36).substring(2,9),
                              name: file.name,
@@ -974,14 +1087,39 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
                              originalUrl: objectUrl,
                              width: img.width,
                              height: img.height,
-                             orientation: img.width > img.height ? 'landscape' : img.width < img.height ? 'portrait' : 'square'
+                             orientation: md.orientation,
+                             aspectRatio: md.aspectRatio,
+                             metadata: md
                           });
                        };
                        img.src = objectUrl;
                     });
                  });
                  Promise.all(promises).then(newAssets => {
-                    useEditorStore.getState().ingestStagedPhotos(newAssets);
+                    if (isGhostDrop) {
+                       import('uuid').then(({ v4: uuidv4 }) => {
+                          const newSpreadId = uuidv4();
+                          
+                          useEditorStore.setState(prev => {
+                             if (!prev.project) return prev;
+                             return { project: { ...prev.project, spreads: [...prev.project.spreads, { id: newSpreadId, elements: [], bg_color: '#FFFFFF', status: 'empty' as const }] } };
+                          });
+
+                          setTimeout(() => {
+                             useEditorStore.getState().setActiveSpread(newSpreadId);
+                             useEditorStore.getState().ingestAndDropToSpread(newSpreadId, newAssets);
+                          }, 50);
+                       });
+                       return;
+                    }
+
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const isFundyMode = (spread.autoLayout?.mode as any) === 'fundy-masonry-experimental';
+                    if (isFundyMode) {
+                        useEditorStore.getState().ingestAndDropToSpread(spread.id, newAssets);
+                    } else {
+                        useEditorStore.getState().ingestStagedPhotos(newAssets);
+                    }
                  });
                  // Stop default JSON payload parsing for these raw payloads
                  return; 
@@ -993,16 +1131,27 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
           const payload = JSON.parse(rawPayload);
           
           if (payload) {
-            let dropX = 20;
-            let dropY = 20;
-            
-            // Konva wraps the <canvas> inside a div with class "konvajs-content"
-            const canvasWrapper = document.querySelector('.konvajs-content');
-            if (canvasWrapper) {
-                const rect = canvasWrapper.getBoundingClientRect();
-                dropX = (e.clientX - rect.left - panX) / scale;
-                dropY = (e.clientY - rect.top - panY) / scale;
-            }
+             if (isGhostDrop && payload.type === 'image') {
+                   const idsToProcess = payload.assetIds || [payload.assetId];
+                   const stagedAssets = idsToProcess.map((id: string) => project.assets?.find(a => a.id === id)).filter(Boolean) as import('@/types/editor').ProjectAsset[];
+
+                   if (stagedAssets.length > 0) {
+                       import('uuid').then(({ v4: uuidv4 }) => {
+                          const newSpreadId = uuidv4();
+                          
+                          useEditorStore.setState(prev => {
+                             if (!prev.project) return prev;
+                             return { project: { ...prev.project, spreads: [...prev.project.spreads, { id: newSpreadId, elements: [], bg_color: '#FFFFFF', status: 'empty' as const }] } };
+                          });
+
+                          setTimeout(() => {
+                             useEditorStore.getState().setActiveSpread(newSpreadId);
+                             useEditorStore.getState().ingestAndDropToSpread(newSpreadId, stagedAssets);
+                          }, 50);
+                       });
+                   }
+                   return;
+             }
 
             // Text payloads bypass image loading entirely!
             if (payload.type === 'text') {
@@ -1037,6 +1186,16 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
             }
 
             if (payload.type === 'image' || payload.type === 'decoration') {
+               const idsToProcess = payload.assetIds || [payload.assetId];
+               const stagedAssets = idsToProcess.map((id: string) => project.assets?.find(a => a.id === id)).filter(Boolean) as import('@/types/editor').ProjectAsset[];
+               // eslint-disable-next-line @typescript-eslint/no-explicit-any
+               const isFundyMode = (spread.autoLayout?.mode as any) === 'fundy-masonry-experimental' || spread.status === 'empty' || spread.elements.length === 0;
+
+               if (payload.type === 'image' && isFundyMode && stagedAssets.length > 0) {
+                    useEditorStore.getState().ingestAndDropToSpread(activeSpreadId, stagedAssets);
+                    return;
+               }
+
               const img = new window.Image();
             img.onload = () => {
               const aspect = img.width / img.height;
@@ -1199,19 +1358,26 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
         })}
 
         {elements.length === 0 && (
-           <Text
-             text="Drag images here to begin designing"
-             x={0}
-             y={project.size.h_mm / 2 - 10}
-             width={project.size.w_mm}
-             fontSize={12}
-             fill="#aaaaaa"
-             fontStyle="italic"
-             align="center"
-             verticalAlign="middle"
-             listening={false}
-           />
+           <Group>
+             <Rect x={project.size.w_mm * 0.2} y={project.size.h_mm * 0.25} width={project.size.w_mm * 0.6} height={project.size.h_mm * 0.5} fill="#d4d4d4" cornerRadius={4} listening={false} />
+             <Text text="↓" x={0} y={project.size.h_mm * 0.5 - 15} width={project.size.w_mm} fontSize={18} fill="#666666" align="center" listening={false} />
+             <Text text="Drop images to Add Spread" x={0} y={project.size.h_mm * 0.5 + 10} width={project.size.w_mm} fontSize={12} fontFamily="Inter" fill="#666666" align="center" listening={false} />
+           </Group>
         )}
+
+        {(() => {
+            const spreadIndex = project.spreads.findIndex((s) => s.id === activeSpreadId);
+            const isLastSpread = spreadIndex === project.spreads.length - 1;
+            return (isLastSpread && elements.length > 0) ? (
+               <Group x={project.size.w_mm + 50} y={0}>
+                 <Rect width={project.size.w_mm} height={project.size.h_mm} fill="#ffffff" shadowBlur={10} shadowOpacity={0.1} />
+                 <Rect x={project.size.w_mm * 0.2} y={project.size.h_mm * 0.25} width={project.size.w_mm * 0.6} height={project.size.h_mm * 0.5} fill="#d4d4d4" cornerRadius={4} listening={false} />
+                 <Text text="↓" x={0} y={project.size.h_mm * 0.5 - 15} width={project.size.w_mm} fontSize={18} fill="#666666" align="center" listening={false} />
+                 <Text text="Drop images to Add Spread" x={0} y={project.size.h_mm * 0.5 + 10} width={project.size.w_mm} fontSize={12} fontFamily="Inter" fill="#666666" align="center" listening={false} />
+                 <Text text={`Pages ${(spreadIndex + 1) * 2 + 1}-${(spreadIndex + 1) * 2 + 2}`} x={0} y={-20} fontSize={10} fill="#888888" listening={false} />
+               </Group>
+            ) : null;
+        })()}
 
         {/* Phase 8.E Drop Preview Overlay Matrix Native Marker */}
         {stagingDropPreviewIndex !== null && (
@@ -1339,6 +1505,19 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
       </Group>
       </Layer>
       </Stage>
+
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      {isDraggingOverCanvas && (spread.autoLayout?.mode as any) === 'fundy-masonry-experimental' && (
+         <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center bg-orange-500/10 backdrop-blur-[1px] m-8 border-2 border-dashed border-orange-500 rounded-lg transition-all animate-in fade-in duration-200">
+             <div className="bg-white dark:bg-neutral-900 px-6 py-4 rounded-xl shadow-2xl flex flex-col items-center gap-2 border border-orange-200 dark:border-orange-900 scale-100 animate-in zoom-in-95 duration-200">
+                 <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/40 rounded-full flex items-center justify-center text-orange-500 mb-1">
+                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                 </div>
+                 <h3 className="font-bold text-neutral-800 dark:text-neutral-100">{t('dropzone_active')}</h3>
+                 <p className="text-xs text-neutral-500">{t('dropzone_active_subtitle')}</p>
+             </div>
+         </div>
+      )}
 
       {contextMenu && (
         <div 

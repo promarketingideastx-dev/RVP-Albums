@@ -3,6 +3,7 @@ import { useTranslations } from 'next-intl';
 import { useEditorStore } from '@/store/useEditorStore';
 import { ProjectAsset } from '@/types/editor';
 import { processLocalImage } from '@/utils/imageIngestion';
+import { extractAssetMetadataFromFile } from '@/utils/metadataEngine';
 import { v4 as uuidv4 } from 'uuid';
 
 export default function AssetTray() {
@@ -11,10 +12,20 @@ export default function AssetTray() {
   const addAsset = useEditorStore((state) => state.addAsset);
   const removeAsset = useEditorStore((state) => state.removeAsset);
   const updateAsset = useEditorStore((state) => state.updateAsset);
+  const setAssetPriority = useEditorStore((state) => state.setAssetPriority);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedAssetIds, setSelectedAssetIds] = useState<Set<string>>(new Set());
   
+  // Phase 13/14: Auto-Book Native Engine Trigger
+  const [showAutoBookMenu, setShowAutoBookMenu] = useState(false);
+  const [autoBookTarget, setAutoBookTarget] = useState<number>(6);
+  const [rebalanceMode, setRebalanceMode] = useState<'COMPACT' | 'BALANCED' | 'AIRY'>('BALANCED');
+  
+  const executeAutoBookBuilder = useEditorStore((state) => state.executeAutoBookBuilder);
+  const rebalanceAutoBookLayout = useEditorStore((state) => state.rebalanceAutoBookLayout);
+  const hasManagedSpreads = useEditorStore((state) => state.project?.spreads.some(s => s.autoBookManaged) ?? false);
+
   // Advanced Fundy Logic States
   const [filterRating, setFilterRating] = useState<number>(0);
   const [sortMode, setSortMode] = useState<'newest' | 'rating'>('newest');
@@ -51,12 +62,16 @@ export default function AssetTray() {
     // Safety boundaries
     const filesToProcess = Array.from(files).slice(0, 100);
     
-    for (const file of filesToProcess) {
+    for (let i = 0; i < filesToProcess.length; i++) {
+      const file = filesToProcess[i];
       if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) continue;
       if (file.size > 30 * 1024 * 1024) continue; // 30MB limit
       
       try {
-        const { originalUrl, previewUrl, originalBlobId, previewBlobId } = await processLocalImage(file);
+        const { originalUrl, previewUrl, originalBlobId, previewBlobId, widthPx, heightPx } = await processLocalImage(file);
+        
+        const metadata = extractAssetMetadataFromFile(file, (project.assets?.length || 0) + i, { w: widthPx || 0, h: heightPx || 0 });
+
         addAsset({
           id: uuidv4(),
           name: file.name,
@@ -65,7 +80,12 @@ export default function AssetTray() {
           previewBlobId,
           originalBlobId,
           rating: 0,
-          isFavorite: false
+          isFavorite: false,
+          width: widthPx,
+          height: heightPx,
+          orientation: metadata.orientation,
+          aspectRatio: metadata.aspectRatio,
+          metadata
         });
       } catch (err) {
         console.error('Failed to ingest asset:', err);
@@ -78,9 +98,15 @@ export default function AssetTray() {
   };
 
   const handleDragStart = (e: React.DragEvent, asset: ProjectAsset) => {
+    let dragIds = [asset.id];
+    if (selectedAssetIds.has(asset.id)) {
+        dragIds = Array.from(selectedAssetIds);
+    }
+
     e.dataTransfer.setData('application/json', JSON.stringify({
       type: 'image',
       assetId: asset.id,
+      assetIds: dragIds,
       previewUrl: asset.previewUrl,
       originalUrl: asset.originalUrl,
       previewBlobId: asset.previewBlobId,
@@ -107,6 +133,13 @@ export default function AssetTray() {
     updateAsset(asset.id, { isFavorite: !asset.isFavorite });
   };
 
+  const togglePriority = (e: React.MouseEvent, asset: ProjectAsset) => {
+    e.stopPropagation();
+    const current = asset.metadata?.manualPriority || 0;
+    const next = (current + 1) % 3; // cycles: 0 -> 1 -> 2 -> 0
+    setAssetPriority(asset.id, next);
+  };
+
   const clearSelection = () => {
     setSelectedAssetIds(new Set());
     setFilterRating(0);
@@ -117,8 +150,19 @@ export default function AssetTray() {
     setSortMode(prev => (prev === 'newest' ? 'rating' : 'newest'));
   };
 
+  const handleAutoBuildTrigger = () => {
+     if (hasManagedSpreads) {
+         rebalanceAutoBookLayout({ targetPhotosPerSpread: autoBookTarget, mode: rebalanceMode });
+     } else {
+         if (assets.length === 0) return;
+         executeAutoBookBuilder(assets, { targetPhotosPerSpread: autoBookTarget });
+     }
+     setShowAutoBookMenu(false);
+     clearSelection();
+  };
+
   return (
-    <div className="h-[170px] border-t border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 flex flex-col shrink-0 w-full relative">
+    <div className="h-[250px] border-t border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 flex flex-col shrink-0 w-full relative">
       <style>{`
         .fundy-scroll::-webkit-scrollbar {
           height: 14px;
@@ -176,13 +220,76 @@ export default function AssetTray() {
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button className="px-4 py-1.5 text-blue-500 border border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full text-xs font-semibold tracking-wide transition-colors">
-            DESIGN FOR ME
-          </button>
-          <button className="px-4 py-1.5 text-blue-500 border border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full text-xs font-semibold tracking-wide transition-colors">
-            DESIGN WIZARD
-          </button>
+        <div className="flex items-center gap-3 relative">
+          
+          {/* Phase 16: Sequencing Overlays */}
+          <div className="relative group">
+             <select 
+               className="appearance-none bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs font-semibold py-1.5 pl-3 pr-8 rounded-full focus:outline-none cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors"
+               value={project?.sequenceMode || 'ORIGINAL_ORDER'}
+               onChange={(e) => useEditorStore.getState().setSequenceMode(e.target.value as 'ORIGINAL_ORDER' | 'CHRONOLOGICAL')}
+             >
+               <option value="ORIGINAL_ORDER">⏳ {t('originalOrder')} </option>
+               <option value="CHRONOLOGICAL">📅 {t('chronological')}</option>
+               <option value="MANUAL_PRIORITY">⭐ Priority</option>
+             </select>
+             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-neutral-500">
+                <svg className="fill-current h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+             </div>
+             {/* Phase 16 Soft Notification Tooltip */}
+             <div className="absolute top-[130%] left-1/2 -translate-x-1/2 bg-black/80 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                {project?.sequenceMode === 'CHRONOLOGICAL' ? t('sortingChronological') : t('sortingOriginal')}
+             </div>
+          </div>
+          
+          {/* Phase 13: Auto-Book Builder Popover */}
+          <div className="relative">
+             <button 
+                onClick={() => setShowAutoBookMenu(!showAutoBookMenu)}
+                className={`px-4 py-1.5 border rounded-full text-xs font-bold tracking-wide transition-colors ${hasManagedSpreads ? 'border-purple-500 text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20' : showAutoBookMenu ? 'border-orange-500 bg-orange-50 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400' : 'border-blue-500 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20'}`}
+             >
+                ✨ {hasManagedSpreads ? t('rebalance_album') : t('auto_book_btn')}
+             </button>
+             {showAutoBookMenu && (
+               <div className="absolute right-0 bottom-[120%] mb-2 bg-white dark:bg-neutral-800 border border-orange-500 shadow-2xl rounded-xl p-4 w-64 z-[100] scale-in origin-bottom-right">
+                 <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-bold text-sm text-neutral-900 dark:text-white">{hasManagedSpreads ? t('rebalance_album') : t('auto_book_title')}</h3>
+                    <button onClick={() => setShowAutoBookMenu(false)} className="text-neutral-400 hover:text-black dark:hover:text-white text-lg leading-none">✕</button>
+                 </div>
+                 <div className="flex items-center justify-between mb-4">
+                    <label className="text-xs font-medium text-neutral-600 dark:text-neutral-300">{t('photos_per_spread')}</label>
+                    <input 
+                      type="number" 
+                      min="1" max="25" 
+                      value={autoBookTarget}
+                      onChange={(e) => setAutoBookTarget(Math.max(1, parseInt(e.target.value) || 6))}
+                      className="w-16 border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-2 py-1 rounded-md text-sm text-center font-mono font-bold text-black dark:text-white focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    />
+                 </div>
+
+                 {hasManagedSpreads && (
+                    <div className="flex bg-neutral-100 dark:bg-neutral-900 p-1 rounded-lg mb-4">
+                      {['COMPACT', 'BALANCED', 'AIRY'].map((m) => (
+                        <button 
+                          key={m}
+                          onClick={() => setRebalanceMode(m as 'COMPACT' | 'BALANCED' | 'AIRY')}
+                          className={`flex-1 text-[10px] py-1 font-bold rounded-md transition-colors ${rebalanceMode === m ? 'bg-orange-500 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200'}`}
+                        >
+                          {t(`reb_${m.toLowerCase()}`)}
+                        </button>
+                      ))}
+                    </div>
+                 )}
+
+                 <button 
+                   onClick={handleAutoBuildTrigger}
+                   className={`w-full text-white font-bold tracking-wide text-xs py-2.5 rounded-lg transition-transform active:scale-95 ${hasManagedSpreads ? 'bg-purple-600 hover:bg-purple-700' : 'bg-orange-600 hover:bg-orange-700'}`}
+                 >
+                   ➔ {hasManagedSpreads ? t('rebalance_album') : t('auto_book_btn')}
+                 </button>
+               </div>
+             )}
+          </div>
           <button 
             onClick={clearSelection}
             className="px-4 py-1.5 bg-neutral-800 text-white hover:bg-neutral-700 rounded-full text-xs font-semibold tracking-wide transition-colors"
@@ -254,11 +361,39 @@ export default function AssetTray() {
                 ×
               </button>
 
-              {/* Draggable Image Layer */}
-              <div 
+              {/* Quick Priority Toggle Layer */}
+              <button
+                onClick={(e) => togglePriority(e, asset)}
+                className={`absolute bottom-2 left-2 z-10 rounded-full px-1.5 py-0.5 text-xs transition-opacity flex items-center justify-center shadow-md scale-in
+                           ${asset.metadata?.manualPriority ? 'bg-orange-500 text-white opacity-100' : 'bg-black/50 text-white/50 opacity-0 group-hover:opacity-100 hover:bg-black/80'}`}
+                title={t('priority')}
+              >
+                {asset.metadata?.manualPriority === 2 ? '⭐⭐' : '⭐'}
+              </button>
+
+               <div 
                  className="flex-1 w-full relative overflow-hidden"
                  draggable
-                 onDragStart={(e) => handleDragStart(e, asset)}
+                 onDragStart={(e) => {
+                    // Automatically visually show ghost drags when dragging multiple
+                    if (selectedAssetIds.size > 1 && selectedAssetIds.has(asset.id)) {
+                        const ghost = document.createElement('div');
+                        ghost.style.width = '100px';
+                        ghost.style.height = '100px';
+                        ghost.style.background = '#f97316';
+                        ghost.style.color = 'white';
+                        ghost.style.display = 'flex';
+                        ghost.style.alignItems = 'center';
+                        ghost.style.justifyContent = 'center';
+                        ghost.style.borderRadius = '8px';
+                        ghost.style.fontWeight = 'bold';
+                        ghost.innerHTML = `+${selectedAssetIds.size} Fotos`;
+                        document.body.appendChild(ghost);
+                        e.dataTransfer.setDragImage(ghost, 50, 50);
+                        setTimeout(() => ghost.remove(), 0);
+                    }
+                    handleDragStart(e, asset);
+                 }}
                  onClick={(e) => toggleSelection(e, asset.id)}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}

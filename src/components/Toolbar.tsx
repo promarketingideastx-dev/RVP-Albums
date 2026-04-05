@@ -6,13 +6,10 @@ import { useEditorStore } from '@/store/useEditorStore';
 import { useStore } from 'zustand';
 import { usePathname } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
-import { exportSpreadToJPG } from '@/utils/exportEngine';
+import { exportToPDF, exportToJPG } from '@/utils/exportEngine';
 import { exportProjectToFile } from '@/utils/exportImport';
 import { storage } from '@/storage';
 import { v4 as uuidv4 } from 'uuid';
-
-type ExportIntent = 'web' | 'print' | 'proof';
-type ExportQuality = 'web' | 'high' | 'print';
 
 export default function Toolbar() {
   const t = useTranslations('Editor');
@@ -27,6 +24,8 @@ export default function Toolbar() {
   const unloadProject = useEditorStore((state) => state.unloadProject);
   const measurementUnit = useEditorStore((state) => state.measurementUnit);
   const toggleMeasurementUnit = useEditorStore((state) => state.toggleMeasurementUnit);
+  const goToNextSpread = useEditorStore((state) => state.goToNextSpread);
+  const goToPrevSpread = useEditorStore((state) => state.goToPrevSpread);
   
   // Zundo Undo/Redo Temporal State Engine
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -55,12 +54,17 @@ export default function Toolbar() {
   const uniquePhotosUsed = usedAssetIds.size;
   const uniquePhotosUnused = Math.max(0, totalAssets - uniquePhotosUsed);
 
-  // Pro Export UI States
+  const completedSpreadsCount = project?.spreads.filter(s => s.status === 'completed').length || 0;
+
+  const currentIdx = project ? project.spreads.findIndex(s => s.id === activeSpreadId) : -1;
+  const isFirstSpread = currentIdx <= 0;
+  const maxSpreads = project?.totalSpreads || Infinity;
+  const isLastSpread = currentIdx >= 0 && currentIdx >= maxSpreads - 1;
+
+  // Remove legacy complex Pro Export States
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [exportIntent, setExportIntent] = useState<ExportIntent>('print');
-  const [exportQuality, setExportQuality] = useState<ExportQuality>('print');
   const menuRef = useRef<HTMLDivElement>(null);
+  const [exportProgress, setExportProgress] = useState(0);
 
   // Close menu on click outside
   useEffect(() => {
@@ -71,101 +75,35 @@ export default function Toolbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const openExportModal = (intent: ExportIntent) => {
-    setExportIntent(intent);
-    if (intent === 'web') setExportQuality('web');
-    else if (intent === 'proof') setExportQuality('web');
-    else setExportQuality('print');
-    
-    setIsMenuOpen(false);
-    setIsModalOpen(true);
-  };
+  const handleMassExport = async (format: 'pdf' | 'jpg') => {
+      if (isExporting || !project) return;
+      setIsExporting(true);
+      setExportProgress(0);
+      setExportStatus('idle');
 
-  const handleExportExecute = async () => {
-     setIsModalOpen(false);
-     if (isExporting || !project || !activeSpreadId) return;
-     const spreadIndex = project.spreads.findIndex(s => s.id === activeSpreadId);
-     if (spreadIndex === -1) return;
-     const spread = project.spreads[spreadIndex];
-     
-     setIsExporting(true);
-     setExportStatus('idle');
+      // Force render frame to unblock UI
+      await new Promise(resolve => setTimeout(resolve, 50));
 
-     // Force render frame before executing export to prevent UI freeze
-     await new Promise(resolve => setTimeout(resolve, 50));
-
-     try {
-       let pixelMultiplier = 10;
-       let quality = 0.95;
-
-       if (exportQuality === 'web') {
-           pixelMultiplier = 2; // ~150 DPI eq
-           quality = 0.70;
-       } else if (exportQuality === 'high') {
-           pixelMultiplier = 5; 
-           quality = 0.85;
-       } else if (exportQuality === 'print') {
-           pixelMultiplier = 10; // ~300 DPI eq
-           quality = 1.0;
-       }
-
-       const dataUrl = await exportSpreadToJPG(project, spread, { 
-         size: project.size, 
-         pixelMultiplier, 
-         quality 
-       });
-       
-       const a = document.createElement('a');
-       a.href = dataUrl;
-       
-       // File Naming Logic
-       const safeProjectName = project.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'album';
-       const paddedIndex = String(spreadIndex + 1).padStart(2, '0');
-       const fileName = `${safeProjectName}-spread-${paddedIndex}.jpg`; 
-       
-       // Detect Native OS Dialog Support (File System Access API)
-       if ('showSaveFilePicker' in window) {
-         try {
-           const blob = await (await fetch(dataUrl)).blob();
-           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-           const fileHandle = await (window as any).showSaveFilePicker({
-             suggestedName: fileName,
-             types: [{
-               description: 'JPEG Image',
-               accept: {'image/jpeg': ['.jpg', '.jpeg']},
-             }],
+      try {
+        if (format === 'pdf') {
+           await exportToPDF(project, (current, total) => {
+               setExportProgress(Math.round((current / total) * 100));
            });
-           const writable = await fileHandle.createWritable();
-           await writable.write(blob);
-           await writable.close();
-         } catch (err: unknown) {
-           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-           if ((err as any).name === 'AbortError') {
-             // User explicitly cancelled the native dialog. Stop silently.
-             setIsExporting(false);
-             return;
-           }
-           throw err; // Forward actual writing errors to global trap
-         }
-       } else {
-         // Standard Anchor Fallback for Safari/Legacy
-         const a = document.createElement('a');
-         a.href = dataUrl;
-         a.download = fileName;
-         document.body.appendChild(a);
-         a.click();
-         document.body.removeChild(a);
-       }
-
-       setExportStatus('success');
-       setTimeout(() => setExportStatus('idle'), 2500);
-     } catch (err) {
-       console.error("Export Failed:", err);
-       setExportStatus('error');
-       setTimeout(() => setExportStatus('idle'), 4000);
-     } finally {
-       setIsExporting(false);
-     }
+        } else {
+           await exportToJPG(project, (current, total) => {
+               setExportProgress(Math.round((current / total) * 100));
+           });
+        }
+        setExportStatus('success');
+        setTimeout(() => setExportStatus('idle'), 2500);
+      } catch (err) {
+        console.error("Export Failed:", err);
+        setExportStatus('error');
+        setTimeout(() => setExportStatus('idle'), 4000);
+      } finally {
+        setIsExporting(false);
+        setExportProgress(0);
+      }
   };
 
   const swapLocale = () => {
@@ -176,14 +114,7 @@ export default function Toolbar() {
     window.location.href = nextLocale;
   };
 
-  const getPreviewFilename = () => {
-    if (!project || !activeSpreadId) return 'album-spread-01.jpg';
-    const spreadIndex = project.spreads.findIndex(s => s.id === activeSpreadId);
-    if (spreadIndex === -1) return 'album-spread-01.jpg';
-    const safeProjectName = project.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'album';
-    const paddedIndex = String(spreadIndex + 1).padStart(2, '0');
-    return `${safeProjectName}-spread-${paddedIndex}.jpg`; 
-  };
+
 
   const handleRename = async () => {
     if (!project) return;
@@ -217,89 +148,28 @@ export default function Toolbar() {
 
   return (
     <>
-      {/* GLOBAL EXPORT OVERLAY */}
+      {/* GLOBAL MASS EXPORT OVERLAY */}
       {isExporting && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-2xl p-8 flex flex-col items-center border border-neutral-200 dark:border-neutral-800">
+          <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-2xl p-8 flex flex-col items-center border border-neutral-200 dark:border-neutral-800 w-80">
             <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="font-medium text-lg text-neutral-900 dark:text-neutral-100">{t('export_loading')}</p>
+            <p className="font-medium text-lg text-neutral-900 dark:text-neutral-100">{t('exporting')}</p>
+            {exportProgress > 0 && (
+              <div className="mt-4 w-full">
+                <div className="flex justify-between text-xs text-neutral-500 mb-1">
+                  <span>Progress</span>
+                  <span className="font-mono">{exportProgress}%</span>
+                </div>
+                <div className="h-2 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${exportProgress}%` }}></div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* PRO EXPORT MODAL */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-[9000] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white dark:bg-neutral-900 w-full max-w-md rounded-xl shadow-2xl flex flex-col overflow-hidden border border-neutral-200 dark:border-neutral-800">
-            {/* Header */}
-            <div className="px-6 py-4 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950">
-              <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                {exportIntent === 'web' ? t('export_modal_title_web') : 
-                 exportIntent === 'print' ? t('export_modal_title_print') : 
-                 t('export_modal_title_proof')}
-              </h2>
-            </div>
-            
-            {/* Body */}
-            <div className="p-6 flex flex-col gap-5">
-              
-              {/* Pages */}
-              <div className="flex flex-col gap-2">
-                 <label className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">{t('export_modal_pages')}</label>
-                 <div className="flex items-center gap-2">
-                   <input type="radio" checked readOnly className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-neutral-300" />
-                   <span className="text-sm text-neutral-900 dark:text-neutral-100">{t('export_modal_pages_active')}</span>
-                 </div>
-                 <div className="flex items-center gap-2 opacity-50 cursor-not-allowed">
-                   <input type="radio" disabled className="w-4 h-4 border-neutral-300" />
-                   <span className="text-sm text-neutral-500">{t('export_modal_pages_all')}</span>
-                 </div>
-              </div>
 
-              {/* Format */}
-              <div className="flex flex-col gap-2">
-                 <label className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">{t('export_modal_format')}</label>
-                 <select disabled className="text-sm border border-neutral-200 dark:border-neutral-700 rounded p-2 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white cursor-not-allowed opacity-80">
-                    <option>JPG</option>
-                    <option disabled>{t('export_modal_format_pdf')}</option>
-                 </select>
-              </div>
-
-              {/* Quality / Intent */}
-              <div className="flex flex-col gap-2">
-                 <label className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">{t('export_modal_quality')}</label>
-                 <select 
-                    value={exportQuality} 
-                    onChange={(e) => setExportQuality(e.target.value as ExportQuality)}
-                    className="text-sm border border-neutral-200 dark:border-neutral-700 rounded p-2 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition"
-                  >
-                    <option value="web">{t('export_modal_quality_web')}</option>
-                    <option value="high">{t('export_modal_quality_high')}</option>
-                    <option value="print">{t('export_modal_quality_print')}</option>
-                 </select>
-              </div>
-
-              {/* Preview block */}
-              <div className="bg-neutral-50 dark:bg-neutral-800/50 p-3 rounded border border-neutral-100 dark:border-neutral-800 flex flex-col gap-1">
-                 <span className="text-xs text-neutral-500 font-medium uppercase tracking-wider">{t('export_modal_preview')}</span>
-                 <span className="text-sm font-mono text-blue-600 dark:text-blue-400 break-all">{getPreviewFilename()}</span>
-                 <span className="text-xs text-neutral-400 mt-1 italic leading-tight">{t('export_modal_helper')}</span>
-              </div>
-              
-            </div>
-
-            {/* Footer */}
-            <div className="px-6 py-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-end gap-3 bg-neutral-50 dark:bg-neutral-950">
-               <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition">
-                  {t('export_modal_cancel')}
-               </button>
-               <button onClick={handleExportExecute} className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded shadow transition active:scale-95">
-                  {t('export_modal_confirm')}
-               </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* TOAST NOTIFICATIONS */}
       {exportStatus === 'success' && (
@@ -359,6 +229,42 @@ export default function Toolbar() {
                 </svg>
               </button>
             </div>
+            
+            {/* Book Navigation HUD */}
+            {project && currentIdx !== -1 && (
+              <div className="flex items-center gap-1 border-l border-neutral-200 dark:border-neutral-800 pl-3 ml-2">
+                 <button
+                   onClick={goToPrevSpread}
+                   disabled={isFirstSpread}
+                   className="w-8 h-8 flex items-center justify-center text-neutral-600 dark:text-neutral-400 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded transition"
+                   title="Previous Spread"
+                 >
+                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                   </svg>
+                 </button>
+                 
+                 <div className="flex flex-col items-center justify-center px-3">
+                    <div className="text-[11px] font-mono text-neutral-500 dark:text-neutral-400 font-medium tracking-wider whitespace-nowrap text-center leading-tight">
+                       Pág <span className="font-bold text-neutral-800 dark:text-neutral-200">{currentIdx + 1}</span> / {maxSpreads < Infinity ? maxSpreads : project.spreads.length}
+                    </div>
+                    <div className="text-[9px] uppercase font-bold text-green-600 dark:text-green-500 tracking-wider mb-0.5" title="Spreads Terminados">
+                       ✓ {completedSpreadsCount} / {maxSpreads < Infinity ? maxSpreads : project.spreads.length}
+                    </div>
+                 </div>
+                 
+                 <button
+                   onClick={goToNextSpread}
+                   disabled={isLastSpread}
+                   className="w-8 h-8 flex items-center justify-center text-neutral-600 dark:text-neutral-400 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded transition"
+                   title="Next Spread"
+                 >
+                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                   </svg>
+                 </button>
+              </div>
+            )}
             
             {/* Global HUD Stats */}
             {project && (
@@ -436,15 +342,11 @@ export default function Toolbar() {
             
             {isMenuOpen && (
               <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md shadow-lg py-1 animate-in fade-in slide-in-from-top-2 z-50">
-                 <button onClick={() => openExportModal('web')} className="w-full text-left px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition">
-                   {t('export_dropdown_web')}
+                 <button onClick={() => { setIsMenuOpen(false); handleMassExport('pdf'); }} className="w-full text-left px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition">
+                   📄 {t('exportPDF')}
                  </button>
-                 <button onClick={() => openExportModal('print')} className="w-full text-left px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition">
-                   {t('export_dropdown_print')}
-                 </button>
-                 <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1"></div>
-                 <button onClick={() => openExportModal('proof')} className="w-full text-left px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition">
-                   {t('export_dropdown_proof')}
+                 <button onClick={() => { setIsMenuOpen(false); handleMassExport('jpg'); }} className="w-full text-left px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition">
+                   🖼️ {t('exportJPG')}
                  </button>
                  <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1"></div>
                  

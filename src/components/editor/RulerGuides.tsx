@@ -49,10 +49,16 @@ export function RulerGuides({ scale, project, unit, panX, panY }: RulerGuidesPro
   const isInch = unit === 'in';
   const majorTickMm = isInch ? 25.4 : 10;
   
-  const wPixels = project.size.w_mm * scale;
+  const isLastSpread = activeSpreadId && project.spreads[project.spreads.length - 1]?.id === activeSpreadId;
+  const isLastSpreadEmpty = isLastSpread && project.spreads.find(s => s.id === activeSpreadId)?.elements.length === 0;
+  
+  const spreadGap = 50; // mm
+  const totalWidth = (isLastSpread && !isLastSpreadEmpty) ? (project.size.w_mm * 2) + spreadGap : project.size.w_mm;
+
+  const wPixels = totalWidth * scale;
   const hPixels = project.size.h_mm * scale;
   
-  const hTicks = Math.floor(project.size.w_mm / majorTickMm) + 1;
+  const hTicks = Math.floor(totalWidth / majorTickMm) + 1;
   const vTicks = Math.floor(project.size.h_mm / majorTickMm) + 1;
 
   const rulerThickness = 24; // px

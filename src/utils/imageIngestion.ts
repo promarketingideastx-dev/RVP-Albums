@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 
-export async function processLocalImage(file: File): Promise<{ originalUrl: string, previewUrl: string, w_mm: number, h_mm: number, previewBlobId: string, originalBlobId: string }> {
+export async function processLocalImage(file: File): Promise<{ originalUrl: string, previewUrl: string, w_mm: number, h_mm: number, previewBlobId: string, originalBlobId: string, widthPx?: number, heightPx?: number }> {
   // Phase 3 Persistence References
   const originalBlobId = uuidv4();
   const previewBlobId = uuidv4();
@@ -42,7 +42,7 @@ export async function processLocalImage(file: File): Promise<{ originalUrl: stri
         // Base mapping UX proportions explicitly via physical limits (100mm baseline)
         const w_mm = 100;
         const h_mm = 100 * (img.height / img.width);
-        resolve({ originalUrl, previewUrl, w_mm, h_mm, previewBlobId, originalBlobId });
+        resolve({ originalUrl, previewUrl, w_mm, h_mm, previewBlobId, originalBlobId, widthPx: img.width, heightPx: img.height });
       }, 'image/webp', 0.8);
     };
     img.onerror = reject;
