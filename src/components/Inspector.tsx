@@ -9,6 +9,7 @@ import GlobalStylesPanel from './editor/GlobalStylesPanel';
 import AutoLayoutPanel from './editor/AutoLayoutPanel';
 import CameraRawPanel from './editor/CameraRawPanel';
 import { useEditorStore } from '@/store/useEditorStore';
+import { LUT_LIBRARY } from '@/lib/lut-presets';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const LocalShadowPanel = ({ element, activeSpreadId, updateElement }: any) => {
@@ -110,6 +111,7 @@ export default function Inspector() {
   const activeSpreadId = useEditorStore((state) => state.activeSpreadId);
   const selectedElementId = useEditorStore((state) => state.selectedElementId);
   const updateElement = useEditorStore((state) => state.updateElement);
+  const setPreviewOriginalPhotoId = useEditorStore((state) => state.setPreviewOriginalPhotoId);
   const bringForward = useEditorStore((state) => state.bringForward);
   const sendBackward = useEditorStore((state) => state.sendBackward);
   const removeElement = useEditorStore((state) => state.removeElement);
@@ -410,7 +412,52 @@ export default function Inspector() {
            </div>
            
             <div className="flex items-center justify-between mb-2">
-             <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-800 dark:text-neutral-200">Camera Raw Editor</h3>
+             <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-800 dark:text-neutral-200">Filtros & LUTs Presets</h3>
+             {element.photoFilter && element.photoFilter !== 'none' && (
+               <button
+                 type="button"
+                 onMouseDown={() => setPreviewOriginalPhotoId(element.id)}
+                 onMouseUp={() => setPreviewOriginalPhotoId(null)}
+                 onMouseLeave={() => setPreviewOriginalPhotoId(null)}
+                 onTouchStart={() => setPreviewOriginalPhotoId(element.id)}
+                 onTouchEnd={() => setPreviewOriginalPhotoId(null)}
+                 className="p-1 rounded bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 transition-colors"
+                 title="Mantener presionado para ver original sin filtros"
+               >
+                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                 </svg>
+               </button>
+             )}
+           </div>
+           <select 
+             className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow mb-4"
+             value={element.photoFilter || 'none'}
+             onChange={(e) => updateElement(activeSpreadId, element.id, { photoFilter: e.target.value })}
+           >
+              <option value="none">Original (Sin Filtro)</option>
+              {Array.from(new Set(LUT_LIBRARY.map(l => l.category))).map(category => (
+                <optgroup key={category} label={category}>
+                  {LUT_LIBRARY.filter(l => l.category === category).map(lut => (
+                    <option key={lut.id} value={lut.id}>{lut.name}</option>
+                  ))}
+                </optgroup>
+              ))}
+              <optgroup label="Legacy Básicos">
+                <option value="sepia">Sepia (Legacy)</option>
+                <option value="grayscale">B/N (Legacy)</option>
+                <option value="invert">Invertir</option>
+                <option value="blur">Desenfoque</option>
+                <option value="noise">Ruido</option>
+                <option value="brighten">Brillo</option>
+                <option value="contrast">Contraste</option>
+                <option value="posterize">Posterizar</option>
+              </optgroup>
+           </select>
+
+           <div className="flex items-center justify-between mb-2">
+             <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-800 dark:text-neutral-200">Camera Raw Pro</h3>
            </div>
            
            <CameraRawPanel element={element} activeSpreadId={activeSpreadId} />
