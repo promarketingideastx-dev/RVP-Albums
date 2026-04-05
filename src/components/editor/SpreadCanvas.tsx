@@ -317,52 +317,85 @@ const EditorImage = ({
   useLayoutEffect(() => {
     if (filterLayerRef.current && image) {
       const node = filterLayerRef.current;
-      if (element.photoFilter && element.photoFilter !== 'none') {
+      const hasLegacyFilter = element.photoFilter && element.photoFilter !== 'none';
+      const hasAdj = element.photoAdjustments && Object.values(element.photoAdjustments).some(v => typeof v === 'number' && v !== 0);
+      
+      if (hasLegacyFilter || hasAdj) {
         node.clearCache();
         node.cache();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const filtersArray: any[] = [];
         
-        const lut = LUT_LIBRARY.find(l => l.id === element.photoFilter);
-        
-        if (lut) {
-           if (lut.contrast && lut.contrast !== 0) {
-              filtersArray.push(Konva.Filters.Contrast);
-              node.contrast(lut.contrast);
-           }
-           if (lut.brightness && lut.brightness !== 0) {
-              filtersArray.push(Konva.Filters.Brighten);
-              node.brightness(lut.brightness);
-           }
-           if (lut.grayscale) filtersArray.push(Konva.Filters.Grayscale);
-           if (lut.sepia) filtersArray.push(Konva.Filters.Sepia);
-           if (lut.invert) filtersArray.push(Konva.Filters.Invert);
-           
-           if (lut.hue !== undefined || lut.saturation !== undefined || lut.luminance !== undefined) {
-              filtersArray.push(Konva.Filters.HSL);
-              if (lut.hue !== undefined) node.hue(lut.hue);
-              if (lut.saturation !== undefined) node.saturation(lut.saturation);
-              if (lut.luminance !== undefined) node.luminance(lut.luminance);
-           }
-        } else {
-           // Fallback for legacy basic filters
-           switch(element.photoFilter) {
-             case 'sepia': filtersArray.push(Konva.Filters.Sepia); break;
-             case 'grayscale': filtersArray.push(Konva.Filters.Grayscale); break;
-             case 'invert': filtersArray.push(Konva.Filters.Invert); break;
-             case 'blur': 
-               filtersArray.push(Konva.Filters.Blur); 
-               node.blurRadius(element.filterIntensity !== undefined ? element.filterIntensity : 5); 
-               break;
-             case 'noise': 
-               filtersArray.push(Konva.Filters.Noise); 
-               node.noise(element.filterIntensity !== undefined ? element.filterIntensity : 1); 
-               break;
-             case 'posterize': 
-               filtersArray.push(Konva.Filters.Posterize); 
-               node.levels(element.filterIntensity !== undefined ? element.filterIntensity : 4); 
-               break;
-           }
+        if (hasLegacyFilter) {
+          const lut = LUT_LIBRARY.find(l => l.id === element.photoFilter);
+          
+          if (lut) {
+             if (lut.contrast && lut.contrast !== 0) {
+                filtersArray.push(Konva.Filters.Contrast);
+                node.contrast(lut.contrast);
+             }
+             if (lut.brightness && lut.brightness !== 0) {
+                filtersArray.push(Konva.Filters.Brighten);
+                node.brightness(lut.brightness);
+             }
+             if (lut.grayscale) filtersArray.push(Konva.Filters.Grayscale);
+             if (lut.sepia) filtersArray.push(Konva.Filters.Sepia);
+             if (lut.invert) filtersArray.push(Konva.Filters.Invert);
+             
+             if (lut.hue !== undefined || lut.saturation !== undefined || lut.luminance !== undefined) {
+                filtersArray.push(Konva.Filters.HSL);
+                if (lut.hue !== undefined) node.hue(lut.hue);
+                if (lut.saturation !== undefined) node.saturation(lut.saturation);
+                if (lut.luminance !== undefined) node.luminance(lut.luminance);
+             }
+          } else {
+             // Fallback for legacy basic filters
+             switch(element.photoFilter) {
+               case 'sepia': filtersArray.push(Konva.Filters.Sepia); break;
+               case 'grayscale': filtersArray.push(Konva.Filters.Grayscale); break;
+               case 'invert': filtersArray.push(Konva.Filters.Invert); break;
+               case 'blur': 
+                 filtersArray.push(Konva.Filters.Blur); 
+                 node.blurRadius(element.filterIntensity !== undefined ? element.filterIntensity : 5); 
+                 break;
+               case 'noise': 
+                 filtersArray.push(Konva.Filters.Noise); 
+                 node.noise(element.filterIntensity !== undefined ? element.filterIntensity : 1); 
+                 break;
+               case 'posterize': 
+                 filtersArray.push(Konva.Filters.Posterize); 
+                 node.levels(element.filterIntensity !== undefined ? element.filterIntensity : 4); 
+                 break;
+             }
+          }
+        }
+
+        // Apply new Pro Adjustments
+        if (hasAdj) {
+          const adj = element.photoAdjustments!;
+          
+          if (adj.exposure) {
+             filtersArray.push(Konva.Filters.Brighten);
+             node.brightness(adj.exposure / 5); // Math map: -5 to 5 scale onto -1.0 to 1.0 Brighten filter
+          }
+          if (adj.lightContrast) {
+             filtersArray.push(Konva.Filters.Contrast);
+             node.contrast(adj.lightContrast); 
+          }
+          if (adj.saturation || adj.temperature || adj.tint) {
+             filtersArray.push(Konva.Filters.HSL);
+             if (adj.saturation) node.saturation(adj.saturation / 100); 
+             if (adj.temperature) node.hue((adj.temperature / 100) * 45); // Map temperature roughly to hue shift
+          }
+          if (adj.grain) {
+             filtersArray.push(Konva.Filters.Noise);
+             node.noise(adj.grain / 100);
+          }
+          if (adj.blur) {
+             // Added blur capability if injected manually later
+             filtersArray.push(Konva.Filters.Blur);
+             node.blurRadius(adj.blur);
+          }
         }
         
         node.filters(filtersArray);
@@ -373,7 +406,7 @@ const EditorImage = ({
         node.getLayer()?.batchDraw();
       }
     }
-  }, [element.photoFilter, image, element.filterIntensity, previewOriginalPhotoId, element.w_mm, element.h_mm, element.scale]);
+  }, [element.photoFilter, element.photoAdjustments, image, element.filterIntensity, previewOriginalPhotoId, element.w_mm, element.h_mm, element.scale]);
 
   // Phase 8.D: Apply Layout Hook Tracking Transition bridging semantic to geometric mapping natively
   const prevIsManaged = useRef(element.isAutoLayoutManaged);

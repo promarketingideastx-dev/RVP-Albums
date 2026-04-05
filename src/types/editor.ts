@@ -1,5 +1,34 @@
 export type ElementType = 'image' | 'text' | 'shape' | 'decoration' | 'group';
 
+export interface PhotoAdjustments {
+   exposure: number;
+   lightContrast: number;
+   highlights: number;
+   shadows: number;
+   whites: number;
+   blacks: number;
+   temperature: number;
+   tint: number;
+   vibrance: number;
+   saturation: number;
+   texture: number;
+   clarity: number;
+   dehaze: number;
+   vignette: number;
+   grain: number;
+   blur?: number;
+   hsl: {
+      reds: { h: number; s: number; l: number };
+      oranges: { h: number; s: number; l: number };
+      yellows: { h: number; s: number; l: number };
+      greens: { h: number; s: number; l: number };
+      aquas: { h: number; s: number; l: number };
+      blues: { h: number; s: number; l: number };
+      purples: { h: number; s: number; l: number };
+      magentas: { h: number; s: number; l: number };
+   };
+}
+
 // Coordinates strictly in absolute mm. Precision mapping is applied in presentation components.
 export interface EditorElement {
   id: string;
@@ -38,6 +67,7 @@ export interface EditorElement {
   assetId?: string; // Phase 7.H: Primary connection to uploaded external image pool
   photoFilter?: string;
   filterIntensity?: number;
+  photoAdjustments?: Partial<PhotoAdjustments>;
   text?: string;
   textColor?: string;
   fontSize?: number;
