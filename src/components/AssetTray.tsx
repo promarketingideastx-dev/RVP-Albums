@@ -413,6 +413,7 @@ export default function AssetTray() {
                     }
                     handleDragStart(e, asset);
                  }}
+                 onDragEnd={() => setSelectedAssetIds(new Set())}
                  onClick={(e) => toggleSelection(e, asset.id)}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
