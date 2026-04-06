@@ -30,6 +30,8 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
+import { AuthProvider } from '@/context/AuthContext';
+
 export default async function LocaleLayout({
   children,
   params: {locale}
@@ -42,11 +44,13 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className="antialiased min-h-screen bg-white dark:bg-neutral-950">
-        <NextIntlClientProvider messages={messages}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            {children}
-          </ThemeProvider>
-        </NextIntlClientProvider>
+        <AuthProvider>
+          <NextIntlClientProvider messages={messages}>
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+              {children}
+            </ThemeProvider>
+          </NextIntlClientProvider>
+        </AuthProvider>
       </body>
     </html>
   );

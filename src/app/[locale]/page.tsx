@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useEditorStore } from '@/store/useEditorStore';
 import { useDebouncedCallback } from 'use-debounce';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Toolbar from '@/components/Toolbar';
 import Inspector from '@/components/Inspector';
@@ -26,6 +28,15 @@ export default function AppPage() {
   const [showSetup, setShowSetup] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [init, setInit] = useState(false);
+
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
 
   useEffect(() => {
     setMounted(true);
@@ -399,7 +410,8 @@ export default function AppPage() {
     debouncedSave(project);
   }, [project, viewMode, mounted, debouncedSave, t]);
 
-  if (!mounted) return <div className="h-screen w-screen bg-white dark:bg-neutral-950" />;
+  if (!mounted || loading) return <div className="h-screen w-screen bg-white dark:bg-neutral-950" />;
+  if (!user) return null; // Block render loop unconditionally while redirect bounds process
   if (viewMode === 'initializing') return <div className="h-screen w-screen flex items-center justify-center bg-white dark:bg-neutral-950 text-black dark:text-white font-medium">{t('initializing')}</div>;
 
   if (viewMode === 'picker') {

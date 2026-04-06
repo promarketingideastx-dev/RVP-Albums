@@ -8,6 +8,8 @@ import { usePathname } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import { exportToPDF, exportToJPG } from '@/utils/exportEngine';
 import { exportProjectToFile } from '@/utils/exportImport';
+import { auth } from '@/lib/firebase/config';
+import { signOut } from 'firebase/auth';
 import { storage } from '@/storage';
 import { v4 as uuidv4 } from 'uuid';
 import ExportModal, { ExportModalOptions } from './ExportModal';
@@ -402,6 +404,13 @@ export default function Toolbar() {
             className="text-sm w-24 py-1 border border-neutral-200 dark:border-neutral-800 rounded text-center hover:bg-neutral-50 dark:hover:bg-neutral-900 transition"
           >
             {theme === 'dark' ? t('theme_light') : t('theme_dark')}
+          </button>
+          
+          <button 
+             onClick={async () => { await signOut(auth); }}
+             className="text-sm px-3 py-1 font-bold text-red-600 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/50 rounded transition"
+          >
+             Cerrar Sesión
           </button>
         </div>
       </header>
