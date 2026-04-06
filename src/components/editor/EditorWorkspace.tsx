@@ -175,7 +175,7 @@ export default function EditorWorkspace() {
                                          top: `${(el.y_mm / project.size.h_mm) * 100}%`,
                                          width: `${(el.w_mm / project.size.w_mm) * 100}%`,
                                          height: `${(el.h_mm / project.size.h_mm) * 100}%`,
-                                         backgroundColor: el.type === 'text' ? 'transparent' : (el.type === 'image' ? '#e2e8f0' : el.fillColor || '#e5e5e5'),
+                                         backgroundColor: el.type === 'text' ? 'transparent' : (el.type === 'image' ? '#e2e8f0' : el.fillColor || 'transparent'),
                                          backgroundImage: (el.type === 'image' && el.previewUrl) ? `url(${el.previewUrl})` : 'none',
                                          backgroundSize: 'cover',
                                          backgroundPosition: 'center',
