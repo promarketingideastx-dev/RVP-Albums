@@ -10,6 +10,7 @@ import { exportToPDF, exportToJPG } from '@/utils/exportEngine';
 import { exportProjectToFile } from '@/utils/exportImport';
 import { storage } from '@/storage';
 import { v4 as uuidv4 } from 'uuid';
+import ExportModal, { ExportModalOptions } from './ExportModal';
 
 export default function Toolbar() {
   const t = useTranslations('Editor');
@@ -77,8 +78,11 @@ export default function Toolbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleMassExport = async (format: 'pdf' | 'jpg') => {
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+
+  const handleAdvancedExport = async (options: ExportModalOptions) => {
       if (isExporting || !project) return;
+      setIsExportModalOpen(false);
       setIsExporting(true);
       setExportProgress(0);
       setExportStatus('idle');
@@ -87,13 +91,19 @@ export default function Toolbar() {
       await new Promise(resolve => setTimeout(resolve, 50));
 
       try {
-        if (format === 'pdf') {
-           await exportToPDF(project, (current, total) => {
-               setExportProgress(Math.round((current / total) * 100));
+        if (options.type === 'pdf') {
+           await exportToPDF(project, {
+               rangeStart: options.rangeStart ? options.rangeStart - 1 : undefined,
+               rangeEnd: options.rangeEnd ? options.rangeEnd - 1 : undefined,
+               onProgress: (current, total) => setExportProgress(Math.round((current / total) * 100))
            });
         } else {
-           await exportToJPG(project, (current, total) => {
-               setExportProgress(Math.round((current / total) * 100));
+           await exportToJPG(project, {
+               type: options.type as 'print' | 'web',
+               webQuality: options.webQuality,
+               rangeStart: options.rangeStart ? options.rangeStart - 1 : undefined,
+               rangeEnd: options.rangeEnd ? options.rangeEnd - 1 : undefined,
+               onProgress: (current, total) => setExportProgress(Math.round((current / total) * 100))
            });
         }
         setExportStatus('success');
@@ -356,13 +366,10 @@ export default function Toolbar() {
               </svg>
             </button>
             
-            {isMenuOpen && (
+             {isMenuOpen && (
               <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md shadow-lg py-1 animate-in fade-in slide-in-from-top-2 z-50">
-                 <button onClick={() => { setIsMenuOpen(false); handleMassExport('pdf'); }} className="w-full text-left px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition">
-                   📄 {t('exportPDF')}
-                 </button>
-                 <button onClick={() => { setIsMenuOpen(false); handleMassExport('jpg'); }} className="w-full text-left px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition">
-                   🖼️ {t('exportJPG')}
+                 <button onClick={() => { setIsMenuOpen(false); setIsExportModalOpen(true); }} className="w-full text-left px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition font-bold">
+                   ⚡ Advanced Export...
                  </button>
                  <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1"></div>
                  
@@ -398,6 +405,13 @@ export default function Toolbar() {
           </button>
         </div>
       </header>
+      
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        onExport={handleAdvancedExport}
+        totalPages={totalPages}
+      />
     </>
   );
 }

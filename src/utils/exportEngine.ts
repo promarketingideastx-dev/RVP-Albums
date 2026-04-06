@@ -467,12 +467,25 @@ function loadHtmlImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-export async function exportToPDF(project: EditorProject, onProgress?: (current: number, total: number) => void): Promise<void> {
+export interface AdvancedExportOptions {
+  type: 'print' | 'web';
+  webQuality?: 'low' | 'medium' | 'high';
+  rangeStart?: number;
+  rangeEnd?: number;
+  onProgress?: (current: number, total: number) => void;
+}
+
+export interface PDFExportOptions {
+  rangeStart?: number;
+  rangeEnd?: number;
+  onProgress?: (current: number, total: number) => void;
+}
+
+export async function exportToPDF(project: EditorProject, options?: PDFExportOptions): Promise<void> {
+  const onProgress = options?.onProgress;
   const pdfW = project.size.w_mm;
   const pdfH = project.size.h_mm;
   
-  // Init jsPDF natively mapped to physical bounds
-  // Use orientation strictly derived from actual aspect ratio
   const orientation = pdfW > pdfH ? 'l' : 'p';
   const doc = new jsPDF({
     orientation: orientation,
@@ -482,55 +495,123 @@ export async function exportToPDF(project: EditorProject, onProgress?: (current:
   
   const total = project.spreads.length;
   const safeTitle = project.title.replace(/[^a-z0-9_ -]/gi, '').trim().replace(/\s+/g, '_') || 'Album';
-  const hasMassiveSpreads = total > 30;
-  const safePixelMultiplier = hasMassiveSpreads ? 6 : 12; // ~150DPI fallback to protect browser ram on 30+ pages
+  
+  const startIdx = Math.max(0, options?.rangeStart ?? 0);
+  const endIdx = Math.min(total - 1, options?.rangeEnd ?? (total - 1));
+  const processCount = endIdx - startIdx + 1;
+
+  const hasMassiveSpreads = processCount > 30;
+  const safePixelMultiplier = hasMassiveSpreads ? 6 : 12;
   
   if (process.env.NODE_ENV === 'development') {
-    console.log(`[Export Pipeline] Starting PDF Render: ${safeTitle}.pdf | Multiplier: ${safePixelMultiplier}x`);
+    console.log(`[Export Pipeline] Starting PDF Render: ${safeTitle}.pdf | Spreads: ${startIdx+1}-${endIdx+1} | Multiplier: ${safePixelMultiplier}x`);
   }
 
-  for (let i = 0; i < total; i++) {
+  let pagesAdded = 0;
+  for (let i = startIdx; i <= endIdx; i++) {
     const spread = project.spreads[i];
     
-    // Memory Guard: Dynamically intercepting base multiplier based on volume limits
+    // Always full quality for PDF matching print logic
     const base64Jpg = await exportSpreadToJPG(project, spread, { size: project.size, pixelMultiplier: safePixelMultiplier, quality: 1.0 });
     
-    if (i > 0) doc.addPage([pdfW, pdfH], orientation);
-    
+    if (pagesAdded > 0) doc.addPage([pdfW, pdfH], orientation);
     doc.addImage(base64Jpg, 'JPEG', 0, 0, pdfW, pdfH, undefined, 'FAST');
     
-    if (onProgress) onProgress(i + 1, total);
+    pagesAdded++;
+    if (onProgress) onProgress(pagesAdded, processCount);
   }
   
   const filename = `${safeTitle}.pdf`;
   doc.save(filename);
 }
 
-export async function exportToJPG(project: EditorProject, onProgress?: (current: number, total: number) => void): Promise<void> {
-  const zip = new JSZip();
+export async function exportToJPG(project: EditorProject, options: AdvancedExportOptions): Promise<void> {
+  const { onProgress, type, webQuality } = options;
   const safeTitle = project.title.replace(/[^a-z0-9_ -]/gi, '').trim().replace(/\s+/g, '_') || 'Album';
-  const folder = zip.folder(safeTitle) || zip;
-  const total = project.spreads.length;
-  const hasMassiveSpreads = total > 30;
-  const safePixelMultiplier = hasMassiveSpreads ? 6 : 12;
   
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[Export Pipeline] Starting JPG Render Pack: ${safeTitle}.zip | Multiplier: ${safePixelMultiplier}x`);
+  const total = project.spreads.length;
+  const startIdx = Math.max(0, options.rangeStart ?? 0);
+  const endIdx = Math.min(total - 1, options.rangeEnd ?? (total - 1));
+  const processCount = endIdx - startIdx + 1;
+
+  // Quality Rules
+  let pixelMultiplier = 12;
+  let jpQuality = 1.0;
+  
+  if (type === 'web') {
+     pixelMultiplier = 4; // Web base
+     if (webQuality === 'low') { jpQuality = 0.6; pixelMultiplier = 2; }
+     else if (webQuality === 'medium') { jpQuality = 0.75; pixelMultiplier = 3; }
+     else { jpQuality = 0.9; pixelMultiplier = 4; } // high
+  } else {
+     // Print mode
+     const hasMassiveSpreads = processCount > 30;
+     pixelMultiplier = hasMassiveSpreads ? 6 : 12;
   }
 
-  for (let i = 0; i < total; i++) {
+  // Attempt direct folder write first
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let dirHandle: any = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (typeof window !== 'undefined' && (window as any).showDirectoryPicker) {
+     try {
+       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       dirHandle = await (window as any).showDirectoryPicker({ id: 'export', mode: 'readwrite' });
+     } catch (err) {
+       if ((err as Error).name === 'AbortError') {
+          // User deliberately cancelled the picker, we abort the entire process
+          return;
+       }
+       console.warn("Directory picker failed, falling back to ZIP:", err);
+     }
+  }
+
+  const zip = !dirHandle ? new JSZip() : null;
+  const folder = zip ? (zip.folder(safeTitle) || zip) : null;
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[Export Pipeline] JPG Mode: ${type} | Quality: ${jpQuality} | Multiplier: ${pixelMultiplier}x | Spreads: ${startIdx+1}-${endIdx+1} | Output: ${dirHandle ? 'Direct Folder' : 'ZIP'}`);
+  }
+
+  let processedCount = 0;
+  for (let i = startIdx; i <= endIdx; i++) {
     const spread = project.spreads[i];
-    const base64Jpg = await exportSpreadToJPG(project, spread, { size: project.size, pixelMultiplier: safePixelMultiplier, quality: 1.0 });
+    const base64Jpg = await exportSpreadToJPG(project, spread, { size: project.size, pixelMultiplier, quality: jpQuality });
     
     const base64Data = base64Jpg.replace(/^data:image\/jpeg;base64,/, "");
     const idxStr = String(i + 1).padStart(2, '0');
-    // Mandated Exact Format: Maria_Wedding_Spread_01.jpg
-    folder.file(`${safeTitle}_Spread_${idxStr}.jpg`, base64Data, { base64: true });
     
-    if (onProgress) onProgress(i + 1, total);
+    // Naming Rule: Keep current naming with a Web prefix if it's web.
+    const typePrefix = type === 'web' ? 'Web_' : '';
+    const fileName = `${safeTitle}_${typePrefix}Spread_${idxStr}.jpg`;
+
+    if (dirHandle) {
+       try {
+          const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
+          const writable = await fileHandle.createWritable();
+          // Convert base64 to Blob to write directly
+          const bstr = atob(base64Data);
+          let n = bstr.length;
+          const u8arr = new Uint8Array(n);
+          while(n--) { u8arr[n] = bstr.charCodeAt(n); }
+          const blob = new Blob([u8arr], {type: 'image/jpeg'});
+          await writable.write(blob);
+          await writable.close();
+       } catch (err) {
+          console.error(`Failed to write file ${fileName} to directory`, err);
+       }
+    } else if (folder) {
+       folder.file(fileName, base64Data, { base64: true });
+    }
+    
+    processedCount++;
+    if (onProgress) onProgress(processedCount, processCount);
   }
   
-  const content = await zip.generateAsync({ type: "blob" });
-  const filename = `${safeTitle}.zip`;
-  saveAs(content, filename);
+  // Finish ZIP fallback if needed
+  if (!dirHandle && zip) {
+     const content = await zip.generateAsync({ type: "blob" });
+     const filename = `${safeTitle}.zip`;
+     saveAs(content, filename);
+  }
 }
