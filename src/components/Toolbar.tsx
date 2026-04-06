@@ -26,6 +26,8 @@ export default function Toolbar() {
   const toggleMeasurementUnit = useEditorStore((state) => state.toggleMeasurementUnit);
   const goToNextSpread = useEditorStore((state) => state.goToNextSpread);
   const goToPrevSpread = useEditorStore((state) => state.goToPrevSpread);
+  const editorViewMode = useEditorStore((state) => state.editorViewMode);
+  const setEditorViewMode = useEditorStore((state) => state.setEditorViewMode);
   
   // Zundo Undo/Redo Temporal State Engine
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -233,6 +235,20 @@ export default function Toolbar() {
             {/* Book Navigation HUD */}
             {project && currentIdx !== -1 && (
               <div className="flex items-center gap-1 border-l border-neutral-200 dark:border-neutral-800 pl-3 ml-2">
+                 <button
+                    onClick={() => setEditorViewMode(editorViewMode === 'GRID' ? 'SINGLE' : 'GRID')}
+                    className={`w-8 h-8 flex items-center justify-center rounded transition ${editorViewMode === 'GRID' ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400 font-bold' : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'}`}
+                    title={editorViewMode === 'GRID' ? "Single Page View" : "Story View"}
+                 >
+                    {editorViewMode === 'GRID' ? (
+                       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/></svg>
+                    ) : (
+                       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3v8h8V3H3zm6 6H5V5h4v4zm-6 4v8h8v-8H3zm6 6H5v-4h4v4zm4-16v8h8V3h-8zm6 6h-4V5h4v4zm-6 4v8h8v-8h-8zm6 6h-4v-4h4v4z"/></svg>
+                    )}
+                 </button>
+
+                 <div className="h-6 w-px bg-neutral-200 dark:bg-neutral-800 mx-1"></div>
+
                  <button
                    onClick={goToPrevSpread}
                    disabled={isFirstSpread}
