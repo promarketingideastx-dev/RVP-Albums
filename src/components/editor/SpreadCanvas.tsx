@@ -1001,6 +1001,20 @@ const EditorText = ({ element, elements, spreadId, isSelected, onSelect, onConte
     }
   }, [element.fontFamily]);
 
+  // Phase 8.G: Realtime Auto-Shrinkwrap Sync. Binds logical bounds to true typography layout natively.
+  useLayoutEffect(() => {
+    if (shapeRef.current) {
+      const node = shapeRef.current;
+      const actW = node.width();
+      const actH = node.height();
+      if (Math.abs(actW - element.w_mm) > 1 || Math.abs(actH - element.h_mm) > 1) {
+         queueMicrotask(() => {
+           updateElement(spreadId, element.id, { w_mm: actW, h_mm: actH });
+         });
+      }
+    }
+  }, [element.text, element.fontSize, element.fontFamily, element.letterSpacing, element.lineHeight, element.textTransform]);
+
   const onTransformEnd = () => {
     const node = shapeRef.current;
     if (!node) return;
@@ -1025,8 +1039,8 @@ const EditorText = ({ element, elements, spreadId, isSelected, onSelect, onConte
         ref={shapeRef}
         x={element.x_mm}
         y={element.y_mm}
-        width={element.w_mm}
-        height={element.h_mm}
+        width={undefined}
+        height={undefined}
         text={element.textTransform === 'uppercase' ? (element.text || 'Doble clic para editar...').toUpperCase() : element.textTransform === 'lowercase' ? (element.text || 'Doble clic para editar...').toLowerCase() : (element.text || 'Doble clic para editar...')}
         fontFamily={element.fontFamily || 'Inter'}
         fontSize={element.fontSize || 32}
@@ -1066,6 +1080,7 @@ const EditorText = ({ element, elements, spreadId, isSelected, onSelect, onConte
       {isSelected && (
         <Transformer
           ref={trRef}
+          enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
           boundBoxFunc={(oldBox, newBox) => {
             if (newBox.width < 10) return oldBox;
             return newBox;
