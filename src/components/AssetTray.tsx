@@ -423,13 +423,13 @@ export default function AssetTray() {
                 />
               </div>
               
-              <div className="h-10 bg-[#1c1c1c] flex items-center justify-between px-2 shrink-0 border-t border-black">
-                 <div className="flex gap-0.5 text-[18px] tracking-tighter">
+              <div className="h-9 bg-[#1c1c1c] flex items-center justify-between px-1.5 shrink-0 border-t border-black w-full overflow-hidden">
+                 <div className="flex gap-[1px] text-[14px] 2xl:text-[16px] tracking-tighter shrink">
                    {[1, 2, 3, 4, 5].map(star => (
                      <span 
                        key={star}
                        onClick={(e) => setRating(e, asset.id, currentRating === star ? 0 : star)}
-                       className={`cursor-pointer ${star <= currentRating ? 'text-[#ffb800] drop-shadow-md' : 'text-neutral-600'} hover:text-[#ffca3a] leading-none mb-1`}
+                       className={`cursor-pointer ${star <= currentRating ? 'text-[#ffb800] drop-shadow-md' : 'text-neutral-600'} hover:text-[#ffca3a] leading-none mb-0.5`}
                      >
                        ★
                      </span>
@@ -437,7 +437,7 @@ export default function AssetTray() {
                  </div>
                  <div 
                    onClick={(e) => toggleFavorite(e, asset)}
-                   className={`${asset.isFavorite ? 'text-red-500 drop-shadow-md' : 'text-neutral-600'} hover:text-red-400 cursor-pointer text-[20px] font-bold leading-none -mt-1`}
+                   className={`${asset.isFavorite ? 'text-red-500 drop-shadow-md' : 'text-neutral-600'} hover:text-red-400 cursor-pointer text-[16px] 2xl:text-[18px] font-bold leading-none shrink-0 mb-0.5 ml-0.5`}
                  >
                    {asset.isFavorite ? '♥' : '♡'}
                  </div>
