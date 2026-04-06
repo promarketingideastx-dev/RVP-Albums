@@ -34,7 +34,7 @@ export default function AppPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/login');
+      window.location.href = '/es/login';
     }
   }, [user, loading, router]);
 
