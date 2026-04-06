@@ -509,14 +509,14 @@ export async function exportToPDF(project: EditorProject, options?: PDFExportOpt
   for (let i = startIdx; i <= endIdx; i++) {
     const spread = project.spreads[i];
     
-    // Skip completely empty pages (no design and no custom background)
+    // Skip completely empty pages (only pages with actual photos, text or shapes are exported)
     const hasValidContent = spread.elements.some(el => {
        if (el.type === 'text' || el.type === 'shape') return true;
        if ((el.type === 'image' || el.type === 'decoration') && (el.originalBlobId || el.previewUrl || el.src)) return true;
        return false;
     });
-    const hasBg = spread.bg_config && spread.bg_config.type !== 'none';
-    if (!hasValidContent && !hasBg) continue;
+    // Ignore background. A spread with nothing but background is strictly empty.
+    if (!hasValidContent) continue;
     
     // Always full quality for PDF matching print logic
     const base64Jpg = await exportSpreadToJPG(project, spread, { size: project.size, pixelMultiplier: safePixelMultiplier, quality: 1.0 });
@@ -590,8 +590,7 @@ export async function exportToJPG(project: EditorProject, options: AdvancedExpor
        if ((el.type === 'image' || el.type === 'decoration') && (el.originalBlobId || el.previewUrl || el.src)) return true;
        return false;
     });
-    const hasBg = spread.bg_config && spread.bg_config.type !== 'none';
-    if (!hasValidContent && !hasBg) continue;
+    if (!hasValidContent) continue;
 
     const base64Jpg = await exportSpreadToJPG(project, spread, { size: project.size, pixelMultiplier, quality: jpQuality });
     

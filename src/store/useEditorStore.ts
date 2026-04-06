@@ -726,7 +726,16 @@ export const useEditorStore = create<EditorState>()(
                 };
                 useEditorStore.setState(prev => {
                    if (!prev.project) return prev;
-                   return { project: { ...prev.project, spreads: [...prev.project.spreads, emptySpread] } };
+                   const inheritedBgConfig = prev.project.spreads.length > 0 ? prev.project.spreads[0].bg_config : { type: 'none' as const };
+                   const inheritedBgColor = prev.project.spreads.length > 0 ? prev.project.spreads[0].bg_color : '#FFFFFF';
+                   
+                   const finalEmptySpread = { 
+                       ...emptySpread, 
+                       bg_color: inheritedBgColor, 
+                       bg_config: inheritedBgConfig 
+                   };
+
+                   return { project: { ...prev.project, spreads: [...prev.project.spreads, finalEmptySpread] } };
                 });
             });
         }
