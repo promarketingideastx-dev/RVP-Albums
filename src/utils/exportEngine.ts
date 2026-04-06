@@ -110,8 +110,6 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
     if (rawEl.type === 'group') continue;
     if (rawEl.visible === false) continue;
 
-    const CONSTANT_SPREAD_SCALAR = 3.779527559; // Binds DB inverse-scaled matrix natively identical to SpreadCanvas
-
     // Apply cascading visibility and opacity rules safely
     let el = rawEl;
     if (el.groupId) {
@@ -189,10 +187,10 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
           const appliedBorderRadius = el.borderRadius ?? (cornerRadiusEnabled ? (globalStyles?.borderRadius ?? 0) : 0);
 
           const kGroup = new Konva.Group({
-            x: (el.x_mm * CONSTANT_SPREAD_SCALAR) * mmToPx,
-            y: (el.y_mm * CONSTANT_SPREAD_SCALAR) * mmToPx,
-            width: (el.w_mm * CONSTANT_SPREAD_SCALAR) * mmToPx,
-            height: (el.h_mm * CONSTANT_SPREAD_SCALAR) * mmToPx,
+            x: el.x_mm * mmToPx,
+            y: el.y_mm * mmToPx,
+            width: el.w_mm * mmToPx,
+            height: el.h_mm * mmToPx,
             rotation: el.rotation_deg,
             opacity: el.opacity !== undefined ? el.opacity : 1,
             scaleX: el.scale || 1,
@@ -211,8 +209,8 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
             image: imgObj,
             x: 0,
             y: 0,
-            width: (el.w_mm * CONSTANT_SPREAD_SCALAR) * mmToPx,
-            height: (el.h_mm * CONSTANT_SPREAD_SCALAR) * mmToPx,
+            width: el.w_mm * mmToPx,
+            height: el.h_mm * mmToPx,
             cornerRadius: appliedBorderRadius * mmToPx,
             stroke: appliedStrokeWidth > 0 ? appliedStrokeColor : undefined,
             strokeWidth: appliedStrokeWidth * mmToPx,
@@ -369,7 +367,7 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
             
             // EXPORT PIPELINE GUARANTEE: Full Native Resolution Cache Locking with VRAM Limits
             const isMassiveAsset = imgObj.naturalWidth > 6000 || imgObj.naturalHeight > 6000;
-            const exportRatio = Math.max(1, imgObj.naturalWidth / ((el.w_mm * CONSTANT_SPREAD_SCALAR) * mmToPx));
+            const exportRatio = Math.max(1, imgObj.naturalWidth / (el.w_mm * mmToPx));
             
             // If asset is brutally scaled but massive memory, clamp the multiplier safely
             const safeExportRatio = isMassiveAsset ? Math.min(exportRatio, 2.5) : exportRatio;
@@ -387,8 +385,8 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
           }
           
           if (hasAdj && el.photoAdjustments?.vignette && el.photoAdjustments.vignette !== 0) {
-              const vigW = (el.w_mm * CONSTANT_SPREAD_SCALAR) * mmToPx;
-              const vigH = (el.h_mm * CONSTANT_SPREAD_SCALAR) * mmToPx;
+              const vigW = el.w_mm * mmToPx;
+              const vigH = el.h_mm * mmToPx;
               const vignetteLayer = new Konva.Rect({
                   x: 0,
                   y: 0,
