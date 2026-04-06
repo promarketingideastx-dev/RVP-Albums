@@ -144,9 +144,15 @@ export const useEditorStore = create<EditorState>()(
               };
               useEditorStore.setState(prev => {
                  if (!prev.project) return prev;
+                 
+                 const inheritedBgConfig = prev.project.spreads.length > 0 ? prev.project.spreads[0].bg_config : { type: 'none' as const };
+                 const inheritedBgColor = prev.project.spreads.length > 0 ? prev.project.spreads[0].bg_color : '#FFFFFF';
+                 
+                 const finalSpread = { ...newSpread, bg_color: inheritedBgColor, bg_config: inheritedBgConfig };
+
                  return { 
-                    project: { ...prev.project, spreads: [...prev.project.spreads, newSpread] },
-                    activeSpreadId: newSpread.id 
+                    project: { ...prev.project, spreads: [...prev.project.spreads, finalSpread] },
+                    activeSpreadId: finalSpread.id 
                  };
               });
            });

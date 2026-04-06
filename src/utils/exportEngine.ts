@@ -44,11 +44,9 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
   let pxW = physicalW * multiplier;
   let pxH = physicalH * multiplier;
   
-  // Desktop canvas limits are generally 16384x16384, but Safari caps area strictly to ~16.7 million pixels (16MB).
-  // A safe max dimension constraint that respects the area limit is approx 4096. 
-  // Let's ensure the total area never exceeds 16,000,000 to be perfectly stable across all browsers.
-  
-  const maxArea = 16000000;
+  // Desktop canvas limits are generally 16384x16384 (268 megapixels).
+  // Raising maxArea to 100,000,000 (100MP) to allow 10MB-15MB exports at 1.0 quality without capping for professional desktop use.
+  const maxArea = 100000000;
   if ((pxW * pxH) > maxArea) {
      const areaScale = Math.sqrt(maxArea / (pxW * pxH));
      pxW *= areaScale;
@@ -511,6 +509,15 @@ export async function exportToPDF(project: EditorProject, options?: PDFExportOpt
   for (let i = startIdx; i <= endIdx; i++) {
     const spread = project.spreads[i];
     
+    // Skip completely empty pages (no design and no custom background)
+    const hasValidContent = spread.elements.some(el => {
+       if (el.type === 'text' || el.type === 'shape') return true;
+       if ((el.type === 'image' || el.type === 'decoration') && (el.originalBlobId || el.previewUrl || el.src)) return true;
+       return false;
+    });
+    const hasBg = spread.bg_config && spread.bg_config.type !== 'none';
+    if (!hasValidContent && !hasBg) continue;
+    
     // Always full quality for PDF matching print logic
     const base64Jpg = await exportSpreadToJPG(project, spread, { size: project.size, pixelMultiplier: safePixelMultiplier, quality: 1.0 });
     
@@ -576,6 +583,16 @@ export async function exportToJPG(project: EditorProject, options: AdvancedExpor
   let processedCount = 0;
   for (let i = startIdx; i <= endIdx; i++) {
     const spread = project.spreads[i];
+
+    // Skip completely empty pages
+    const hasValidContent = spread.elements.some(el => {
+       if (el.type === 'text' || el.type === 'shape') return true;
+       if ((el.type === 'image' || el.type === 'decoration') && (el.originalBlobId || el.previewUrl || el.src)) return true;
+       return false;
+    });
+    const hasBg = spread.bg_config && spread.bg_config.type !== 'none';
+    if (!hasValidContent && !hasBg) continue;
+
     const base64Jpg = await exportSpreadToJPG(project, spread, { size: project.size, pixelMultiplier, quality: jpQuality });
     
     const base64Data = base64Jpg.replace(/^data:image\/jpeg;base64,/, "");
