@@ -1359,77 +1359,84 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
                     return;
                }
 
-              const img = new window.Image();
-            img.onload = () => {
-              const aspect = img.width / img.height;
-              let w = 80;
-              let h = 80 / aspect;
-              
-              if (h > 120) {
-                 h = 120;
-                 w = 120 * aspect;
-              }
-
               if (payload.type === 'image') {
-                // Phase 7.H: Collision Swap Detection for Auto-Layout Constraints
-                let didSwap = false;
-                if (spread?.autoLayout?.isActive) {
-                  const targetManagedElement = spread.elements.find(el => 
-                     el.isAutoLayoutManaged &&
-                     dropX >= el.x_mm && dropX <= el.x_mm + el.w_mm &&
-                     dropY >= el.y_mm && dropY <= el.y_mm + el.h_mm
-                  );
+                 if (stagedAssets.length > 0) {
+                    stagedAssets.forEach((asset, idx) => {
+                       const img = new window.Image();
+                       img.onload = () => {
+                          const aspect = img.width / img.height;
+                          let w = 80;
+                          let h = 80 / aspect;
+                          if (h > 120) { h = 120; w = 120 * aspect; }
 
-                  if (targetManagedElement) {
-                     // SWAP execution. Do NOT destroy AST geometry.
-                     useEditorStore.getState().updateElement(activeSpreadId, targetManagedElement.id, {
-                        previewUrl: payload.previewUrl,
-                        originalUrl: payload.originalUrl,
-                        previewBlobId: payload.previewBlobId,
-                        originalBlobId: payload.originalBlobId,
-                        assetId: payload.assetId
-                     });
-                     didSwap = true;
-                  }
-                }
+                          let didSwap = false;
+                          // Only swap if it's the primary lead dragged item (first one)
+                          if (idx === 0 && spread?.autoLayout?.isActive) {
+                             const targetManagedElement = spread.elements.find(el => 
+                                el.isAutoLayoutManaged &&
+                                dropX >= el.x_mm && dropX <= el.x_mm + el.w_mm &&
+                                dropY >= el.y_mm && dropY <= el.y_mm + el.h_mm
+                             );
+                             if (targetManagedElement) {
+                                useEditorStore.getState().updateElement(activeSpreadId, targetManagedElement.id, {
+                                   previewUrl: asset.previewUrl,
+                                   originalUrl: asset.originalUrl,
+                                   previewBlobId: asset.previewBlobId,
+                                   originalBlobId: asset.originalBlobId,
+                                   assetId: asset.id
+                                });
+                                didSwap = true;
+                             }
+                          }
 
-                if (!didSwap) {
-                  useEditorStore.getState().addElement(activeSpreadId, {
-                    id: `el_${Date.now()}`,
-                    type: 'image',
-                    previewUrl: payload.previewUrl,
-                    originalUrl: payload.originalUrl,
-                    previewBlobId: payload.previewBlobId,
-                    originalBlobId: payload.originalBlobId,
-                    assetId: payload.assetId, // Persistent generic linkage
-                    x_mm: dropX - (w / 2),
-                    y_mm: dropY - (h / 2),
-                    w_mm: w,
-                    h_mm: h,
-                    rotation_deg: 0,
-                    zIndex: 0
-                  });
-                }
+                          if (!didSwap) {
+                             useEditorStore.getState().addElement(activeSpreadId, {
+                                id: `el_${Date.now()}_${idx}`,
+                                type: 'image',
+                                previewUrl: asset.previewUrl,
+                                originalUrl: asset.originalUrl,
+                                previewBlobId: asset.previewBlobId,
+                                originalBlobId: asset.originalBlobId,
+                                assetId: asset.id,
+                                x_mm: dropX - (w / 2) + (idx * 25), // Waterfall cascade
+                                y_mm: dropY - (h / 2) + (idx * 25), // Waterfall cascade
+                                w_mm: w,
+                                h_mm: h,
+                                rotation_deg: 0,
+                                zIndex: spread.elements.length + idx // Ensure they mount on top
+                             });
+                          }
+                       };
+                       img.src = asset.previewUrl || '';
+                    });
+                 }
               } else if (payload.type === 'decoration') {
-                useEditorStore.getState().addElement(activeSpreadId, {
-                  id: `el_${Date.now()}`,
-                  type: 'decoration',
-                  src: payload.src,
-                  libraryCategory: payload.libraryCategory,
-                  sourceType: payload.sourceType || 'default',
-                  blendMode: payload.libraryCategory === 'cinematic' ? 'multiply' : payload.libraryCategory === 'overlays' ? 'screen' : 'source-over',
-                  sourceId: payload.sourceId,
-                  x_mm: payload.libraryCategory === 'cinematic' ? 0 : dropX - (w / 2),
-                  y_mm: payload.libraryCategory === 'cinematic' ? 0 : dropY - (h / 2),
-                  w_mm: payload.libraryCategory === 'cinematic' ? 900 : w,
-                  h_mm: payload.libraryCategory === 'cinematic' ? 900 : h,
-                  opacity: payload.libraryCategory === 'cinematic' ? 0.35 : 1,
-                  rotation_deg: 0,
-                  zIndex: 0
-                });
+                 const img = new window.Image();
+                 img.onload = () => {
+                    const aspect = img.width / img.height;
+                    let w = 80;
+                    let h = 80 / aspect;
+                    if (h > 120) { h = 120; w = 120 * aspect; }
+
+                    useEditorStore.getState().addElement(activeSpreadId, {
+                      id: `el_${Date.now()}`,
+                      type: 'decoration',
+                      src: payload.src,
+                      libraryCategory: payload.libraryCategory,
+                      sourceType: payload.sourceType || 'default',
+                      blendMode: payload.libraryCategory === 'cinematic' ? 'multiply' : payload.libraryCategory === 'overlays' ? 'screen' : 'source-over',
+                      sourceId: payload.sourceId,
+                      x_mm: payload.libraryCategory === 'cinematic' ? 0 : dropX - (w / 2),
+                      y_mm: payload.libraryCategory === 'cinematic' ? 0 : dropY - (h / 2),
+                      w_mm: payload.libraryCategory === 'cinematic' ? 900 : w,
+                      h_mm: payload.libraryCategory === 'cinematic' ? 900 : h,
+                      opacity: payload.libraryCategory === 'cinematic' ? 0.35 : 1,
+                      rotation_deg: 0,
+                      zIndex: 0
+                    });
+                 };
+                 img.src = payload.src;
               }
-            };
-            img.src = payload.type === 'decoration' ? payload.src : payload.previewUrl;
             }
           }
         } catch (err) {

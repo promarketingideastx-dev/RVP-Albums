@@ -383,7 +383,7 @@ export default function AssetTray() {
               {/* Quick Priority Toggle Layer */}
               <button
                 onClick={(e) => togglePriority(e, asset)}
-                className={`absolute bottom-2 left-2 z-10 rounded-full px-1.5 py-0.5 text-xs transition-opacity flex items-center justify-center shadow-md scale-in
+                className={`absolute bottom-10 left-2 z-10 rounded-full px-1.5 py-0.5 text-xs transition-opacity flex items-center justify-center shadow-md scale-in
                            ${asset.metadata?.manualPriority ? 'bg-orange-500 text-white opacity-100' : 'bg-black/50 text-white/50 opacity-0 group-hover:opacity-100 hover:bg-black/80'}`}
                 title={t('priority')}
               >
