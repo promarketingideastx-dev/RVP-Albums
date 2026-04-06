@@ -125,6 +125,19 @@ export default function EditorWorkspace() {
                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 pb-32">
                   {project.spreads.map((spread, idx) => {
                      const ratio = project.size.h_mm / project.size.w_mm;
+                     
+                     // Compute accurate background logic
+                     const bgConfig = spread.bg_config || { type: 'none' };
+                     let cssBackgroundStr = spread.bg_color || '#ffffff';
+                     
+                     if (bgConfig.type === 'solid' && bgConfig.color1) {
+                        cssBackgroundStr = bgConfig.color1;
+                     } else if (bgConfig.type === 'linear' && bgConfig.color1 && bgConfig.color2) {
+                        cssBackgroundStr = `linear-gradient(${bgConfig.gradientAngle || 0}deg, ${bgConfig.color1}, ${bgConfig.color2})`;
+                     } else if (bgConfig.type === 'radial' && bgConfig.color1 && bgConfig.color2) {
+                        cssBackgroundStr = `radial-gradient(circle ${bgConfig.radialSize ?? 50}% at ${bgConfig.radialCenterX ?? 50}% ${bgConfig.radialCenterY ?? 50}%, ${bgConfig.color1}, ${bgConfig.color2})`;
+                     }
+
                      return (
                         <div 
                           key={spread.id} 
@@ -140,13 +153,23 @@ export default function EditorWorkspace() {
                            </div>
                            <div 
                               className="w-full relative bg-white dark:bg-neutral-950 shadow-md group-hover:shadow-2xl group-hover:ring-4 ring-orange-500 transition-all overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-800"
-                              style={{ aspectRatio: 1 / ratio, backgroundColor: spread.bg_color || '#ffffff' }}
+                              style={{ aspectRatio: 1 / ratio, background: cssBackgroundStr }}
                            >
                                {spread.elements.map(el => {
+                                  let filterString = '';
+                                  if (el.type === 'image' && el.photoAdjustments) {
+                                     const adj = el.photoAdjustments;
+                                     if (!adj.bypassLight && adj.exposure) filterString += ` brightness(${100 + (adj.exposure / 2)}%)`;
+                                     if (!adj.bypassLight && adj.lightContrast) filterString += ` contrast(${100 + (adj.lightContrast / 2)}%)`;
+                                     if (!adj.bypassColor && adj.saturation) filterString += ` saturate(${100 + adj.saturation}%)`;
+                                     if (!adj.bypassColor && adj.temperature) filterString += ` sepia(${Math.abs(adj.temperature / 2)}%) hue-rotate(${adj.temperature > 0 ? '-10deg' : '10deg'})`;
+                                     if (!adj.bypassEffects && adj.blur) filterString += ` blur(${Math.max(0, adj.blur / 5)}px)`;
+                                  }
+
                                   return (
                                      <div
                                        key={el.id}
-                                       className="absolute shadow-sm border border-black/10"
+                                       className="absolute shadow-sm border border-black/10 transition-all"
                                        style={{
                                          left: `${(el.x_mm / project.size.w_mm) * 100}%`,
                                          top: `${(el.y_mm / project.size.h_mm) * 100}%`,
@@ -158,7 +181,8 @@ export default function EditorWorkspace() {
                                          backgroundPosition: 'center',
                                          transform: `rotate(${el.rotation_deg || 0}deg)`,
                                          zIndex: el.zIndex,
-                                         borderRadius: `${(el.borderRadius || 0)}px`
+                                         borderRadius: `${(el.borderRadius || 0)}px`,
+                                         filter: filterString || 'none'
                                        }}
                                      />
                                   );
