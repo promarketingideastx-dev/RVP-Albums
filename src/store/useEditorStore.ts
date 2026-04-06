@@ -82,10 +82,10 @@ interface EditorState {
   resetSpreadBackground: (spreadId: string) => void;
   resetAllGlobalStyles: () => void;
 
-  addGuide: (spreadId: string, guide: import('@/types/editor').SpreadGuide) => void;
-  updateGuide: (spreadId: string, guideId: string, changes: Partial<import('@/types/editor').SpreadGuide>) => void;
-  removeGuide: (spreadId: string, guideId: string) => void;
-  clearGuides: (spreadId: string) => void;
+  addGuide: (guide: import('@/types/editor').SpreadGuide) => void;
+  updateGuide: (guideId: string, changes: Partial<import('@/types/editor').SpreadGuide>) => void;
+  removeGuide: (guideId: string) => void;
+  clearGuides: () => void;
   setSequenceMode: (mode: 'ORIGINAL_ORDER' | 'CHRONOLOGICAL' | 'MANUAL_PRIORITY') => void;
 }
 
@@ -391,41 +391,25 @@ export const useEditorStore = create<EditorState>()(
     };
   }),
 
-  addGuide: (spreadId, guide) => set((state) => {
+  addGuide: (guide) => set((state) => {
     if (!state.project) return state;
-    const newSpreads = state.project.spreads.map((s) => {
-      if (s.id !== spreadId) return s;
-      return { ...s, guides: [...(s.guides || []), guide] };
-    });
-    return { project: { ...state.project, spreads: newSpreads } };
+    return { project: { ...state.project, globalGuides: [...(state.project.globalGuides || []), guide] } };
   }),
 
-  updateGuide: (spreadId, guideId, changes) => set((state) => {
+  updateGuide: (guideId, changes) => set((state) => {
     if (!state.project) return state;
-    const newSpreads = state.project.spreads.map((s) => {
-      if (s.id !== spreadId) return s;
-      const newGuides = (s.guides || []).map(g => g.id === guideId ? { ...g, ...changes } : g);
-      return { ...s, guides: newGuides };
-    });
-    return { project: { ...state.project, spreads: newSpreads } };
+    const newGuides = (state.project.globalGuides || []).map(g => g.id === guideId ? { ...g, ...changes } : g);
+    return { project: { ...state.project, globalGuides: newGuides } };
   }),
 
-  removeGuide: (spreadId, guideId) => set((state) => {
+  removeGuide: (guideId) => set((state) => {
     if (!state.project) return state;
-    const newSpreads = state.project.spreads.map((s) => {
-      if (s.id !== spreadId) return s;
-      return { ...s, guides: (s.guides || []).filter(g => g.id !== guideId) };
-    });
-    return { project: { ...state.project, spreads: newSpreads } };
+    return { project: { ...state.project, globalGuides: (state.project.globalGuides || []).filter(g => g.id !== guideId) } };
   }),
 
-  clearGuides: (spreadId) => set((state) => {
+  clearGuides: () => set((state) => {
     if (!state.project) return state;
-    const newSpreads = state.project.spreads.map((s) => {
-      if (s.id !== spreadId) return s;
-      return { ...s, guides: [] };
-    });
-    return { project: { ...state.project, spreads: newSpreads } };
+    return { project: { ...state.project, globalGuides: [] } };
   }),
 
   addElement: (spreadId, element) => set((state) => {
@@ -550,7 +534,7 @@ export const useEditorStore = create<EditorState>()(
     
     const newSpreads = [...state.project.spreads];
     if (newSpreads.length === 0) {
-       newSpreads.push({ id: `spread_${Date.now()}`, bg_color: '#FFFFFF', elements: [], guides: [], status: 'empty' });
+       newSpreads.push({ id: `spread_${Date.now()}`, bg_color: '#FFFFFF', elements: [], status: 'empty' });
     }
 
     let currentSpreadIndex = newSpreads.findIndex(s => s.id === state.activeSpreadId);
@@ -574,9 +558,8 @@ export const useEditorStore = create<EditorState>()(
                    id: crypto.randomUUID(),
                    bg_color: '#FFFFFF',
                    elements: [],
-                   guides: [],
                    status: 'empty'
-               });
+                 });
                currentSpreadIndex = newSpreads.length - 1;
                targetSpread = { ...newSpreads[currentSpreadIndex] };
            } else {
@@ -619,9 +602,8 @@ export const useEditorStore = create<EditorState>()(
                      id: crypto.randomUUID(),
                      bg_color: '#FFFFFF',
                      elements: [],
-                     guides: [],
                      status: 'empty'
-                  });
+                 });
               } else {
                   hitLimit = true;
                   return;

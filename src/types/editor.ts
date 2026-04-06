@@ -143,7 +143,6 @@ export interface Spread {
   bg_color: string;
   autoBookManaged?: boolean; // Phase 14: Discriminates pristine autobook layouts from manually handcrafted spaces
   bg_config?: SpreadBackgroundConfig; // Phase 7.G.9: Advanced Gradient spread backgrounds
-  guides?: SpreadGuide[]; // Phase 7.G.12: Native alignment geometry boundaries
   autoLayout?: SpreadAutoLayout; // Phase 7.H: Auto Layout Engine Structural bounds 
   status?: 'empty' | 'staging' | 'designed' | 'completed'; // Phase Final A: Explict Structural Pagination Status
 }
@@ -225,6 +224,7 @@ export interface EditorProject {
   safe_zone_mm: number;
   typographyPresetId?: string; // Phase 7.I: Document-scope active typography pattern
   globalImageStyles?: GlobalImageStyles; // Phase 7.G.9: Project-level cascading default styles
+  globalGuides?: SpreadGuide[]; // Phase 7.G.12: Native alignment geometry boundaries synced globally across all spreads
   totalSpreads?: number; // Phase Final A: Fixed album capacity bounds natively
   spreads: Spread[];
   assets?: ProjectAsset[];

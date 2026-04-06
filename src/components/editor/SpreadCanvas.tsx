@@ -1624,7 +1624,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
         {/* Center Fold Line Component replaced by individual Spread Canvases - No Center Fold needed here */}
       
       {/* Dynamic Native Ruler Guides Overlay */}
-        {spread.guides?.map(guide => (
+        {project?.globalGuides?.map(guide => (
           <Line
             key={guide.id}
             points={
@@ -1646,9 +1646,9 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
               const newPos = guide.position_mm + delta;
               
               if (newPos < -10 || (guide.orientation === 'vertical' && newPos > project.size.w_mm + 10) || (guide.orientation === 'horizontal' && newPos > project.size.h_mm + 10)) {
-                 useEditorStore.getState().removeGuide(spread.id, guide.id);
+                 useEditorStore.getState().removeGuide(guide.id);
               } else {
-                 useEditorStore.getState().updateGuide(spread.id, guide.id, { position_mm: newPos });
+                 useEditorStore.getState().updateGuide(guide.id, { position_mm: newPos });
               }
               node.position({ x: 0, y: 0 }); 
             }}
@@ -1702,31 +1702,31 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
                  className="w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 transition-colors"
                  onClick={() => {
                     const guideId = contextMenu.elementId.replace('guide:', '');
-                    const guide = spread.guides?.find(g => g.id === guideId);
-                    if (guide) useEditorStore.getState().updateGuide(spread.id, guideId, { locked: !guide.locked });
+                    const guide = project?.globalGuides?.find(g => g.id === guideId);
+                    if (guide) useEditorStore.getState().updateGuide(guideId, { locked: !guide.locked });
                     setContextMenu(null);
                  }}
                >
-                 {spread.guides?.find(g => g.id === contextMenu.elementId.replace('guide:', ''))?.locked ? 'Unlock Guide' : 'Lock Guide'}
+                 {project?.globalGuides?.find(g => g.id === contextMenu.elementId.replace('guide:', ''))?.locked ? 'Unlock Guide' : 'Lock Guide'}
                </button>
                <button
                  className="w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 transition-colors flex items-center justify-between"
                  onClick={() => {
                     const guideId = contextMenu.elementId.replace('guide:', '');
-                    const guide = spread.guides?.find(g => g.id === guideId);
+                    const guide = project?.globalGuides?.find(g => g.id === guideId);
                     const isRed = guide?.color === '#ff0000';
-                    useEditorStore.getState().updateGuide(spread.id, guideId, { color: isRed ? '#00ffff' : '#ff0000' });
+                    useEditorStore.getState().updateGuide(guideId, { color: isRed ? '#00ffff' : '#ff0000' });
                     setContextMenu(null);
                  }}
                >
                  Change Color
-                 <span className="w-3 h-3 rounded-full border border-neutral-300 dark:border-neutral-600" style={{ backgroundColor: spread.guides?.find(g => g.id === contextMenu.elementId.replace('guide:', ''))?.color === '#ff0000' ? '#00ffff' : '#ff0000' }}></span>
+                 <span className="w-3 h-3 rounded-full border border-neutral-300 dark:border-neutral-600" style={{ backgroundColor: project?.globalGuides?.find(g => g.id === contextMenu.elementId.replace('guide:', ''))?.color === '#ff0000' ? '#00ffff' : '#ff0000' }}></span>
                </button>
                <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1"></div>
                <button
                  className="w-full text-left px-4 py-2 hover:bg-red-500 hover:text-white text-red-500 transition-colors"
                  onClick={() => { 
-                    useEditorStore.getState().removeGuide(spread.id, contextMenu.elementId.replace('guide:', '')); 
+                    useEditorStore.getState().removeGuide(contextMenu.elementId.replace('guide:', '')); 
                     setContextMenu(null); 
                  }}
                >

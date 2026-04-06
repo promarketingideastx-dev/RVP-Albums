@@ -15,6 +15,11 @@ export function RulerGuides({ scale, project, unit, panX, panY }: RulerGuidesPro
   const addGuide = useEditorStore(s => s.addGuide);
   const updateGuide = useEditorStore(s => s.updateGuide);
   const removeGuide = useEditorStore(s => s.removeGuide);
+  
+  const [tooltip, setTooltip] = React.useState<{visible: boolean, x: number, y: number, value: string} | null>(null);
+
+  const isInch = unit === 'in';
+  const majorTickMm = isInch ? 25.4 : 10;
 
   const startGuideDrag = (e: React.PointerEvent, orientation: 'horizontal' | 'vertical') => {
      if (!activeSpreadId) return;
@@ -26,19 +31,23 @@ export function RulerGuides({ scale, project, unit, panX, panY }: RulerGuidesPro
      const guideId = `guide_${Date.now()}`;
      const initialPos = orientation === 'horizontal' ? (e.clientY - rect.top - panY) / scale : (e.clientX - rect.left - panX) / scale;
      
-     addGuide(activeSpreadId, { id: guideId, orientation, position_mm: initialPos });
+     addGuide({ id: guideId, orientation, position_mm: initialPos });
 
      const onMove = (ev: PointerEvent) => {
          const mm = orientation === 'horizontal' ? (ev.clientY - rect.top - panY) / scale : (ev.clientX - rect.left - panX) / scale;
-         updateGuide(activeSpreadId, guideId, { position_mm: mm });
+         updateGuide(guideId, { position_mm: mm });
+         
+         const displayValue = isInch ? `${(mm / 25.4).toFixed(2)} in` : `${(mm / 10).toFixed(2)} cm`;
+         setTooltip({ visible: true, x: ev.clientX, y: ev.clientY, value: displayValue });
      };
 
      const onUp = (ev: PointerEvent) => {
          const mm = orientation === 'horizontal' ? (ev.clientY - rect.top - panY) / scale : (ev.clientX - rect.left - panX) / scale;
          // Drag-to-delete logic dynamically drops guides snapped completely outside physical page lines
          if (mm < -10 || (orientation === 'vertical' && mm > project.size.w_mm + 10) || (orientation === 'horizontal' && mm > project.size.h_mm + 10)) {
-            removeGuide(activeSpreadId, guideId);
+            removeGuide(guideId);
          }
+         setTooltip(null);
          window.removeEventListener('pointermove', onMove);
          window.removeEventListener('pointerup', onUp);
      };
@@ -46,8 +55,6 @@ export function RulerGuides({ scale, project, unit, panX, panY }: RulerGuidesPro
      window.addEventListener('pointermove', onMove);
      window.addEventListener('pointerup', onUp);
   };
-  const isInch = unit === 'in';
-  const majorTickMm = isInch ? 25.4 : 10;
   
   const isLastSpread = activeSpreadId && project.spreads[project.spreads.length - 1]?.id === activeSpreadId;
   const isLastSpreadEmpty = isLastSpread && project.spreads.find(s => s.id === activeSpreadId)?.elements.length === 0;
@@ -81,15 +88,29 @@ export function RulerGuides({ scale, project, unit, panX, panY }: RulerGuidesPro
           {Array.from({ length: hTicks }).map((_, i) => {
             const pos = i * majorTickMm * scale;
             return (
-              <div 
-                key={i} 
-                className="absolute top-0 bottom-0 border-l border-neutral-400 dark:border-neutral-500"
-                style={{ left: pos }}
-              >
-                <span className="text-[10px] text-neutral-500 ml-1 mt-0.5 block select-none">
-                  {i}
-                </span>
-              </div>
+              <React.Fragment key={i}>
+                <div 
+                  className="absolute top-0 bottom-0 border-l border-neutral-400 dark:border-neutral-500"
+                  style={{ left: pos }}
+                >
+                  <span className="text-[10px] text-neutral-500 ml-1 mt-0.5 block select-none">
+                    {i}
+                  </span>
+                </div>
+                {isInch && i < hTicks - 1 && [1, 2, 3].map(frac => (
+                   <div 
+                      key={`frac-h-${i}-${frac}`} 
+                      className={`absolute bottom-0 border-l border-neutral-400 dark:border-neutral-500 ${frac === 2 ? 'h-1/2' : 'h-1/3'}`}
+                      style={{ left: pos + (frac * 0.25 * majorTickMm * scale), opacity: frac === 2 ? 0.6 : 0.3 }}
+                   />
+                ))}
+                {!isInch && i < hTicks - 1 && (
+                   <div 
+                      className="absolute bottom-0 border-l border-neutral-400 dark:border-neutral-500 h-1/2 opacity-40"
+                      style={{ left: pos + (0.5 * majorTickMm * scale) }}
+                   />
+                )}
+              </React.Fragment>
             );
           })}
         </div>
@@ -111,15 +132,29 @@ export function RulerGuides({ scale, project, unit, panX, panY }: RulerGuidesPro
           {Array.from({ length: vTicks }).map((_, i) => {
             const pos = i * majorTickMm * scale;
             return (
-              <div 
-                key={i} 
-                className="absolute left-0 right-0 border-t border-neutral-400 dark:border-neutral-500"
-                style={{ top: pos }}
-              >
-                <span className="text-[10px] text-neutral-500 ml-0.5 mt-0.5 block select-none" style={{ transform: 'rotate(-90deg)', transformOrigin: 'top left', marginTop: '14px', marginLeft: '6px' }}>
-                  {i}
-                </span>
-              </div>
+              <React.Fragment key={i}>
+                <div 
+                  className="absolute left-0 right-0 border-t border-neutral-400 dark:border-neutral-500"
+                  style={{ top: pos }}
+                >
+                  <span className="text-[10px] text-neutral-500 ml-0.5 mt-0.5 block select-none" style={{ transform: 'rotate(-90deg)', transformOrigin: 'top left', marginTop: '14px', marginLeft: '6px' }}>
+                    {i}
+                  </span>
+                </div>
+                {isInch && i < vTicks - 1 && [1, 2, 3].map(frac => (
+                   <div 
+                      key={`frac-v-${i}-${frac}`} 
+                      className={`absolute right-0 border-t border-neutral-400 dark:border-neutral-500 ${frac === 2 ? 'w-1/2' : 'w-1/3'}`}
+                      style={{ top: pos + (frac * 0.25 * majorTickMm * scale), opacity: frac === 2 ? 0.6 : 0.3 }}
+                   />
+                ))}
+                {!isInch && i < vTicks - 1 && (
+                   <div 
+                      className="absolute right-0 border-t border-neutral-400 dark:border-neutral-500 w-1/2 opacity-40"
+                      style={{ top: pos + (0.5 * majorTickMm * scale) }}
+                   />
+                )}
+              </React.Fragment>
             );
           })}
         </div>
@@ -138,18 +173,14 @@ export function RulerGuides({ scale, project, unit, panX, panY }: RulerGuidesPro
         {unit.toUpperCase()}
       </div>
       
-      {/* Corner Square */}
-      <div 
-        className="absolute bg-white dark:bg-neutral-800 border-b border-r border-neutral-300 dark:border-neutral-700 font-mono text-[9px] text-neutral-400 flex items-center justify-center font-bold"
-        style={{
-          top: -rulerThickness,
-          left: -rulerThickness,
-          width: rulerThickness,
-          height: rulerThickness
-        }}
-      >
-        {unit.toUpperCase()}
-      </div>
+      {tooltip?.visible && (
+        <div 
+          className="fixed z-50 px-2 py-1 bg-black/80 text-white text-xs rounded-md shadow-lg font-mono pointer-events-none whitespace-nowrap transform -translate-x-1/2 -translate-y-[150%]"
+          style={{ left: tooltip.x, top: tooltip.y }}
+        >
+          {tooltip.value}
+        </div>
+      )}
     </>
   );
 }
