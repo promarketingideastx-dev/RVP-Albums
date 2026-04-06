@@ -5,6 +5,30 @@ import '../globals.css';
 
 import enMessages from '../../messages/en.json';
 import esMessages from '../../messages/es.json';
+import { Metadata, Viewport } from 'next';
+
+export const metadata: Metadata = {
+  title: 'RVP Albums',
+  description: 'Pro Photography Albums Editor',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'RVP Albums',
+  },
+  icons: {
+    icon: '/icon-192x192.png',
+    apple: '/apple-icon.png',
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#0a0a0a',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export default async function LocaleLayout({
   children,
