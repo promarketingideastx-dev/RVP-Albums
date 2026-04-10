@@ -154,5 +154,14 @@
     "reb_compact": "Compact",
     "reb_balanced": "Balanced",
     "reb_airy": "Airy"
+  },
+  "Auth": {
+    "forgotPassword": "Forgot password?",
+    "resetPassword": "Reset Password",
+    "passwordResetSent": "We sent you a password reset email.",
+    "enterEmailForReset": "Please enter your email above to reset.",
+    "googleSignInFailed": "Google sign-in failed. Please try again.",
+    "passwordResetFailed": "Failed to send reset email. Contact support.",
+    "continueWithGoogle": "Google"
   }
 }

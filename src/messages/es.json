@@ -151,5 +151,14 @@
     "reb_compact": "Compactar",
     "reb_balanced": "Balancear",
     "reb_airy": "Airear"
+  },
+  "Auth": {
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "resetPassword": "Restablecer",
+    "passwordResetSent": "Te hemos enviado un correo para restablecer tu contraseña.",
+    "enterEmailForReset": "Por favor, ingresa tu correo arriba para restablecer.",
+    "googleSignInFailed": "Error al iniciar sesión con Google. Intenta de nuevo.",
+    "passwordResetFailed": "Fallo al enviar correo de restablecimiento. Contacta a soporte.",
+    "continueWithGoogle": "Google"
   }
 }
