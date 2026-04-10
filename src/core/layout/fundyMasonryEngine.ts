@@ -44,16 +44,36 @@ export function generateFundyMasonryLayout(config: MasonryEngineConfig): Masonry
 
     if (photos.length === 1) {
         // Trivial case: 1 photo fills the entire available area
+        // But rather than just filling randomly, we should constrain it geometrically so it doesn't distort!
+        const W = spreadWidth - margin * 2;
+        const H = spreadHeight - margin * 2;
+        const photoAR = photos[0].aspectRatio;
+        const boundingAR = W / H;
+        
+        let finalW = W;
+        let finalH = H;
+        if (photoAR > boundingAR) {
+             finalH = W / photoAR;
+        } else {
+             finalW = H * photoAR;
+        }
+        
         return [{
             photoId: photos[0].id,
-            x: margin,
-            y: margin,
-            width: W,
-            height: H,
+            x: margin + (W - finalW) / 2,
+            y: margin + (H - finalH) / 2,
+            width: finalW,
+            height: finalH,
             rowIndex: 0,
             orderIndex: 0,
-            originalAspectRatio: photos[0].aspectRatio
+            originalAspectRatio: photoAR
         }];
+    }
+
+    // Phase 13: STRICT LOW-COUNT INTERCEPTOR
+    if (photos.length <= 6) {
+        const lowCountResult = generateLowCountComposition(config);
+        if (lowCountResult.length > 0) return lowCountResult;
     }
 
     // --- STEP 1.5: SEEDED PERMUTATION SHUFFLE ---
@@ -282,4 +302,167 @@ function calculateTotalHeight(rows: MasonryPhotoInput[][], maxW: number, gap: nu
         totalH += rowH;
     });
     return totalH + (rows.length - 1) * gap;
+}
+
+// --- LOW-COUNT COMPOSITIONAL AST ENGINE --- 
+type TopoNode = 
+    | { type: 'leaf', index: number }
+    | { type: 'row', children: TopoNode[] }
+    | { type: 'col', children: TopoNode[] };
+
+interface LinearRel {
+    s: number; 
+    c: number;
+}
+
+function solveTreeRel(node: TopoNode, photos: MasonryPhotoInput[], gap: number): LinearRel {
+    if (node.type === 'leaf') {
+        return { s: photos[node.index].aspectRatio, c: 0 };
+    }
+    if (node.type === 'row') {
+        const rels = node.children.map(c => solveTreeRel(c, photos, gap));
+        let s = 0; let c = 0;
+        rels.forEach(r => { s += r.s; c += r.c; });
+        c += (rels.length - 1) * gap;
+        return { s, c };
+    }
+    if (node.type === 'col') {
+        const rels = node.children.map(c => solveTreeRel(c, photos, gap));
+        let sumInv = 0; let sumCInv = 0;
+        rels.forEach(r => { sumInv += 1 / r.s; sumCInv += r.c / r.s; });
+        const s = 1 / sumInv;
+        const c = (sumCInv - (rels.length - 1) * gap) / sumInv;
+        return { s, c };
+    }
+    return { s: 1, c: 0 };
+}
+
+function computeTreeLayout(node: TopoNode, x: number, y: number, w: number, h: number, photos: MasonryPhotoInput[], gap: number, orderAcc: {count: number}): MasonrySlotOutput[] {
+    if (node.type === 'leaf') {
+        return [{
+            photoId: photos[node.index].id,
+            x, y, width: w, height: h,
+            rowIndex: 0,
+            orderIndex: orderAcc.count++,
+            originalAspectRatio: photos[node.index].aspectRatio
+        }];
+    }
+    const slots: MasonrySlotOutput[] = [];
+    if (node.type === 'row') {
+        let currentX = x;
+        node.children.forEach(child => {
+            const rel = solveTreeRel(child, photos, gap);
+            const childW = rel.s * h + rel.c;
+            slots.push(...computeTreeLayout(child, currentX, y, childW, h, photos, gap, orderAcc));
+            currentX += childW + gap;
+        });
+    } else if (node.type === 'col') {
+        let currentY = y;
+        node.children.forEach(child => {
+            const rel = solveTreeRel(child, photos, gap);
+            const childH = (w - rel.c) / rel.s;
+            slots.push(...computeTreeLayout(child, x, currentY, w, childH, photos, gap, orderAcc));
+            currentY += childH + gap;
+        });
+    }
+    return slots;
+}
+
+function getTopologies(n: number): TopoNode[] {
+    const P = (i: number): TopoNode => ({ type: 'leaf', index: i });
+    const R = (...c: TopoNode[]): TopoNode => ({ type: 'row', children: c });
+    const C = (...c: TopoNode[]): TopoNode => ({ type: 'col', children: c });
+    
+    if (n === 2) return [ R(P(0), P(1)), C(P(0), P(1)) ];
+    if (n === 3) return [
+       R(P(0), P(1), P(2)), C(P(0), P(1), P(2)),
+       R(P(0), C(P(1), P(2))), R(C(P(0), P(1)), P(2)),
+       C(P(0), R(P(1), P(2))), C(R(P(0), P(1)), P(2))
+    ];
+    if (n === 4) return [
+       R(P(0), P(1), P(2), P(3)), C(P(0), P(1), P(2), P(3)),
+       C(R(P(0), P(1)), R(P(2), P(3))), R(P(0), C(P(1), P(2), P(3))), R(C(P(0), P(1), P(2)), P(3)),
+       C(P(0), R(P(1), P(2), P(3))), C(R(P(0), P(1), P(2)), P(3)), R(C(P(0), P(1)), C(P(2), P(3))),
+       C(P(0), R(P(1), P(2)), P(3)), R(P(0), C(P(1), P(2)), P(3))
+    ];
+    if (n === 5) return [
+       R(P(0), P(1), P(2), P(3), P(4)), C(P(0), P(1), P(2), P(3), P(4)),
+       C(R(P(0), P(1)), R(P(2), P(3), P(4))), C(R(P(0), P(1), P(2)), R(P(3), P(4))),
+       R(C(P(0), P(1)), C(P(2), P(3), P(4))), R(C(P(0), P(1), P(2)), C(P(3), P(4))),
+       C(P(0), R(P(1), P(2), P(3), P(4))), R(P(0), C(P(1), P(2), P(3), P(4))),
+       C(R(P(0), P(1), P(2), P(3)), P(4)), R(C(P(0), P(1), P(2), P(3)), P(4)),
+       C(P(0), R(P(1), P(2)), R(P(3), P(4)))
+    ];
+    if (n === 6) return [
+       C(R(P(0), P(1), P(2)), R(P(3), P(4), P(5))), R(C(P(0), P(1), P(2)), C(P(3), P(4), P(5))),
+       C(R(P(0), P(1)), R(P(2), P(3)), R(P(4), P(5))), R(C(P(0), P(1)), C(P(2), P(3)), C(P(4), P(5))),
+       C(P(0), R(P(1), P(2), P(3), P(4), P(5))), C(R(P(0), P(1), P(2), P(3)), R(P(4), P(5))),
+       R(P(0), C(R(P(1), P(2)), R(P(3), P(4)), P(5)))
+    ];
+    return [];
+}
+
+function generateLowCountComposition(config: MasonryEngineConfig): MasonrySlotOutput[] {
+    const { spreadWidth, spreadHeight, photos, gap = 10, margin = 20, variantSeed = 0 } = config;
+    const W = spreadWidth - margin * 2;
+    const H = spreadHeight - margin * 2;
+
+    const shuffledPhotos = [...photos];
+    if (variantSeed > 0) {
+        let rngSeed = (variantSeed * 16807) % 2147483647;
+        for (let i = shuffledPhotos.length - 1; i > 0; i--) {
+            rngSeed = (rngSeed * 16807) % 2147483647;
+            const j = rngSeed % (i + 1);
+            [shuffledPhotos[i], shuffledPhotos[j]] = [shuffledPhotos[j], shuffledPhotos[i]];
+        }
+    }
+
+    const topologies = getTopologies(shuffledPhotos.length);
+    const scoredTopos: { area: number, slots: MasonrySlotOutput[] }[] = [];
+
+    topologies.forEach(topo => {
+        const rootRel = solveTreeRel(topo, shuffledPhotos, gap);
+        if (rootRel.s <= 0 || rootRel.c > Math.max(W, H) * 2) return;
+
+        const hW = (W - rootRel.c) / rootRel.s;
+        const validW = hW > 0 && hW <= H;
+        
+        const wH = rootRel.s * H + rootRel.c;
+        const validH = wH > 0 && wH <= W;
+        
+        let area = 0;
+        let finalW = 0; let finalH = 0;
+
+        if (validW && validH) {
+            const areaW = W * hW; const areaH = wH * H;
+            if (areaW > areaH) { finalW = W; finalH = hW; area = areaW; } 
+            else { finalW = wH; finalH = H; area = areaH; }
+        } else if (validW) { finalW = W; finalH = hW; area = W * hW; } 
+        else if (validH) { finalW = wH; finalH = H; area = wH * H; }
+
+        if (area > 0) {
+            const offsetX = margin + (W - finalW) / 2;
+            const offsetY = margin + (H - finalH) / 2;
+            const slots = computeTreeLayout(topo, offsetX, offsetY, finalW, finalH, shuffledPhotos, gap, { count: 0 });
+            scoredTopos.push({ area, slots });
+        }
+    });
+
+    if (scoredTopos.length === 0) return [];
+    
+    // Sort strictly by mathematical dominance 
+    scoredTopos.sort((a, b) => b.area - a.area);
+    
+    // Fundy Variety Simulation: Pick among top 3 best-fitting topological frameworks!
+    const poolSize = Math.min(3, scoredTopos.length);
+    const selected = scoredTopos[variantSeed % poolSize];
+    
+    if (config.flipHorizontal) {
+        selected.slots.forEach(slot => {
+            const dist = slot.x - margin;
+            slot.x = margin + W - slot.width - dist;
+        });
+    }
+
+    return selected.slots;
 }
