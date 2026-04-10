@@ -232,6 +232,7 @@ export class IDBDriver implements StorageDriver {
     if (asset.originalBlobId) await del(asset.originalBlobId);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async cleanupElement(_element: EditorElement): Promise<void> {
     // Phase 13 Fix: DO NOT revokeObjectURL here!
     // The previewUrl and originalUrl in an EditorElement are strictly COPIED from the ProjectAsset pool.
