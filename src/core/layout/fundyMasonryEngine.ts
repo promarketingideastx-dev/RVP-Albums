@@ -425,20 +425,20 @@ function generateLowCountComposition(config: MasonryEngineConfig): MasonrySlotOu
         if (rootRel.s <= 0 || rootRel.c > Math.max(W, H) * 2) return;
 
         const hW = (W - rootRel.c) / rootRel.s;
-        const validW = hW > 0 && hW <= H;
+        const validW = hW > 0 && hW <= H + 0.1;
         
         const wH = rootRel.s * H + rootRel.c;
-        const validH = wH > 0 && wH <= W;
+        const validH = wH > 0 && wH <= W + 0.1;
         
         let area = 0;
         let finalW = 0; let finalH = 0;
 
         if (validW && validH) {
             const areaW = W * hW; const areaH = wH * H;
-            if (areaW > areaH) { finalW = W; finalH = hW; area = areaW; } 
-            else { finalW = wH; finalH = H; area = areaH; }
-        } else if (validW) { finalW = W; finalH = hW; area = W * hW; } 
-        else if (validH) { finalW = wH; finalH = H; area = wH * H; }
+            if (areaW > areaH) { finalW = W; finalH = Math.min(hW, H); area = areaW; } 
+            else { finalW = Math.min(wH, W); finalH = H; area = areaH; }
+        } else if (validW) { finalW = W; finalH = Math.min(hW, H); area = W * hW; } 
+        else if (validH) { finalW = Math.min(wH, W); finalH = H; area = wH * H; }
 
         if (area > 0) {
             const offsetX = margin + (W - finalW) / 2;
