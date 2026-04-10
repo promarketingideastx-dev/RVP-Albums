@@ -1013,6 +1013,7 @@ const EditorText = ({ element, elements, spreadId, isSelected, onSelect, onConte
          });
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [element.text, element.fontSize, element.fontFamily, element.letterSpacing, element.lineHeight, element.textTransform]);
 
   const onTransformEnd = () => {
