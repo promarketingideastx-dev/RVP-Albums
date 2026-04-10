@@ -62,10 +62,10 @@ export default function LoginPage() {
       await signInWithPopup(auth, provider);
       router.push('/');
     } catch (e) {
-      const err = e as { code?: string };
+      const err = e as { code?: string, message?: string };
       // Gracefully ignore if the user simply closed the popup
       if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
-         setError(tAuth('googleSignInFailed'));
+         setError(`${tAuth('googleSignInFailed')} [${err.code || 'unknown'}]: ${err.message || ''}`);
       }
     } finally {
       setLoading(false);
