@@ -232,7 +232,7 @@ export class IDBDriver implements StorageDriver {
     if (asset.originalBlobId) await del(asset.originalBlobId);
   }
 
-  async cleanupElement(element: EditorElement): Promise<void> {
+  async cleanupElement(_element: EditorElement): Promise<void> {
     // Phase 13 Fix: DO NOT revokeObjectURL here!
     // The previewUrl and originalUrl in an EditorElement are strictly COPIED from the ProjectAsset pool.
     // If we revoke them here, the asset inside the sidebar tray breaks globally for the entire session.
