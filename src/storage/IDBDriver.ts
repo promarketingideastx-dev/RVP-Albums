@@ -233,19 +233,13 @@ export class IDBDriver implements StorageDriver {
   }
 
   async cleanupElement(element: EditorElement): Promise<void> {
-    // For pure element cleanup, memory URL strings must be revoked to stop RAM leakage.
-    // However, the actual persistent IDB blob is SHARED with the AssetTray asset. 
-    // We MUST NOT delete the underlying Blob from IDB when an element is removed from a spread, 
-    // otherwise the Asset in the tray breaks instantly!
-    // The IDB Blob will only be deleted when removeAsset() is explicitly called via the Tray.
+    // Phase 13 Fix: DO NOT revokeObjectURL here!
+    // The previewUrl and originalUrl in an EditorElement are strictly COPIED from the ProjectAsset pool.
+    // If we revoke them here, the asset inside the sidebar tray breaks globally for the entire session.
+    // The browser garbage collector will naturally clean them up when `removeAsset()` is explicitly called 
+    // from the library tab instead.
     
-    if (element?.originalUrl && element.originalUrl.startsWith('blob:')) {
-      URL.revokeObjectURL(element.originalUrl);
-    }
-    
-    // Note: previewUrl isn't strictly tracked inside the element structure, but if it exists:
-    if (element?.previewUrl && element.previewUrl.startsWith('blob:')) {
-      URL.revokeObjectURL(element.previewUrl);
-    }
+    // Memory leak protection is natively handled by strict reference counting in modern modern browsers, 
+    // and manual revocation is fully covered in removeAsset().
   }
 }
