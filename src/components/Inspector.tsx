@@ -115,6 +115,9 @@ export default function Inspector() {
   const bringForward = useEditorStore((state) => state.bringForward);
   const sendBackward = useEditorStore((state) => state.sendBackward);
   const removeElement = useEditorStore((state) => state.removeElement);
+  const selectedStagedElementIds = useEditorStore((state) => state.selectedStagedElementIds);
+  const swapStagedElements = useEditorStore((state) => state.swapStagedElements);
+  const clearStagedSelection = useEditorStore((state) => state.clearStagedSelection);
 
   const activeSpread = project?.spreads.find(s => s.id === activeSpreadId);
   const element = activeSpread?.elements.find(e => e.id === selectedElementId);
@@ -210,6 +213,33 @@ export default function Inspector() {
   }
 
   if (!element) {
+    if (selectedStagedElementIds?.length === 2) {
+       return (
+         <aside className="w-64 shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full overflow-hidden">
+           <TabsHeader />
+           <div className="flex-1 p-6 flex flex-col items-center justify-center text-sm text-neutral-400 text-center gap-4 animate-in fade-in zoom-in-95 duration-200">
+             <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mb-2 shadow-inner border border-blue-100 dark:border-blue-800/50">
+               <RotateCcw className="w-8 h-8 text-blue-500" />
+             </div>
+             <p className="font-medium text-neutral-800 dark:text-neutral-200 tracking-wide uppercase text-xs">2 Seleccionados</p>
+             <button
+               onClick={swapStagedElements}
+               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold tracking-wide py-2.5 rounded-lg shadow-md transition-transform active:scale-95 flex items-center justify-center gap-2"
+               title="Intercambiar el tamaño, ancho, y rotación de las dos fotos"
+             >
+               Intercambiar Posición
+             </button>
+             <button
+               onClick={clearStagedSelection}
+               className="w-full bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 font-bold py-2 rounded-lg transition-colors text-xs"
+             >
+               Desmarcar Todos
+             </button>
+           </div>
+         </aside>
+       );
+    }
+    
     return (
       <aside className="w-64 shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full overflow-hidden">
         <TabsHeader />

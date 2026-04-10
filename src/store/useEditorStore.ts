@@ -43,6 +43,7 @@ interface EditorState {
   toggleStagedElementSelection: (elementId: string) => void;
   clearStagedSelection: () => void;
   setStagedSelection: (elementIds: string[]) => void;
+  swapStagedElements: () => void; // Phase 16: Free mode active element exchange
 
   updateElement: (spreadId: string, elementId: string, changes: Partial<EditorElement>) => void;
   addElement: (spreadId: string, element: EditorElement) => void;
@@ -186,6 +187,55 @@ export const useEditorStore = create<EditorState>()(
   }),
   clearStagedSelection: () => set({ selectedStagedElementIds: [] }),
   setStagedSelection: (ids) => set({ selectedStagedElementIds: ids, selectedElementId: null }),
+
+  swapStagedElements: () => set((state) => {
+     if (!state.project || !state.activeSpreadId || state.selectedStagedElementIds.length !== 2) return state;
+     const newSpreads = [...state.project.spreads];
+     const sIdx = newSpreads.findIndex(s => s.id === state.activeSpreadId);
+     if (sIdx === -1) return state;
+
+     const targetSpread = { ...newSpreads[sIdx] };
+     const elements = [...targetSpread.elements];
+
+     const id1 = state.selectedStagedElementIds[0];
+     const id2 = state.selectedStagedElementIds[1];
+
+     const idx1 = elements.findIndex(e => e.id === id1);
+     const idx2 = elements.findIndex(e => e.id === id2);
+
+     if (idx1 === -1 || idx2 === -1) return state;
+
+     const el1 = { ...elements[idx1] };
+     const el2 = { ...elements[idx2] };
+
+     // Store el2 properties to map onto el1
+     const tempX = el2.x_mm;
+     const tempY = el2.y_mm;
+     const tempW = el2.w_mm;
+     const tempH = el2.h_mm;
+     const tempRot = el2.rotation_deg;
+
+     el2.x_mm = el1.x_mm;
+     el2.y_mm = el1.y_mm;
+     el2.w_mm = el1.w_mm;
+     el2.h_mm = el1.h_mm;
+     el2.rotation_deg = el1.rotation_deg;
+
+     el1.x_mm = tempX;
+     el1.y_mm = tempY;
+     el1.w_mm = tempW;
+     el1.h_mm = tempH;
+     el1.rotation_deg = tempRot;
+
+     elements[idx1] = el1;
+     elements[idx2] = el2;
+     
+     targetSpread.elements = elements;
+     newSpreads[sIdx] = targetSpread;
+
+     // Force UI trigger update by flushing new project state. Keep selection.
+     return { project: { ...state.project, spreads: newSpreads } };
+  }),
 
   updateSpread: (spreadId, changes) => set((state) => {
     if (!state.project) return state;
