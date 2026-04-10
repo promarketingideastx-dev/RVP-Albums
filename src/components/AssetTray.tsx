@@ -310,9 +310,10 @@ export default function AssetTray() {
           </div>
           <button 
             onClick={clearSelection}
-            className="px-4 py-1.5 bg-neutral-800 text-white hover:bg-neutral-700 rounded-full text-xs font-semibold tracking-wide transition-colors"
+            disabled={selectedAssetIds.size === 0}
+            className="px-4 py-1.5 bg-neutral-800 dark:bg-neutral-900 border border-neutral-700 text-white hover:bg-neutral-700 dark:hover:bg-neutral-800 rounded-full text-xs font-semibold tracking-wide transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            CLEAR
+            {selectedAssetIds.size > 0 ? `CLEAR (${selectedAssetIds.size})` : 'CLEAR'}
           </button>
           <button
             onClick={() => fileInputRef.current?.click()}
@@ -356,12 +357,14 @@ export default function AssetTray() {
               className={`h-full bg-white dark:bg-neutral-800 border-2 ${isSelected ? 'border-orange-500' : 'border-neutral-200 dark:border-neutral-700'} overflow-hidden cursor-grab active:cursor-grabbing relative group shrink-0 flex flex-col shadow-sm hover:shadow-md transition-shadow`}
               style={{ aspectRatio: (asset.aspectRatio && asset.aspectRatio > 0.1) ? asset.aspectRatio : 1 }}
             >
-              {/* Checkbox Hook Layer */}
+              {/* Checkbox / Sequential Selection Badge Layer */}
               <div 
-                className="absolute top-2 right-10 z-20 w-5 h-5 rounded border border-white bg-black/30 cursor-pointer flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                className={`absolute top-2 right-10 z-20 w-6 h-6 rounded-full border-2 border-white cursor-pointer flex items-center justify-center font-bold text-[12px] shadow-md transition-opacity scale-in ${isSelected ? 'bg-orange-500 text-white opacity-100' : 'bg-black/30 opacity-0 group-hover:opacity-100'}`}
                 onClick={(e) => toggleSelection(e, asset.id)}
               >
-                {isSelected && <div className="w-3 h-3 bg-orange-500 rounded-sm"></div>}
+                {isSelected && (
+                   <span>{Array.from(selectedAssetIds).indexOf(asset.id) + 1}</span>
+                )}
               </div>
 
               {/* Usage Count Badge Layer */}
