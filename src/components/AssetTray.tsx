@@ -11,7 +11,10 @@ export default function AssetTray() {
   const t = useTranslations('Editor');
   const pathname = usePathname();
   const isEs = pathname?.startsWith('/es') ?? true;
-  const project = useEditorStore((state) => state.project);
+  const hasProject = useEditorStore((state) => Boolean(state.project));
+  const projectAssets = useEditorStore((state) => state.project?.assets);
+  const sequenceMode = useEditorStore((state) => state.project?.sequenceMode || 'ORIGINAL_ORDER');
+  const projectCategory = useEditorStore((state) => state.project?.projectCategory);
   const addAsset = useEditorStore((state) => state.addAsset);
   const removeAsset = useEditorStore((state) => state.removeAsset);
   const updateAsset = useEditorStore((state) => state.updateAsset);
@@ -29,12 +32,20 @@ export default function AssetTray() {
   const rebalanceAutoBookLayout = useEditorStore((state) => state.rebalanceAutoBookLayout);
   const hasManagedSpreads = useEditorStore((state) => state.project?.spreads.some(s => s.autoBookManaged) ?? false);
 
+  // Only recompute usage counts when image elements are added/removed/replaced, NOT when x_mm/y_mm/w_mm/h_mm/rotation change
+  const imageElementsSignature = useEditorStore((state) => {
+    if (!state.project) return '';
+    return state.project.spreads
+      .map(s => s.elements.filter(e => e.type === 'image').map(e => `${e.id}:${(e as { previewBlobId?: string }).previewBlobId || ''}:${(e as { previewUrl?: string }).previewUrl || ''}`).join(','))
+      .join('|');
+  });
+
   // Advanced Fundy Logic States
   const [filterRating, setFilterRating] = useState<number>(0);
   const [filterFavorite, setFilterFavorite] = useState<boolean>(false);
   const [sortMode, setSortMode] = useState<'newest' | 'rating'>('newest');
 
-  const assets = project?.assets || [];
+  const assets = projectAssets || [];
 
   const visibleAssets = useMemo(() => {
     let filtered = [...assets];
@@ -52,17 +63,19 @@ export default function AssetTray() {
     }
     return filtered;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project?.assets, filterFavorite, filterRating, sortMode]);
+  }, [projectAssets, filterFavorite, filterRating, sortMode]);
 
 
           
   // Extract all existing image elements across all spreads efficiently updating live drops
   const allImageElements = useMemo(() => {
-    if (!project) return [];
-    return project.spreads.flatMap(s => s.elements.filter(e => e.type === 'image'));
-  }, [project]);
+    const proj = useEditorStore.getState().project;
+    if (!proj) return [];
+    return proj.spreads.flatMap(s => s.elements.filter(e => e.type === 'image'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [imageElementsSignature]);
 
-  if (!project) return null;
+  if (!hasProject) return null;
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -79,7 +92,7 @@ export default function AssetTray() {
       try {
         const { originalUrl, previewUrl, originalBlobId, previewBlobId, widthPx, heightPx } = await processLocalImage(file);
         
-        const metadata = extractAssetMetadataFromFile(file, (project.assets?.length || 0) + i, { w: widthPx || 0, h: heightPx || 0 });
+        const metadata = extractAssetMetadataFromFile(file, (assets.length || 0) + i, { w: widthPx || 0, h: heightPx || 0 });
 
         addAsset({
           id: uuidv4(),
@@ -247,7 +260,7 @@ export default function AssetTray() {
           <div className="relative group">
              <select 
                className="appearance-none bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs font-semibold py-1.5 pl-3 pr-8 rounded-full focus:outline-none cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors"
-               value={project?.sequenceMode || 'ORIGINAL_ORDER'}
+               value={sequenceMode}
                onChange={(e) => useEditorStore.getState().setSequenceMode(e.target.value as 'ORIGINAL_ORDER' | 'CHRONOLOGICAL')}
              >
                <option value="ORIGINAL_ORDER">⏳ {t('originalOrder')} </option>
@@ -259,12 +272,12 @@ export default function AssetTray() {
              </div>
              {/* Phase 16 Soft Notification Tooltip */}
              <div className="absolute top-[130%] left-1/2 -translate-x-1/2 bg-black/80 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-                {project?.sequenceMode === 'CHRONOLOGICAL' ? t('sortingChronological') : t('sortingOriginal')}
+                {sequenceMode === 'CHRONOLOGICAL' ? t('sortingChronological') : t('sortingOriginal')}
              </div>
           </div>
           
           {/* Phase 13: Auto-Book Builder Popover (Only for Albums) */}
-          {project?.projectCategory !== 'studio_print' && (
+          {projectCategory !== 'studio_print' && (
             <div className="relative">
                <button 
                   onClick={() => setShowAutoBookMenu(!showAutoBookMenu)}

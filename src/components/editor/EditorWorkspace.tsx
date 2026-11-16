@@ -156,6 +156,7 @@ export default function EditorWorkspace() {
                               style={{ aspectRatio: 1 / ratio, background: cssBackgroundStr }}
                            >
                                {spread.elements.map(el => {
+                                  if (el.visible === false || el.type === 'group') return null;
                                   let filterString = '';
                                   if (el.type === 'image' && el.photoAdjustments) {
                                      const adj = el.photoAdjustments;

@@ -15,15 +15,15 @@ export async function processLocalImage(file: File): Promise<{ originalUrl: stri
     const img = new Image();
     img.src = originalUrl;
     img.onload = () => {
-      const maxDim = 1000;
+      const maxDim = 1600;
       let targetW = img.width;
       let targetH = img.height;
       if (targetW > maxDim || targetH > maxDim) {
         if (targetW > targetH) {
-          targetH = (targetH / targetW) * maxDim;
+          targetH = Math.round((targetH / targetW) * maxDim);
           targetW = maxDim;
         } else {
-          targetW = (targetW / targetH) * maxDim;
+          targetW = Math.round((targetW / targetH) * maxDim);
           targetH = maxDim;
         }
       }
@@ -43,7 +43,7 @@ export async function processLocalImage(file: File): Promise<{ originalUrl: stri
         const w_mm = 100;
         const h_mm = 100 * (img.height / img.width);
         resolve({ originalUrl, previewUrl, w_mm, h_mm, previewBlobId, originalBlobId, widthPx: img.width, heightPx: img.height });
-      }, 'image/webp', 0.8);
+      }, 'image/webp', 0.85);
     };
     img.onerror = reject;
   });

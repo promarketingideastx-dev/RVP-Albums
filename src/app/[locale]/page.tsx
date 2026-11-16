@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useEditorStore } from '@/store/useEditorStore';
-import { useDebouncedCallback } from 'use-debounce';
 import { useAuth } from '@/context/AuthContext';
 import Sidebar from '@/components/Sidebar';
 import Toolbar from '@/components/Toolbar';
@@ -19,7 +18,7 @@ export default function AppPage() {
   const t = useTranslations('Editor');
   const locale = useLocale();
   const loadProject = useEditorStore((state) => state.loadProject);
-  const project = useEditorStore((state) => state.project);
+  const hasProject = useEditorStore((state) => Boolean(state.project));
   const activeSpreadId = useEditorStore((state) => state.activeSpreadId);
   const selectedElementId = useEditorStore((state) => state.selectedElementId);
   const removeElement = useEditorStore((state) => state.removeElement);
@@ -60,11 +59,7 @@ export default function AppPage() {
             try {
                const { loadProjectFromDB, hydrateProjectBlobs } = await import('@/utils/persistence');
                const hydratedDB = await loadProjectFromDB(lastSessionId);
-               if (hydratedDB) {
-                 recoveringProject = hydratedDB;
-               } else {
-                 recoveringProject = await hydrateProjectBlobs(recoveringProject);
-               }
+               recoveringProject = await hydrateProjectBlobs(hydratedDB || recoveringProject);
             } catch (e) {
                console.warn("Hydration boot upgrade bypassed.", e);
             }
@@ -252,24 +247,6 @@ export default function AppPage() {
     handleOpenProject(newId);
   };
 
-  // MOCK AUTOSAVE DEBOUNCE (Hardened with deep string comparison)
-  const [saveStatus, setSaveStatus] = useState<string>('');
-  const lastSavedStr = useRef<string>('');
-  
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const debouncedSave = useDebouncedCallback((p: any) => {
-    const pStr = JSON.stringify(p);
-    if (pStr === lastSavedStr.current) return; // Prevent unnecessary DB calls
-    lastSavedStr.current = pStr;
-    
-    // Real DB Save is handled globally by Zustand subscribe in useEditorStore!
-    // To be safe we can force an explicit LocalStorage backup just for the active hook:
-    projectStorage.saveProject(p);
-
-    setSaveStatus(t('save_success'));
-    setTimeout(() => setSaveStatus(''), 2000);
-  }, 1000);
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Phase 8.G Fix: Key Repeat Storm Guard
@@ -298,10 +275,17 @@ export default function AppPage() {
       
       if (e.key === 'Backspace' || e.key === 'Delete') {
         if (activeSpreadId) {
+           const activeSpread = project?.spreads.find(s => s.id === activeSpreadId);
            if (selectedElementId) {
-             removeElement(activeSpreadId, selectedElementId);
+             const selEl = activeSpread?.elements.find(el => el.id === selectedElementId);
+             if (!selEl?.locked) {
+               removeElement(activeSpreadId, selectedElementId);
+             }
            } else if (stgSel.length > 0) {
-             stgSel.forEach(id => removeElement(activeSpreadId, id));
+             stgSel.forEach(id => {
+               const el = activeSpread?.elements.find(item => item.id === id);
+               if (!el?.locked) removeElement(activeSpreadId, id);
+             });
              state.clearStagedSelection();
            }
         }
@@ -400,16 +384,10 @@ export default function AppPage() {
 
   // WATCH FOR PROJECT UNLOAD
   useEffect(() => {
-    if (viewMode === 'editor' && !project) {
+    if (viewMode === 'editor' && !hasProject) {
       setViewMode('picker');
     }
-  }, [project, viewMode]);
-
-  useEffect(() => {
-    if (!mounted || viewMode !== 'editor' || !project) return;
-    setSaveStatus(t('saving'));
-    debouncedSave(project);
-  }, [project, viewMode, mounted, debouncedSave, t]);
+  }, [hasProject, viewMode]);
 
   if (!mounted || loading) return <div className="h-screen w-screen bg-white dark:bg-neutral-950" />;
   if (!user) return null; // Block render loop unconditionally while redirect bounds process
@@ -452,13 +430,6 @@ export default function AppPage() {
             <EditorWorkspace />
           </div>
           <AssetTray />
-          
-          {/* MOCK SAVING INDICATOR UI */}
-          {saveStatus && (
-            <div className="absolute top-4 right-4 bg-black text-white text-xs px-3 py-1 rounded shadow-lg opacity-50 z-50">
-              {saveStatus}
-            </div>
-          )}
         </main>
         <Inspector />
       </div>

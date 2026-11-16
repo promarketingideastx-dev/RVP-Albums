@@ -90,6 +90,8 @@ export interface EditorElement {
   w_mm: number;
   h_mm: number;
   rotation_deg: number;
+  pivotX?: number; // Normalized anchor X (0 = left, 0.5 = center, 1 = right; default 0 for anchor rotation)
+  pivotY?: number; // Normalized anchor Y (0 = top, 0.5 = center, 1 = bottom; default 0 for anchor rotation)
   zIndex: number;
 }
 

@@ -1,4 +1,4 @@
-import { EditorProject } from '@/types/editor';
+import { EditorProject, UserDecoration } from '@/types/editor';
 
 export interface ProjectMetadata {
   id: string;
@@ -18,25 +18,24 @@ export async function listProjectsFromDB(): Promise<ProjectMetadata[]> {
 
 export async function deleteProjectFromDB(id: string): Promise<void> {
   const { get: idbGet, set: idbSet, del: idbDel } = await import('idb-keyval');
-  const registry = await idbGet<ProjectMetadata[]>('rvp_project_registry') || [];
-  const newRegistry = registry.filter(p => p.id !== id);
+  const registry = (await idbGet<ProjectMetadata[]>('rvp_project_registry')) || [];
+  const newRegistry = registry.filter((p) => p.id !== id);
   await idbSet('rvp_project_registry', newRegistry);
   await idbDel(`rvp_project_${id}`);
-  
-  // Nuke the legacy genesis fallback block ensuring it doesn't resurrect as a zombie
+
   if (id === 'proj_genesis') {
-     await idbDel('rvp_editor_project');
+    await idbDel('rvp_editor_project');
   }
 }
 
 export async function saveProjectToDB(project: EditorProject): Promise<void> {
   const { get: idbGet, set: idbSet } = await import('idb-keyval');
-  
+
   // Save Full Payload
   await idbSet(`rvp_project_${project.id}`, project);
-  
+
   // Update Registry
-  const registry = await idbGet<ProjectMetadata[]>('rvp_project_registry') || [];
+  const registry = (await idbGet<ProjectMetadata[]>('rvp_project_registry')) || [];
   const meta: ProjectMetadata = {
     id: project.id,
     title: project.title,
@@ -45,116 +44,110 @@ export async function saveProjectToDB(project: EditorProject): Promise<void> {
     labPresetName: project.labPresetName,
     updatedAt: project.updatedAt,
   };
-  
-  const existingIndex = registry.findIndex(p => p.id === project.id);
+
+  const existingIndex = registry.findIndex((p) => p.id === project.id);
   if (existingIndex >= 0) {
     registry[existingIndex] = meta;
   } else {
     registry.push(meta);
   }
-  
+
   await idbSet('rvp_project_registry', registry);
 }
 
+/**
+ * Fast viewport hydration: loads only lightweight preview blobs (previewBlobId) into ObjectURLs
+ * and reuses them across assets and spread elements. Heavy originalBlobId files remain in IndexedDB
+ * until exportEngine requests them at 300 DPI export time.
+ */
 export async function hydrateProjectBlobs(project: EditorProject): Promise<EditorProject> {
   const { get: idbGet } = await import('idb-keyval');
 
-  // 1. Hydrate Asset Tray Blobs
+  // Cache of blobId -> objectURL to avoid reading the same blob from IndexedDB more than once
+  const blobUrlCache = new Map<string, string>();
+  const resolveBlobUrl = async (blobId?: string): Promise<string | undefined> => {
+    if (!blobId) return undefined;
+    const cached = blobUrlCache.get(blobId);
+    if (cached) return cached;
+    const blob = await idbGet<Blob>(blobId);
+    if (!blob) return undefined;
+    const url = URL.createObjectURL(blob);
+    blobUrlCache.set(blobId, url);
+    return url;
+  };
+
+  // 1. Hydrate Asset Tray Blobs (fast preview proxy first; fallback to original only if preview missing)
   const rawAssets = project.assets || [];
-  const hydratedAssets = await Promise.all(rawAssets.map(async (asset) => {
-    const newAsset = { ...asset };
-    
-    // Preview URL restoration with originalBlob fallback
-    if (!newAsset.previewUrl) {
-      if (newAsset.previewBlobId) {
-        const previewBlob = await idbGet<Blob>(newAsset.previewBlobId);
-        if (previewBlob) newAsset.previewUrl = URL.createObjectURL(previewBlob);
+  const hydratedAssets = await Promise.all(
+    rawAssets.map(async (asset) => {
+      const newAsset = { ...asset };
+      if (!newAsset.previewUrl || !newAsset.previewUrl.startsWith('blob:')) {
+        newAsset.previewUrl =
+          (await resolveBlobUrl(newAsset.previewBlobId)) ||
+          (await resolveBlobUrl(newAsset.originalBlobId)) ||
+          newAsset.previewUrl;
       }
-      if (!newAsset.previewUrl && newAsset.originalBlobId) {
-        const origBlob = await idbGet<Blob>(newAsset.originalBlobId);
-        if (origBlob) newAsset.previewUrl = URL.createObjectURL(origBlob);
+      // Point originalUrl to previewUrl in memory; exportEngine resolves originalBlobId directly from IDB
+      if (!newAsset.originalUrl || !newAsset.originalUrl.startsWith('blob:')) {
+        newAsset.originalUrl = newAsset.previewUrl;
       }
-    }
+      return newAsset;
+    })
+  );
 
-    // Original URL restoration with previewBlob fallback
-    if (!newAsset.originalUrl) {
-      if (newAsset.originalBlobId) {
-        const originalBlob = await idbGet<Blob>(newAsset.originalBlobId);
-        if (originalBlob) newAsset.originalUrl = URL.createObjectURL(originalBlob);
-      }
-      if (!newAsset.originalUrl && newAsset.previewBlobId) {
-        const prevBlob = await idbGet<Blob>(newAsset.previewBlobId);
-        if (prevBlob) newAsset.originalUrl = URL.createObjectURL(prevBlob);
-      }
-    }
+  const assetMap = new Map<string, (typeof hydratedAssets)[0]>();
+  hydratedAssets.forEach((a) => assetMap.set(a.id, a));
 
-    // Ultimate fallback for preview/original
-    newAsset.previewUrl = newAsset.previewUrl || newAsset.originalUrl;
-    newAsset.originalUrl = newAsset.originalUrl || newAsset.previewUrl;
+  // Optional user decorations lookup if any spread contains user-decoration elements
+  const hasUserDecorations = project.spreads.some((s) =>
+    s.elements?.some((el) => el.type === 'decoration' && el.sourceType === 'user-decoration' && el.sourceId)
+  );
+  const userDecs = hasUserDecorations ? (await idbGet<UserDecoration[]>('rvp_user_decorations')) || [] : [];
 
-    return newAsset;
-  }));
+  // 2. Hydrate Spread Elements reusing assetMap & blobUrlCache
+  const hydratedSpreads = await Promise.all(
+    project.spreads.map(async (spread) => {
+      const hydratedElements = await Promise.all(
+        (spread.elements || []).map(async (el) => {
+          if (el.type === 'image') {
+            const newEl = { ...el };
+            const matchedAsset = newEl.assetId ? assetMap.get(newEl.assetId) : undefined;
 
-  // Create an asset lookup map for quick cross-referencing
-  const assetMap = new Map<string, typeof hydratedAssets[0]>();
-  hydratedAssets.forEach(a => assetMap.set(a.id, a));
+            if (matchedAsset) {
+              newEl.previewBlobId = newEl.previewBlobId || matchedAsset.previewBlobId;
+              newEl.originalBlobId = newEl.originalBlobId || matchedAsset.originalBlobId;
+              if (matchedAsset.previewUrl) {
+                newEl.previewUrl = matchedAsset.previewUrl;
+                newEl.originalUrl = matchedAsset.originalUrl || matchedAsset.previewUrl;
+              }
+            }
 
-  // 2. Hydrate Spreads Elements
-  const hydratedSpreads = await Promise.all(project.spreads.map(async (spread) => {
-    const hydratedElements = await Promise.all(spread.elements.map(async (el) => {
-      if (el.type === 'image') {
-        const newEl = { ...el };
+            if (!newEl.previewUrl || !newEl.previewUrl.startsWith('blob:')) {
+              newEl.previewUrl =
+                (await resolveBlobUrl(newEl.previewBlobId)) ||
+                (await resolveBlobUrl(newEl.originalBlobId)) ||
+                newEl.previewUrl;
+            }
+            if (!newEl.originalUrl || !newEl.originalUrl.startsWith('blob:')) {
+              newEl.originalUrl = newEl.previewUrl;
+            }
 
-        // Cross-reference with assets if blob IDs are missing on element
-        if (newEl.assetId && (!newEl.previewBlobId || !newEl.originalBlobId)) {
-          const matchedAsset = assetMap.get(newEl.assetId);
-          if (matchedAsset) {
-            newEl.previewBlobId = newEl.previewBlobId || matchedAsset.previewBlobId;
-            newEl.originalBlobId = newEl.originalBlobId || matchedAsset.originalBlobId;
-            if (!newEl.previewUrl && matchedAsset.previewUrl) newEl.previewUrl = matchedAsset.previewUrl;
-            if (!newEl.originalUrl && matchedAsset.originalUrl) newEl.originalUrl = matchedAsset.originalUrl;
+            return newEl;
           }
-        }
 
-        // Re-generate preview blob URL
-        if (!newEl.previewUrl && newEl.previewBlobId) {
-          const previewBlob = await idbGet<Blob>(newEl.previewBlobId);
-          if (previewBlob) {
-            newEl.previewUrl = URL.createObjectURL(previewBlob);
+          if (el.type === 'decoration' && el.sourceType === 'user-decoration' && el.sourceId) {
+            const matched = userDecs.find((d) => d.id === el.sourceId);
+            if (matched?.blob) {
+              return { ...el, src: URL.createObjectURL(matched.blob) };
+            }
           }
-        }
-        
-        // Re-generate original blob URL
-        if (!newEl.originalUrl && newEl.originalBlobId) {
-          const originalBlob = await idbGet<Blob>(newEl.originalBlobId);
-          if (originalBlob) {
-            newEl.originalUrl = URL.createObjectURL(originalBlob);
-          }
-        }
 
-        // Fallbacks between previewUrl and originalUrl
-        if (!newEl.previewUrl && newEl.originalUrl) {
-          newEl.previewUrl = newEl.originalUrl;
-        }
-        if (!newEl.originalUrl && newEl.previewUrl) {
-          newEl.originalUrl = newEl.previewUrl;
-        }
-
-        // Fallback to linked asset if still missing
-        if ((!newEl.previewUrl || !newEl.originalUrl) && newEl.assetId) {
-          const matchedAsset = assetMap.get(newEl.assetId);
-          if (matchedAsset) {
-            newEl.previewUrl = newEl.previewUrl || matchedAsset.previewUrl;
-            newEl.originalUrl = newEl.originalUrl || matchedAsset.originalUrl;
-          }
-        }
-
-        return newEl;
-      }
-      return el;
-    }));
-    return { ...spread, elements: hydratedElements };
-  }));
+          return el;
+        })
+      );
+      return { ...spread, elements: hydratedElements };
+    })
+  );
 
   return { ...project, spreads: hydratedSpreads, assets: hydratedAssets };
 }
@@ -162,13 +155,12 @@ export async function hydrateProjectBlobs(project: EditorProject): Promise<Edito
 export async function loadProjectFromDB(id: string): Promise<EditorProject | null> {
   const { get: idbGet } = await import('idb-keyval');
   let project = await idbGet<EditorProject>(`rvp_project_${id}`);
-  
-  // Fallback for extreme legacy dev environment (genesis project override)
+
   if (!project && id === 'proj_genesis') {
     project = await idbGet<EditorProject>('rvp_editor_project');
   }
 
   if (!project) return null;
 
-  return hydrateProjectBlobs(project);
+  return project;
 }

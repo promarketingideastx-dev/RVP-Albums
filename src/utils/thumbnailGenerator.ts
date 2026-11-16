@@ -86,23 +86,26 @@ export async function generateProjectThumbnailBlob(project: EditorProject): Prom
     const elements: EditorElement[] = [...(spread.elements || [])].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
 
     for (const el of elements) {
-      if (el.visible === false) continue;
+      if (el.visible === false || el.type === 'group') continue;
+      if (el.groupId) {
+        const parent = elements.find((g) => g.id === el.groupId);
+        if (parent && parent.visible === false) continue;
+      }
 
+      const elScale = el.scale || 1;
       const elX = el.x_mm * scale;
       const elY = el.y_mm * scale;
-      const elW = el.w_mm * scale;
-      const elH = el.h_mm * scale;
+      const elW = el.w_mm * scale * elScale;
+      const elH = el.h_mm * scale * elScale;
 
       ctx.save();
       ctx.globalAlpha = el.opacity !== undefined ? el.opacity : 1;
 
-      // Handle Rotation around center
+      // Match Konva Group origin (elX, elY) so both center-rotated and anchor-rotated elements align identically
       if (el.rotation_deg) {
-        const cx = elX + elW / 2;
-        const cy = elY + elH / 2;
-        ctx.translate(cx, cy);
+        ctx.translate(elX, elY);
         ctx.rotate((el.rotation_deg * Math.PI) / 180);
-        ctx.translate(-cx, -cy);
+        ctx.translate(-elX, -elY);
       }
 
       if (el.type === 'image') {

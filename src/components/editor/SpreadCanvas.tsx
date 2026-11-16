@@ -4,12 +4,31 @@ import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import { Stage, Layer, Rect, Ellipse, Transformer, Image as KonvaImage, Text, Group, Line, Circle } from 'react-konva';
 import Konva from 'konva';
 import { useTranslations } from 'next-intl';
+import {
+  ArrowUpToLine,
+  ArrowUp,
+  ArrowDown,
+  ArrowDownToLine,
+  Copy,
+  Lock,
+  Unlock,
+  Eye,
+  EyeOff,
+  Trash2,
+} from 'lucide-react';
 import { LUT_LIBRARY } from '@/lib/lut-presets';
 import { TYPOGRAPHY_PRESETS } from '@/lib/typography-presets';
 import { useEditorStore } from '@/store/useEditorStore';
 import { EditorElement } from '@/types/editor';
 import { extractAssetMetadataFromFile } from '@/utils/metadataEngine';
 import { processLocalImage } from '@/utils/imageIngestion';
+import {
+  Point2D,
+  getWorldPivotPoint,
+  computeRotationAroundPivot,
+  worldPointToNormalizedPivot,
+  findTopmostElementAtPoint,
+} from '@/utils/transformGeometry';
 import useImage from 'use-image';
 
 // Register Global Custom WebGL ColorShift Filter for Additive Raw Math (Replaces luminance-based RGB / painter RGBA)
@@ -102,8 +121,8 @@ export function buildSmartSnapBoundFunc(
   spreadSize: { w_mm: number, h_mm: number }
 ) {
   return (pos: { x: number, y: number }) => {
-    // We are returning the theoretical {x, y} which is the top-left of the Group dragging!
-    const SNAP_THRESHOLD_MM = 2; // ~8 pixels mathematically 
+    // Gentle 0.65mm snap threshold so dragging layers feels smooth without magnetic sticking friction
+    const SNAP_THRESHOLD_MM = 0.65; 
     
     const dragBox = {
        x: pos.x,
@@ -209,19 +228,19 @@ const ShadowDragAnchor = ({ element, spreadId, isSelected }: { element: EditorEl
   const appliedShadowOffsetX = element.shadowOffsetX ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetX ?? 0) : 0);
   const appliedShadowOffsetY = element.shadowOffsetY ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetY ?? 0) : 0);
 
-  if (!isSelected || appliedShadowOpacity <= 0 || appliedShadowColor === 'transparent') return null;
+  if (!isSelected || element.locked || appliedShadowOpacity <= 0 || appliedShadowColor === 'transparent') return null;
 
-  const centerX = element.x_mm + element.w_mm / 2;
-  const centerY = element.y_mm + element.h_mm / 2;
+  const centerPt = getWorldPivotPoint(element, 0.5, 0.5);
 
   return (
-    <Group x={centerX} y={centerY}>
+    <Group x={centerPt.x} y={centerPt.y}>
       <Line 
         points={[0, 0, appliedShadowOffsetX, appliedShadowOffsetY]} 
         stroke="#3b82f6" 
         dash={[4,4]} 
         strokeWidth={1.5} 
         opacity={0.8}
+        listening={false}
       />
       <Circle 
         x={appliedShadowOffsetX} 
@@ -250,11 +269,93 @@ const ShadowDragAnchor = ({ element, spreadId, isSelected }: { element: EditorEl
   );
 };
 
-const EditorImage = ({ 
+const PivotAnchorOverlay = ({
+  element,
+  spreadId,
+  isSelected,
+}: {
+  element: EditorElement;
+  spreadId: string;
+  isSelected: boolean;
+}) => {
+  const updateElement = useEditorStore((state) => state.updateElement);
+
+  if (!isSelected || element.locked) return null;
+
+  const centerPt = getWorldPivotPoint(element, 0.5, 0.5);
+  const pivotU = element.pivotX ?? 0;
+  const pivotV = element.pivotY ?? 0;
+  const anchorPt = getWorldPivotPoint(element, pivotU, pivotV);
+  const isAnchorAtCenter = Math.abs(pivotU - 0.5) < 0.02 && Math.abs(pivotV - 0.5) < 0.02;
+
+  const snapNormalized = (val: number) => {
+    if (Math.abs(val - 0) < 0.04) return 0;
+    if (Math.abs(val - 0.5) < 0.04) return 0.5;
+    if (Math.abs(val - 1) < 0.04) return 1;
+    return val;
+  };
+
+  return (
+    <Group>
+      {/* Geometric Center Reference Crosshair (Blue) */}
+      <Group x={centerPt.x} y={centerPt.y} listening={false}>
+        <Line points={[-4, 0, 4, 0]} stroke="#3b82f6" strokeWidth={1.2} opacity={0.85} />
+        <Line points={[0, -4, 0, 4]} stroke="#3b82f6" strokeWidth={1.2} opacity={0.85} />
+        <Circle x={0} y={0} radius={2.2} fill="#3b82f6" opacity={0.85} />
+      </Group>
+
+      {/* Dashed connector from Geometric Center to Active Anchor Pivot when distinct */}
+      {!isAnchorAtCenter && (
+        <Line
+          points={[centerPt.x, centerPt.y, anchorPt.x, anchorPt.y]}
+          stroke="#f59e0b"
+          dash={[3, 3]}
+          strokeWidth={1}
+          opacity={0.75}
+          listening={false}
+        />
+      )}
+
+      {/* Draggable Active Anchor Pivot Target (Amber) */}
+      <Group
+        x={anchorPt.x}
+        y={anchorPt.y}
+        draggable
+        onDragMove={(e) => {
+          const worldX = e.target.x();
+          const worldY = e.target.y();
+          const norm = worldPointToNormalizedPivot(element, worldX, worldY);
+          const snappedU = snapNormalized(norm.pivotX);
+          const snappedV = snapNormalized(norm.pivotY);
+          updateElement(spreadId, element.id, {
+            pivotX: snappedU,
+            pivotY: snappedV,
+          });
+        }}
+        onMouseEnter={(e) => {
+          const container = e.target.getStage()?.container();
+          if (container) container.style.cursor = 'crosshair';
+        }}
+        onMouseLeave={(e) => {
+          const container = e.target.getStage()?.container();
+          if (container) container.style.cursor = 'default';
+        }}
+      >
+        <Circle x={0} y={0} radius={5.5} fill="rgba(245, 158, 11, 0.2)" stroke="#f59e0b" strokeWidth={1.75} />
+        <Line points={[-7, 0, 7, 0]} stroke="#f59e0b" strokeWidth={1.25} listening={false} />
+        <Line points={[0, -7, 0, 7]} stroke="#f59e0b" strokeWidth={1.25} listening={false} />
+        <Circle x={0} y={0} radius={2} fill="#ffffff" stroke="#d97706" strokeWidth={1} listening={false} />
+      </Group>
+    </Group>
+  );
+};
+
+const EditorImage = React.memo(function EditorImage({ 
   element, 
   elements,
   spreadId, 
   isSelected, 
+  isHovered = false,
   onSelect,
   onContextMenu
 }: { 
@@ -262,15 +363,18 @@ const EditorImage = ({
   elements: EditorElement[],
   spreadId: string, 
   isSelected: boolean, 
+  isHovered?: boolean,
   onSelect: () => void,
   onContextMenu: (x: number, y: number, id: string) => void
-}) => {
+}) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const groupRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const filterLayerRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const trRef = useRef<any>(null);
+  const transformPivotRef = useRef<Point2D | null>(null);
+  const transformStartRotRef = useRef<number>(0);
   const lastSwapTimeRef = useRef<number>(0);
   const lastSwappedIdRef = useRef<string | null>(null);
   const updateElement = useEditorStore((state) => state.updateElement);
@@ -290,24 +394,25 @@ const EditorImage = ({
   const isStagingMode = element.stageType === 'staged';
   const stagingIndex = isStagingMode ? elements.filter(e => e.type === 'image' && e.stageType === 'staged').findIndex(e => e.id === element.id) : -1;
 
-  const project = useEditorStore(state => state.project);
-  const isStudio = project?.projectCategory === 'studio_print';
-  const imageSrc = isStudio
-    ? (element.originalUrl || element.previewUrl || element.src || 'https://via.placeholder.com/150')
-    : (element.previewUrl || element.originalUrl || element.src || 'https://via.placeholder.com/150');
+  // Always use working viewport proxy (previewUrl) for 60fps interactive rendering;
+  // full-resolution originalBlobId is used untouched by exportEngine at export time.
+  const imageSrc = element.previewUrl || element.originalUrl || element.src || 'https://via.placeholder.com/150';
   const [image] = useImage(imageSrc);
   const isSelectedStaged = useEditorStore(state => state.selectedStagedElementIds.includes(element.id));
 
   useEffect(() => {
-    if (isSelected && trRef.current && groupRef.current) {
+    if (isSelected && !element.locked && trRef.current && groupRef.current) {
       trRef.current.nodes([groupRef.current]);
       trRef.current.getLayer().batchDraw();
     }
-  }, [isSelected]);
+  }, [isSelected, element.locked]);
 
-  // Object-Fit Cover Math for Layouts
+  // Object-Fit Cover Math ONLY for Album Auto-Layout slots (never crop free Photo Studio layers or decorations!)
   let computedCrop = undefined;
-  if (image) {
+  const isAutoLayoutSlot = Boolean(
+    element.type === 'image' && (element.isAutoLayoutManaged || element.stageType === 'layout')
+  );
+  if (image && isAutoLayoutSlot) {
     const imgW = image.width;
     const imgH = image.height;
     const imgRatio = imgW / imgH;
@@ -490,13 +595,13 @@ const EditorImage = ({
         node.filters(filtersArray);
         
         // HIGH PERFORMANCE INTERACTIVE CACHE RATIO
-        // During interactive editing, cap preview canvas size to crisp screen resolution (max 1400px)
-        // so real-time slider drags run in <16ms at 60fps without freezing the UI thread.
+        // During interactive editing, cap preview canvas size to crisp screen resolution (max 960px)
+        // so real-time slider drags run in ~5.8ms (>60fps) without blocking the UI thread.
         // Full 300 DPI high-res caching is executed during actual file export in exportEngine.
         const naturalWidth = image.naturalWidth || image.width;
         const logicalWidth = element.w_mm;
         
-        const maxInteractiveWidth = 1400;
+        const maxInteractiveWidth = 960;
         const targetWidth = Math.min(maxInteractiveWidth, Math.max(300, naturalWidth));
         const computedPixelRatio = logicalWidth > 0 ? (targetWidth / logicalWidth) : 1;
 
@@ -504,15 +609,31 @@ const EditorImage = ({
         node.getLayer()?.batchDraw();
       } else {
         // RAW Passthrough - Clear entirely
-        if (process.env.NODE_ENV === 'development') {
-           if (node.isCached()) console.log(`[Preview Pipeline] Raw Passthrough ${element.id} -> Cache Cleared (Zero Values)`);
-        }
         node.clearCache();
         node.filters([]);
         node.getLayer()?.batchDraw();
       }
     }
-  }, [element.id, element.photoFilter, element.photoAdjustments, image, element.filterIntensity, previewOriginalPhotoId, element.w_mm, element.h_mm, element.scale]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [element.id, element.photoFilter, element.photoAdjustments, image, element.filterIntensity, previewOriginalPhotoId]);
+
+  // Debounced cache geometry refresh when w_mm or h_mm changes on an already-filtered node,
+  // avoiding synchronous CPU filter execution on every single resize frame.
+  useEffect(() => {
+    const node = filterLayerRef.current;
+    if (!node || !image || !node.isCached()) return;
+    const timer = setTimeout(() => {
+      if (filterLayerRef.current && filterLayerRef.current.isCached()) {
+        const naturalWidth = image.naturalWidth || image.width;
+        const logicalWidth = element.w_mm;
+        const targetWidth = Math.min(960, Math.max(300, naturalWidth));
+        const computedPixelRatio = logicalWidth > 0 ? (targetWidth / logicalWidth) : 1;
+        filterLayerRef.current.cache({ pixelRatio: computedPixelRatio, imageSmoothingEnabled: true });
+        filterLayerRef.current.getLayer()?.batchDraw();
+      }
+    }, 120);
+    return () => clearTimeout(timer);
+  }, [element.w_mm, element.h_mm, image]);
 
   // Phase 8.D: Apply Layout Hook Tracking Transition bridging semantic to geometric mapping natively
   const prevIsManaged = useRef(element.isAutoLayoutManaged);
@@ -549,20 +670,6 @@ const EditorImage = ({
   const appliedShadowOpacity = element.shadowOpacity ?? (!element.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowOpacity ?? 0.5) : 0.5);
 
   const shadowIsInvisibleArtifact = (appliedShadowBlur === 0 && appliedShadowOffsetX === 0 && appliedShadowOffsetY === 0) || appliedShadowOpacity === 0;
-  
-  if (element.type === 'image' || element.type === 'decoration') {
-    console.log("SHADOW TRACE:", {
-      id: element.id,
-      globalEnabled: globalStyles?.shadowEnabled,
-      appliedShadowColor,
-      appliedShadowBlur,
-      appliedShadowOffsetX,
-      appliedShadowOffsetY,
-      appliedShadowOpacity,
-      shadowIsInvisibleArtifact
-    });
-  }
-
   const finalShadowColor = shadowIsInvisibleArtifact ? 'transparent' : appliedShadowColor;
 
   const strokeEnabled = !element.isolateFromGlobalStyles && (globalStyles?.strokeEnabled ?? false);
@@ -583,8 +690,10 @@ const EditorImage = ({
         rotation={element.rotation_deg || 0}
         scaleX={element.scale || 1}
         scaleY={element.scale || 1}
-        draggable={isSelected && !element.locked || isSelectedStaged} // Allow drag if staged batch selected!
+        listening={!element.locked}
+        draggable={!element.locked && (isSelected || isSelectedStaged)} // Allow drag if unlocked and selected!
         onClick={(e) => {
+           if (element.locked) return;
            if (element.stageType === 'staged') {
               if (e.evt.metaKey || e.evt.ctrlKey || e.evt.shiftKey) {
                  useEditorStore.getState().toggleStagedElementSelection(element.id);
@@ -601,6 +710,7 @@ const EditorImage = ({
            onSelect();
         }}
         onTap={() => {
+           if (element.locked) return;
            if (element.stageType === 'staged') {
               useEditorStore.getState().setStagedSelection([element.id]);
            } else {
@@ -731,21 +841,50 @@ const EditorImage = ({
           });
         }}
         dragBoundFunc={buildSmartSnapBoundFunc(element, elements, projectSize)}
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        onTransformEnd={(e) => {
+        onTransformStart={() => {
+          const pivotU = element.pivotX ?? 0.5;
+          const pivotV = element.pivotY ?? 0.5;
+          transformPivotRef.current = getWorldPivotPoint(element, pivotU, pivotV);
+          transformStartRotRef.current = groupRef.current?.rotation() || 0;
+        }}
+        onTransform={() => {
           const node = groupRef.current;
-          const scaleX = node.scaleX();
-          const scaleY = node.scaleY();
+          if (!node || !transformPivotRef.current) return;
+          const baseScale = element.scale || 1;
+          const isPureRotation =
+            Math.abs(node.scaleX() - baseScale) < 0.005 &&
+            Math.abs(node.scaleY() - baseScale) < 0.005 &&
+            Math.abs(node.rotation() - transformStartRotRef.current) > 0.01;
+          if (isPureRotation) {
+            const pivotU = element.pivotX ?? 0.5;
+            const pivotV = element.pivotY ?? 0.5;
+            const nextPose = computeRotationAroundPivot(
+              element,
+              node.rotation(),
+              pivotU,
+              pivotV,
+              transformPivotRef.current
+            );
+            node.x(nextPose.x_mm);
+            node.y(nextPose.y_mm);
+          }
+        }}
+        onTransformEnd={() => {
+          const node = groupRef.current;
+          const baseScale = element.scale || 1;
+          const ratioX = node.scaleX() / baseScale;
+          const ratioY = node.scaleY() / baseScale;
 
-          node.scaleX(1);
-          node.scaleY(1);
+          node.scaleX(baseScale);
+          node.scaleY(baseScale);
+          transformPivotRef.current = null;
 
           updateElement(spreadId, element.id, {
-            x_mm: node.x(),
-            y_mm: node.y(),
-            w_mm: Math.max(5, element.w_mm * scaleX),
-            h_mm: Math.max(5, element.h_mm * scaleY),
-            rotation_deg: node.rotation()
+            x_mm: Number(node.x().toFixed(3)),
+            y_mm: Number(node.y().toFixed(3)),
+            w_mm: Math.max(5, Number((element.w_mm * ratioX).toFixed(2))),
+            h_mm: Math.max(5, Number((element.h_mm * ratioY).toFixed(2))),
+            rotation_deg: Number(node.rotation().toFixed(2))
           });
         }}
       >
@@ -764,9 +903,24 @@ const EditorImage = ({
           shadowOffsetX={appliedShadowOffsetX}
           shadowOffsetY={appliedShadowOffsetY}
           shadowOpacity={appliedShadowOpacity}
-          imageSmoothingEnabled={false}
+          imageSmoothingEnabled={true}
           imageSmoothingQuality="high"
         />
+
+        {/* Real-Time Color Overlay (for decorations & tinted image layers) */}
+        {element.color && element.color !== 'transparent' ? (
+          <Rect
+            x={0}
+            y={0}
+            width={element.w_mm}
+            height={element.h_mm}
+            cornerRadius={appliedBorderRadius}
+            fill={element.color}
+            opacity={element.type === 'decoration' ? 0.75 : 0.35}
+            globalCompositeOperation="source-atop"
+            listening={false}
+          />
+        ) : null}
         
         {/* Pro Vignette Overlay */}
         {element.photoAdjustments?.vignette && element.photoAdjustments.vignette !== 0 ? (
@@ -845,26 +999,58 @@ const EditorImage = ({
              listening={false}
            />
         )}
+
+        {/* Discrete Hover Indicator for Overlapping Layers */}
+        {isHovered && !isSelected && !element.locked && (
+          <Rect
+            width={element.w_mm}
+            height={element.h_mm}
+            stroke="#3b82f6"
+            strokeWidth={1.5}
+            dash={[4, 3]}
+            opacity={0.75}
+            listening={false}
+          />
+        )}
+
+        {/* Locked Layer Selection Outline when inspected from Layers Panel */}
+        {isSelected && element.locked && (
+          <Rect
+            width={element.w_mm}
+            height={element.h_mm}
+            stroke="#ef4444"
+            strokeWidth={1.5}
+            dash={[5, 4]}
+            opacity={0.85}
+            listening={false}
+          />
+        )}
       </Group>
-      {isSelected && (
+      {isSelected && !element.locked && (
         <Transformer
           ref={trRef}
+          centeredRotation={
+            element.pivotX === undefined ||
+            (Math.abs((element.pivotX ?? 0.5) - 0.5) < 0.02 && Math.abs((element.pivotY ?? 0.5) - 0.5) < 0.02)
+          }
           boundBoxFunc={(oldBox, newBox) => {
             if (newBox.width < 5 || newBox.height < 5) return oldBox;
             return newBox;
           }}
         />
       )}
+      <PivotAnchorOverlay element={element} spreadId={spreadId} isSelected={isSelected} />
       <ShadowDragAnchor element={element} spreadId={spreadId} isSelected={isSelected} />
     </React.Fragment>
   );
-};
+}, (prev, next) => prev.element === next.element && prev.isSelected === next.isSelected && prev.isHovered === next.isHovered && prev.spreadId === next.spreadId);
 
-const EditorShape = ({ 
+const EditorShape = React.memo(function EditorShape({ 
   element, 
   elements,
   spreadId, 
   isSelected, 
+  isHovered = false,
   onSelect,
   onContextMenu
 }: { 
@@ -872,9 +1058,10 @@ const EditorShape = ({
   elements: EditorElement[],
   spreadId: string, 
   isSelected: boolean, 
+  isHovered?: boolean,
   onSelect: () => void,
   onContextMenu: (x: number, y: number, id: string) => void
-}) => {
+}) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const shapeRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -883,16 +1070,18 @@ const EditorShape = ({
   const projectSize = useEditorStore((state) => state.project?.size) || { w_mm: 1000, h_mm: 1000 };
 
   useEffect(() => {
-    if (isSelected && trRef.current && shapeRef.current) {
+    if (isSelected && !element.locked && trRef.current && shapeRef.current) {
       trRef.current.nodes([shapeRef.current]);
       trRef.current.getLayer().batchDraw();
     }
-  }, [isSelected]);
+  }, [isSelected, element.locked]);
 
   const commonProps = {
     ref: shapeRef,
     fill: element.fillColor || '#aaaaaa',
     rotation: element.rotation_deg,
+    scaleX: element.scale || 1,
+    scaleY: element.scale || 1,
     opacity: element.opacity !== undefined ? element.opacity : 1,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     globalCompositeOperation: (element.blendMode as any) || 'source-over',
@@ -901,9 +1090,17 @@ const EditorShape = ({
     shadowOffsetX: element.shadowOffsetX || 0,
     shadowOffsetY: element.shadowOffsetY || 0,
     shadowOpacity: element.shadowOpacity !== undefined ? element.shadowOpacity : 0.5,
-    draggable: true,
-    onClick: onSelect,
-    onTap: onSelect,
+    listening: !element.locked,
+    draggable: Boolean(isSelected && !element.locked),
+    stroke: isHovered && !isSelected && !element.locked ? '#3b82f6' : isSelected && element.locked ? '#ef4444' : undefined,
+    strokeWidth: (isHovered && !isSelected && !element.locked) || (isSelected && element.locked) ? 1.5 : 0,
+    dash: isSelected && element.locked ? [5, 4] : isHovered && !isSelected ? [4, 3] : undefined,
+    onClick: () => {
+      if (!element.locked) onSelect();
+    },
+    onTap: () => {
+      if (!element.locked) onSelect();
+    },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onContextMenu: (e: any) => {
       e.evt.preventDefault();
@@ -923,17 +1120,18 @@ const EditorShape = ({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onTransformEnd: () => {
       const node = shapeRef.current;
-      const scaleX = node.scaleX();
-      const scaleY = node.scaleY();
-      node.scaleX(1);
-      node.scaleY(1);
+      const baseScale = element.scale || 1;
+      const ratioX = node.scaleX() / baseScale;
+      const ratioY = node.scaleY() / baseScale;
+      node.scaleX(baseScale);
+      node.scaleY(baseScale);
 
       updateElement(spreadId, element.id, {
-        x_mm: node.x(),
-        y_mm: node.y(),
-        w_mm: Math.max(5, node.width() * scaleX),
-        h_mm: Math.max(5, node.height() * scaleY),
-        rotation_deg: node.rotation()
+        x_mm: Number(node.x().toFixed(3)),
+        y_mm: Number(node.y().toFixed(3)),
+        w_mm: Math.max(5, Number((element.w_mm * ratioX).toFixed(2))),
+        h_mm: Math.max(5, Number((element.h_mm * ratioY).toFixed(2))),
+        rotation_deg: Number(node.rotation().toFixed(2))
       });
     }
   };
@@ -958,22 +1156,27 @@ const EditorShape = ({
           height={element.h_mm}
         />
       )}
-      {isSelected && (
+      {isSelected && !element.locked && (
         <Transformer
           ref={trRef}
+          centeredRotation={
+            element.pivotX === undefined ||
+            (Math.abs((element.pivotX ?? 0.5) - 0.5) < 0.02 && Math.abs((element.pivotY ?? 0.5) - 0.5) < 0.02)
+          }
           boundBoxFunc={(oldBox, newBox) => {
             if (newBox.width < 5 || newBox.height < 5) return oldBox;
             return newBox;
           }}
         />
       )}
+      <PivotAnchorOverlay element={element} spreadId={spreadId} isSelected={isSelected} />
       <ShadowDragAnchor element={element} spreadId={spreadId} isSelected={isSelected} />
     </React.Fragment>
   );
-};
+}, (prev, next) => prev.element === next.element && prev.isSelected === next.isSelected && prev.isHovered === next.isHovered && prev.spreadId === next.spreadId);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const EditorText = ({ element, elements, spreadId, isSelected, onSelect, onContextMenu }: any) => {
+const EditorText = React.memo(function EditorText({ element, elements, spreadId, isSelected, isHovered = false, onSelect, onContextMenu }: any) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const shapeRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -982,11 +1185,11 @@ const EditorText = ({ element, elements, spreadId, isSelected, onSelect, onConte
   const projectSize = useEditorStore((state) => state.project?.size) || { w_mm: 1000, h_mm: 1000 };
 
   useEffect(() => {
-    if (isSelected && trRef.current && shapeRef.current) {
+    if (isSelected && !element.locked && trRef.current && shapeRef.current) {
       trRef.current.nodes([shapeRef.current]);
       trRef.current.getLayer().batchDraw();
     }
-  }, [isSelected]);
+  }, [isSelected, element.locked]);
 
   // Forces the canvas to redraw as soon as the font is downloaded
   useEffect(() => {
@@ -1017,18 +1220,19 @@ const EditorText = ({ element, elements, spreadId, isSelected, onSelect, onConte
   const onTransformEnd = () => {
     const node = shapeRef.current;
     if (!node) return;
-    const scaleX = node.scaleX();
-    const scaleY = node.scaleY();
-    node.scaleX(1);
-    node.scaleY(1);
+    const baseScale = element.scale || 1;
+    const ratioX = node.scaleX() / baseScale;
+    const ratioY = node.scaleY() / baseScale;
+    node.scaleX(baseScale);
+    node.scaleY(baseScale);
     
     updateElement(spreadId, element.id, {
-      x_mm: node.x(),
-      y_mm: node.y(),
-      w_mm: Math.max(10, node.width() * scaleX),
-      h_mm: Math.max(10, node.height() * scaleY),
-      fontSize: Math.round((element.fontSize || 32) * scaleX),
-      rotation_deg: node.rotation()
+      x_mm: Number(node.x().toFixed(3)),
+      y_mm: Number(node.y().toFixed(3)),
+      w_mm: Math.max(10, Number((node.width() * ratioX).toFixed(2))),
+      h_mm: Math.max(10, Number((node.height() * ratioY).toFixed(2))),
+      fontSize: Math.round((element.fontSize || 32) * ratioX),
+      rotation_deg: Number(node.rotation().toFixed(2))
     });
   };
 
@@ -1046,18 +1250,25 @@ const EditorText = ({ element, elements, spreadId, isSelected, onSelect, onConte
         fill={element.textColor || '#000000'}
         letterSpacing={element.letterSpacing || 0}
         lineHeight={element.lineHeight || 1}
-        stroke={element.strokeColor || undefined}
-        strokeWidth={element.strokeWidth || 0}
+        stroke={element.strokeColor || (isHovered && !isSelected && !element.locked ? '#3b82f6' : undefined)}
+        strokeWidth={element.strokeWidth || (isHovered && !isSelected && !element.locked ? 0.5 : 0)}
         rotation={element.rotation_deg}
+        scaleX={element.scale || 1}
+        scaleY={element.scale || 1}
         opacity={element.opacity !== undefined ? element.opacity : 1}
         shadowColor={element.shadowColor || 'black'}
         shadowBlur={element.shadowBlur || 0}
         shadowOffsetX={element.shadowOffsetX || 0}
         shadowOffsetY={element.shadowOffsetY || 0}
         shadowOpacity={element.shadowOpacity !== undefined ? element.shadowOpacity : 0.5}
-        draggable={isSelected && !element.locked}
-        onClick={onSelect}
-        onTap={onSelect}
+        listening={!element.locked}
+        draggable={Boolean(isSelected && !element.locked)}
+        onClick={() => {
+          if (!element.locked) onSelect();
+        }}
+        onTap={() => {
+          if (!element.locked) onSelect();
+        }}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onDragEnd={(e: any) => {
           smartGuidesEmitter.setGuides([]);
@@ -1076,9 +1287,13 @@ const EditorText = ({ element, elements, spreadId, isSelected, onSelect, onConte
           onContextMenu(e.evt.clientX, e.evt.clientY, element.id);
         }}
       />
-      {isSelected && (
+      {isSelected && !element.locked && (
         <Transformer
           ref={trRef}
+          centeredRotation={
+            element.pivotX === undefined ||
+            (Math.abs((element.pivotX ?? 0.5) - 0.5) < 0.02 && Math.abs((element.pivotY ?? 0.5) - 0.5) < 0.02)
+          }
           enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
           boundBoxFunc={(oldBox, newBox) => {
             if (newBox.width < 10) return oldBox;
@@ -1086,10 +1301,11 @@ const EditorText = ({ element, elements, spreadId, isSelected, onSelect, onConte
           }}
         />
       )}
+      <PivotAnchorOverlay element={element} spreadId={spreadId} isSelected={isSelected} />
       <ShadowDragAnchor element={element} spreadId={spreadId} isSelected={isSelected} />
     </React.Fragment>
   );
-};
+}, (prev, next) => prev.element === next.element && prev.isSelected === next.isSelected && prev.isHovered === next.isHovered && prev.spreadId === next.spreadId);
 
 export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, panY, spreadIdOverride }: SpreadCanvasProps) {
   const project = useEditorStore((state) => state.project);
@@ -1103,11 +1319,22 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
   const bringForward = useEditorStore((state) => state.bringForward);
   const sendBackward = useEditorStore((state) => state.sendBackward);
   const sendToBack = useEditorStore((state) => state.sendToBack);
+  const duplicateElement = useEditorStore((state) => state.duplicateElement);
+  const updateElement = useEditorStore((state) => state.updateElement);
+  const removeElement = useEditorStore((state) => state.removeElement);
 
   const t = useTranslations('Editor');
 
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, elementId: string } | null>(null);
+  const [hoveredElementId, setHoveredElementId] = useState<string | null>(null);
   const [isDraggingOverCanvas, setIsDraggingOverCanvas] = useState(false);
+
+  const openElementContextMenu = (clientX: number, clientY: number, elementId: string) => {
+    setSelectedElement(elementId);
+    const clampedX = typeof window !== 'undefined' ? Math.min(clientX, window.innerWidth - 200) : clientX;
+    const clampedY = typeof window !== 'undefined' ? Math.min(clientY, window.innerHeight - 290) : clientY;
+    setContextMenu({ x: Math.max(8, clampedX), y: Math.max(8, clampedY), elementId });
+  };
 
   useEffect(() => {
     const handleGlobalClick = () => { if (contextMenu) setContextMenu(null); };
@@ -1540,8 +1767,42 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
         pixelRatio={typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1}
         onMouseDown={checkDeselect}
         onTouchStart={checkDeselect}
+        onMouseMove={(e) => {
+          if (e.evt && e.evt.buttons !== 0) return;
+          const stage = e.target.getStage();
+          if (!stage) return;
+          const pointer = stage.getPointerPosition();
+          if (!pointer) return;
+          const worldX_mm = (pointer.x - panX) / scale;
+          const worldY_mm = (pointer.y - panY) / scale;
+          const hit = findTopmostElementAtPoint(elements, worldX_mm, worldY_mm, { includeLocked: false });
+          const nextHoverId = hit?.id ?? null;
+          if (nextHoverId !== hoveredElementId) {
+            setHoveredElementId(nextHoverId);
+          }
+        }}
+        onMouseLeave={() => {
+          if (hoveredElementId !== null) setHoveredElementId(null);
+        }}
         style={{ boxShadow: '0px 10px 30px rgba(0,0,0,0.1)' }}
-        onContextMenu={(e) => e.evt.preventDefault()}
+        onContextMenu={(e) => {
+          e.evt.preventDefault();
+          const stage = e.target.getStage();
+          if (!stage) return;
+          const pointer = stage.getPointerPosition();
+          if (!pointer) return;
+          const worldX_mm = (pointer.x - panX) / scale;
+          const worldY_mm = (pointer.y - panY) / scale;
+          // Hit-test topmost visible element including locked layers so locked layers can be unlocked via right-click
+          const hit = findTopmostElementAtPoint(elements, worldX_mm, worldY_mm, { includeLocked: true });
+          if (hit) {
+            e.cancelBubble = true;
+            e.evt.stopPropagation();
+            openElementContextMenu(e.evt.clientX, e.evt.clientY, hit.id);
+          } else {
+            setContextMenu(null);
+          }
+        }}
       >
       <Layer>
       <Group x={panX} y={panY} scaleX={scale} scaleY={scale}>
@@ -1560,7 +1821,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
 
         {/* Elements */}
         {elements.map((rawEl) => {
-          let el = { ...rawEl };
+          let el = rawEl;
           if (el.type === 'group') return null; // Logical container bypassing visual draw explicitly
           if (el.visible === false) return null; // Direct visibility toggle overriding render loops
 
@@ -1569,8 +1830,8 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
              const parent = spread.elements.find(g => g.id === el.groupId);
              if (parent && parent.visible === false) return null; // Cascade Visibility
              
-             if (parent && parent.opacity !== undefined) {
-                // If parent has opacity, merge it natively
+             if (parent && parent.opacity !== undefined && parent.opacity !== 1) {
+                // If parent has non-1 opacity, merge it natively
                 const childOpacity = el.opacity !== undefined ? el.opacity : 1;
                 el = { ...el, opacity: parent.opacity * childOpacity };
              }
@@ -1584,8 +1845,9 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
                 elements={elements}
                 spreadId={activeSpreadId}
                 isSelected={selectedElementId === el.id}
+                isHovered={hoveredElementId === el.id}
                 onSelect={() => setSelectedElement(el.id)}
-                onContextMenu={(x: number, y: number, id: string) => setContextMenu({ x, y, elementId: id })}
+                onContextMenu={openElementContextMenu}
               />
             );
           }
@@ -1597,8 +1859,9 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
                 elements={elements}
                 spreadId={activeSpreadId}
                 isSelected={selectedElementId === el.id}
+                isHovered={hoveredElementId === el.id}
                 onSelect={() => setSelectedElement(el.id)}
-                onContextMenu={(x: number, y: number, id: string) => setContextMenu({ x, y, elementId: id })}
+                onContextMenu={openElementContextMenu}
               />
             );
           }
@@ -1609,8 +1872,9 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
               elements={elements}
               spreadId={activeSpreadId}
               isSelected={selectedElementId === el.id}
+              isHovered={hoveredElementId === el.id}
               onSelect={() => setSelectedElement(el.id)}
-              onContextMenu={(x: number, y: number, id: string) => setContextMenu({ x, y, elementId: id })}
+              onContextMenu={openElementContextMenu}
             />
           );
         })}
@@ -1781,13 +2045,14 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
 
       {contextMenu && (
         <div 
-          className="fixed z-50 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-xl py-1 min-w-[160px] text-sm overflow-hidden"
+          className="fixed z-50 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-2xl py-1.5 min-w-[190px] text-xs font-medium overflow-hidden"
           style={{ top: contextMenu.y, left: contextMenu.x }}
           onClick={(e) => e.stopPropagation()}
         >
           {contextMenu.elementId.startsWith('guide:') ? (
              <>
                <button
+                 type="button"
                  className="w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 transition-colors"
                  onClick={() => {
                     const guideId = contextMenu.elementId.replace('guide:', '');
@@ -1799,6 +2064,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
                  {project?.globalGuides?.find(g => g.id === contextMenu.elementId.replace('guide:', ''))?.locked ? 'Unlock Guide' : 'Lock Guide'}
                </button>
                <button
+                 type="button"
                  className="w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 transition-colors flex items-center justify-between"
                  onClick={() => {
                     const guideId = contextMenu.elementId.replace('guide:', '');
@@ -1813,6 +2079,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
                </button>
                <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1"></div>
                <button
+                 type="button"
                  className="w-full text-left px-4 py-2 hover:bg-red-500 hover:text-white text-red-500 transition-colors"
                  onClick={() => { 
                     useEditorStore.getState().removeGuide(contextMenu.elementId.replace('guide:', '')); 
@@ -1822,35 +2089,103 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
                  Delete Guide
                </button>
              </>
-          ) : (
-             <>
-               <button
-            className="w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 transition-colors"
-            onClick={() => { bringToFront(activeSpreadId, contextMenu.elementId); setContextMenu(null); }}
-          >
-            {t('bring_to_front')}
-          </button>
-          <button
-            className="w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 transition-colors"
-            onClick={() => { bringForward(activeSpreadId, contextMenu.elementId); setContextMenu(null); }}
-          >
-            {t('bring_forward')}
-          </button>
-          <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1"></div>
-          <button
-            className="w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 transition-colors"
-            onClick={() => { sendBackward(activeSpreadId, contextMenu.elementId); setContextMenu(null); }}
-          >
-            {t('send_backward')}
-          </button>
-          <button
-            className="w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 transition-colors"
-            onClick={() => { sendToBack(activeSpreadId, contextMenu.elementId); setContextMenu(null); }}
-          >
-            {t('send_to_back')}
-          </button>
-         </>
-       )}
+          ) : (() => {
+             const ctxEl = spread.elements.find(el => el.id === contextMenu.elementId);
+             const isCtxLocked = Boolean(ctxEl?.locked);
+             const isCtxHidden = ctxEl?.visible === false;
+             return (
+               <>
+                 <button
+                   type="button"
+                   className="w-full text-left px-3.5 py-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 transition-colors flex items-center gap-2.5"
+                   onClick={() => { bringToFront(activeSpreadId, contextMenu.elementId); setContextMenu(null); }}
+                 >
+                   <ArrowUpToLine className="w-3.5 h-3.5 text-neutral-400" />
+                   <span>{t('bring_to_front')}</span>
+                 </button>
+                 <button
+                   type="button"
+                   className="w-full text-left px-3.5 py-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 transition-colors flex items-center gap-2.5"
+                   onClick={() => { bringForward(activeSpreadId, contextMenu.elementId); setContextMenu(null); }}
+                 >
+                   <ArrowUp className="w-3.5 h-3.5 text-neutral-400" />
+                   <span>{t('bring_forward')}</span>
+                 </button>
+                 <button
+                   type="button"
+                   className="w-full text-left px-3.5 py-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 transition-colors flex items-center gap-2.5"
+                   onClick={() => { sendBackward(activeSpreadId, contextMenu.elementId); setContextMenu(null); }}
+                 >
+                   <ArrowDown className="w-3.5 h-3.5 text-neutral-400" />
+                   <span>{t('send_backward')}</span>
+                 </button>
+                 <button
+                   type="button"
+                   className="w-full text-left px-3.5 py-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 transition-colors flex items-center gap-2.5"
+                   onClick={() => { sendToBack(activeSpreadId, contextMenu.elementId); setContextMenu(null); }}
+                 >
+                   <ArrowDownToLine className="w-3.5 h-3.5 text-neutral-400" />
+                   <span>{t('send_to_back')}</span>
+                 </button>
+
+                 <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1 mx-2" />
+
+                 <button
+                   type="button"
+                   className="w-full text-left px-3.5 py-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 transition-colors flex items-center gap-2.5"
+                   onClick={() => { duplicateElement(activeSpreadId, contextMenu.elementId); setContextMenu(null); }}
+                 >
+                   <Copy className="w-3.5 h-3.5 text-neutral-400" />
+                   <span>{t('duplicate_layer')}</span>
+                 </button>
+                 <button
+                   type="button"
+                   className="w-full text-left px-3.5 py-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 transition-colors flex items-center gap-2.5"
+                   onClick={() => {
+                     if (ctxEl) updateElement(activeSpreadId, contextMenu.elementId, { locked: !isCtxLocked });
+                     setContextMenu(null);
+                   }}
+                 >
+                   {isCtxLocked ? (
+                     <Unlock className="w-3.5 h-3.5 text-amber-500" />
+                   ) : (
+                     <Lock className="w-3.5 h-3.5 text-neutral-400" />
+                   )}
+                   <span>{isCtxLocked ? t('unlock_layer') : t('lock_layer')}</span>
+                 </button>
+                 <button
+                   type="button"
+                   className="w-full text-left px-3.5 py-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 transition-colors flex items-center gap-2.5"
+                   onClick={() => {
+                     if (ctxEl) updateElement(activeSpreadId, contextMenu.elementId, { visible: isCtxHidden ? true : false });
+                     setContextMenu(null);
+                   }}
+                 >
+                   {isCtxHidden ? (
+                     <Eye className="w-3.5 h-3.5 text-blue-500" />
+                   ) : (
+                     <EyeOff className="w-3.5 h-3.5 text-neutral-400" />
+                   )}
+                   <span>{isCtxHidden ? t('show_layer') : t('hide_layer')}</span>
+                 </button>
+
+                 <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1 mx-2" />
+
+                 <button
+                   type="button"
+                   disabled={isCtxLocked}
+                   className="w-full text-left px-3.5 py-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors flex items-center gap-2.5 disabled:opacity-40 disabled:pointer-events-none"
+                   onClick={() => {
+                     if (!isCtxLocked) removeElement(activeSpreadId, contextMenu.elementId);
+                     setContextMenu(null);
+                   }}
+                 >
+                   <Trash2 className="w-3.5 h-3.5" />
+                   <span>{t('delete_layer')}</span>
+                 </button>
+               </>
+             );
+          })()}
         </div>
       )}
     </div>

@@ -22,6 +22,8 @@ export interface ProjectIndexMeta {
   thumbnailPreviewId?: string;
 }
 
+let thumbnailDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
 export const projectStorage = {
   getFolders: (): string[] => {
     if (typeof window === 'undefined') return DEFAULT_FOLDERS;
@@ -185,10 +187,14 @@ export const projectStorage = {
       // Real composition thumbnail key in IndexedDB
       const thumbnailPreviewId = `thumb_${safeProject.id}`;
 
-      // Trigger background real composition thumbnail generation
-      generateAndSaveThumbnail(project).catch(err => {
-        console.warn('Background generateAndSaveThumbnail failed:', err);
-      });
+      // Trigger background real composition thumbnail generation (debounced so interactive edits stay at 60 FPS)
+      if (thumbnailDebounceTimer) clearTimeout(thumbnailDebounceTimer);
+      thumbnailDebounceTimer = setTimeout(() => {
+        thumbnailDebounceTimer = null;
+        generateAndSaveThumbnail(project).catch(err => {
+          console.warn('Background generateAndSaveThumbnail failed:', err);
+        });
+      }, 2500);
 
       const meta: ProjectIndexMeta = {
         id: safeProject.id,
@@ -225,6 +231,10 @@ export const projectStorage = {
     try {
       // 1. Synchronous localStorage save
       projectStorage.saveProject(project);
+      if (thumbnailDebounceTimer) {
+        clearTimeout(thumbnailDebounceTimer);
+        thumbnailDebounceTimer = null;
+      }
 
       // 2. Await IndexedDB persistence
       const safeProject: EditorProject = {

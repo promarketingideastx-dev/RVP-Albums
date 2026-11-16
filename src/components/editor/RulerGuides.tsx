@@ -10,7 +10,7 @@ interface RulerGuidesProps {
   panY: number;
 }
 
-export function RulerGuides({ scale, project, unit, panX, panY }: RulerGuidesProps) {
+export const RulerGuides = React.memo(function RulerGuides({ scale, project, unit, panX, panY }: RulerGuidesProps) {
   const activeSpreadId = useEditorStore(s => s.activeSpreadId);
   const addGuide = useEditorStore(s => s.addGuide);
   const updateGuide = useEditorStore(s => s.updateGuide);
@@ -184,4 +184,13 @@ export function RulerGuides({ scale, project, unit, panX, panY }: RulerGuidesPro
       )}
     </>
   );
-}
+}, (prev, next) =>
+  prev.scale === next.scale &&
+  prev.panX === next.panX &&
+  prev.panY === next.panY &&
+  prev.unit === next.unit &&
+  prev.project.size.w_mm === next.project.size.w_mm &&
+  prev.project.size.h_mm === next.project.size.h_mm &&
+  prev.project.projectCategory === next.project.projectCategory &&
+  prev.project.spreads.length === next.project.spreads.length
+);

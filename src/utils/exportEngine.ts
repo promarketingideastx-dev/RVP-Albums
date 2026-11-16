@@ -460,6 +460,22 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
             }
           }
           
+          // Real-Time Color Overlay preservation at 300 DPI export
+          if (el.color && el.color !== 'transparent') {
+              const colorOverlayRect = new Konva.Rect({
+                  x: 0,
+                  y: 0,
+                  width: el.w_mm * mmToPx,
+                  height: el.h_mm * mmToPx,
+                  cornerRadius: appliedBorderRadius * mmToPx,
+                  fill: el.color,
+                  opacity: el.type === 'decoration' ? 0.75 : 0.35,
+                  globalCompositeOperation: 'source-atop',
+                  listening: false,
+              });
+              kGroup.add(colorOverlayRect);
+          }
+
           if (hasAdj && el.photoAdjustments?.vignette && el.photoAdjustments.vignette !== 0) {
               const vigW = el.w_mm * mmToPx;
               const vigH = el.h_mm * mmToPx;

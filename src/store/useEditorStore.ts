@@ -46,6 +46,7 @@ interface EditorState {
   swapStagedElements: () => void; // Phase 16: Free mode active element exchange
 
   updateElement: (spreadId: string, elementId: string, changes: Partial<EditorElement>) => void;
+  resetElementAdjustments: (spreadId: string, elementId: string) => void;
   addElement: (spreadId: string, element: EditorElement) => void;
   removeElement: (spreadId: string, elementId: string) => void;
   duplicateElement: (spreadId: string, elementId: string) => void;
@@ -554,6 +555,91 @@ export const useEditorStore = create<EditorState>()(
     return { project: { ...state.project, spreads: newSpreads }, selectedElementId: newSelectedId };
   }),
 
+  resetElementAdjustments: (spreadId, elementId) => set((state) => {
+    if (!state.project) return state;
+    const canvasW = state.project.size.w_mm || 400;
+    const canvasH = state.project.size.h_mm || 300;
+    const assets = state.project.assets || [];
+
+    const newSpreads = state.project.spreads.map((spread) => {
+      if (spread.id !== spreadId) return spread;
+      const isSingleElement = spread.elements.filter((e) => e.type !== 'group').length <= 1;
+
+      const newElements = spread.elements.map((el) => {
+        if (el.id !== elementId) return el;
+
+        let nextX = el.x_mm;
+        let nextY = el.y_mm;
+        let nextW = el.w_mm;
+        let nextH = el.h_mm;
+
+        if (!el.isAutoLayoutManaged) {
+          const matchedAsset = el.assetId ? assets.find((a) => a.id === el.assetId) : undefined;
+          const nativeAspect =
+            matchedAsset?.width && matchedAsset?.height
+              ? matchedAsset.width / matchedAsset.height
+              : matchedAsset?.aspectRatio;
+
+          if (nativeAspect && nativeAspect > 0) {
+            if (isSingleElement || el.zIndex === 0) {
+              // Primary/background photo: fit proportionally inside canvas and center
+              const canvasRatio = canvasW / canvasH;
+              if (nativeAspect > canvasRatio) {
+                nextW = canvasW;
+                nextH = Number((canvasW / nativeAspect).toFixed(2));
+                nextX = 0;
+                nextY = Number(((canvasH - nextH) / 2).toFixed(2));
+              } else {
+                nextH = canvasH;
+                nextW = Number((canvasH * nativeAspect).toFixed(2));
+                nextX = Number(((canvasW - nextW) / 2).toFixed(2));
+                nextY = 0;
+              }
+            } else {
+              // Secondary/overlay image or logo: restore true native aspect ratio and center on canvas
+              nextW = Math.min(canvasW * 0.8, Math.max(40, el.w_mm));
+              nextH = Number((nextW / nativeAspect).toFixed(2));
+              if (nextH > canvasH * 0.8) {
+                nextH = Number((canvasH * 0.8).toFixed(2));
+                nextW = Number((nextH * nativeAspect).toFixed(2));
+              }
+              nextX = Number(((canvasW - nextW) / 2).toFixed(2));
+              nextY = Number(((canvasH - nextH) / 2).toFixed(2));
+            }
+          } else {
+            nextX = Number(((canvasW - nextW) / 2).toFixed(2));
+            nextY = Number(((canvasH - nextH) / 2).toFixed(2));
+          }
+        }
+
+        return {
+          ...el,
+          x_mm: nextX,
+          y_mm: nextY,
+          w_mm: nextW,
+          h_mm: nextH,
+          rotation_deg: 0,
+          scale: 1,
+          pivotX: 0,
+          pivotY: 0,
+          photoFilter: 'none',
+          filterIntensity: 1,
+          photoAdjustments: undefined,
+          blendMode: 'source-over',
+          opacity: 1,
+          color: el.type === 'shape' ? el.color : undefined,
+          shadowColor: 'transparent',
+          shadowBlur: undefined,
+          shadowOpacity: undefined,
+          shadowOffsetX: undefined,
+          shadowOffsetY: undefined,
+        };
+      });
+      return { ...spread, elements: newElements };
+    });
+    return { project: { ...state.project, spreads: newSpreads } };
+  }),
+
   duplicateElement: (spreadId, elementId) => set((state) => {
     if (!state.project) return state;
     const spread = state.project.spreads.find(s => s.id === spreadId);
@@ -561,11 +647,16 @@ export const useEditorStore = create<EditorState>()(
     const element = spread.elements.find(e => e.id === elementId);
     if (!element) return state;
 
-    const newElement = { 
+    const newElement: EditorElement = { 
       ...element, 
-      id: crypto.randomUUID(),
-      x_mm: element.x_mm + 10,
-      y_mm: element.y_mm + 10,
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `el_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      x_mm: Number((element.x_mm + 10).toFixed(2)),
+      y_mm: Number((element.y_mm + 10).toFixed(2)),
+      locked: false,
+      isAutoLayoutManaged: false,
+      stageType: 'free',
+      photoAdjustments: element.photoAdjustments ? JSON.parse(JSON.stringify(element.photoAdjustments)) : undefined,
+      layerName: element.layerName ? `${element.layerName} (Copy)` : undefined,
     };
 
     const newSpreads = state.project.spreads.map((s) => {
@@ -1493,11 +1584,19 @@ export const useEditorStore = create<EditorState>()(
 );
 
 // Global Auto-Save Interceptor
-useEditorStore.subscribe((state) => {
-  if (state.project && state.project.id && state.project.storageMode === 'local') {
-      if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
-      autoSaveTimeout = setTimeout(() => {
-          projectStorage.saveProject(state.project!);
-      }, 500); // Debounce to allow grouped mutators to settle natively
+useEditorStore.subscribe((state, prevState) => {
+  if (
+    state.project &&
+    state.project !== prevState.project &&
+    state.project.id &&
+    state.project.storageMode === 'local'
+  ) {
+    if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+    autoSaveTimeout = setTimeout(() => {
+      const latestProject = useEditorStore.getState().project;
+      if (latestProject) {
+        projectStorage.saveProject(latestProject);
+      }
+    }, 800); // Debounce to allow continuous slider drags & grouped mutators to settle natively
   }
 });
