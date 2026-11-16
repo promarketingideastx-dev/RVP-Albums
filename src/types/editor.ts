@@ -141,6 +141,7 @@ export interface Spread {
   id: string;
   elements: EditorElement[];
   bg_color: string;
+  pageCount?: number;
   autoBookManaged?: boolean; // Phase 14: Discriminates pristine autobook layouts from manually handcrafted spaces
   bg_config?: SpreadBackgroundConfig; // Phase 7.G.9: Advanced Gradient spread backgrounds
   autoLayout?: SpreadAutoLayout; // Phase 7.H: Auto Layout Engine Structural bounds 
@@ -219,6 +220,9 @@ export interface EditorProject {
   createdAt: string;
   updatedAt: string;
   projectVersion: number;
+  projectCategory?: 'album' | 'studio_print';
+  targetDpi?: number;
+  orientation?: 'portrait' | 'landscape';
   size: Size; // Total size (e.g. 500x250)
   bleed_mm: number;
   safe_zone_mm: number;

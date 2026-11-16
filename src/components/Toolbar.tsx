@@ -244,8 +244,16 @@ export default function Toolbar() {
               </button>
             </div>
             
-            {/* Book Navigation HUD */}
-            {project && currentIdx !== -1 && (
+            {/* Studio Print Badge or Book Navigation HUD */}
+            {project && project.projectCategory === 'studio_print' ? (
+              <div className="flex items-center gap-2 border-l border-neutral-200 dark:border-neutral-800 pl-3 ml-2">
+                <span className="px-3 py-1 bg-orange-100 dark:bg-orange-950/50 border border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 shadow-sm">
+                  <span>🖼️</span>
+                  <span>{Math.round(project.size.w_mm / 25.4)}×{Math.round(project.size.h_mm / 25.4)} in</span>
+                  <span className="text-[10px] opacity-75 font-normal">({project.targetDpi || 300} DPI)</span>
+                </span>
+              </div>
+            ) : project && currentIdx !== -1 && (
               <div className="flex items-center gap-1 border-l border-neutral-200 dark:border-neutral-800 pl-3 ml-2">
                  <button
                     onClick={() => setEditorViewMode(editorViewMode === 'GRID' ? 'SINGLE' : 'GRID')}

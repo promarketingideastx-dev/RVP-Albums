@@ -191,8 +191,16 @@ export default function AppPage() {
   };
 
   // CREATE PROJECT HANDLER
-  const handleCreateProject = (name: string, bookLine: string, labPresetId: string, sizeStr?: string) => {
-    // Dynamic Geometry Extraction parsing the selected size string. e.g "Flushmount 10x10" or "Custom 12x12in"
+  const handleCreateProject = (
+    name: string, 
+    bookLine: string, 
+    labPresetId: string, 
+    sizeStr?: string,
+    projectCategory: 'album' | 'studio_print' = 'album',
+    dpi: number = 300,
+    orientation: 'portrait' | 'landscape' = 'portrait'
+  ) => {
+    // Dynamic Geometry Extraction parsing the selected size string. e.g "Flushmount 10x10", "8x10in", or "Custom 12x12in"
     let w_mm = 508;
     let h_mm = 254;
 
@@ -204,18 +212,28 @@ export default function AppPage() {
         if (parts.length === 2) {
           const wInches = parseFloat(parts[0]);
           const hInches = parseFloat(parts[1]);
-          // A single page is wInches. The spread is wInches * 2.
-          w_mm = Math.round((wInches * 2) * 25.4);
-          h_mm = Math.round(hInches * 25.4);
+          if (projectCategory === 'studio_print') {
+            w_mm = Math.round(wInches * 25.4);
+            h_mm = Math.round(hInches * 25.4);
+          } else {
+            // A single page is wInches. The spread is wInches * 2.
+            w_mm = Math.round((wInches * 2) * 25.4);
+            h_mm = Math.round(hInches * 25.4);
+          }
         }
       } else if (sourceSize.includes('x')) {
-        // Handlers for "Flushmount 10x10", "Flushmount 5x5", "Flushmount 20x8", etc.
+        // Handlers for "Flushmount 10x10", "8x10in", "16x20in", etc.
         const match = sourceSize.match(/(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)/);
         if (match) {
           const wInches = parseFloat(match[1]);
           const hInches = parseFloat(match[2]);
-          w_mm = Math.round((wInches * 2) * 25.4);
-          h_mm = Math.round(hInches * 25.4);
+          if (projectCategory === 'studio_print') {
+            w_mm = Math.round(wInches * 25.4);
+            h_mm = Math.round(hInches * 25.4);
+          } else {
+            w_mm = Math.round((wInches * 2) * 25.4);
+            h_mm = Math.round(hInches * 25.4);
+          }
         }
       }
     } catch(err) {
@@ -228,19 +246,23 @@ export default function AppPage() {
       title: name,
       type: bookLine,
       labPresetId: labPresetId,
-      labPresetName: labPresetId === 'pic-pro-lab' ? 'Pic Pro Lab' : 'Custom Lab',
+      labPresetName: labPresetId === 'pic-pro-lab' ? 'Pic Pro Lab' : labPresetId === 'studio-lab' ? 'Photo Studio Print' : 'Custom Lab',
       storageMode: 'local',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       projectVersion: 1,
+      projectCategory,
+      targetDpi: dpi,
+      orientation,
+      totalSpreads: projectCategory === 'studio_print' ? 1 : undefined,
       size: { w_mm, h_mm },
-
-      bleed_mm: 3,
-      safe_zone_mm: 5,
+      bleed_mm: projectCategory === 'studio_print' ? 0 : 3,
+      safe_zone_mm: projectCategory === 'studio_print' ? 2 : 5,
       spreads: [
         {
           id: `spread_${Date.now()}`,
           bg_color: '#ffffff',
+          pageCount: projectCategory === 'studio_print' ? 1 : 2,
           elements: []
         }
       ]
