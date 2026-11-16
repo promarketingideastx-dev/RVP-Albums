@@ -7,6 +7,9 @@ export interface ProjectIndexMeta {
   title: string;
   updatedAt: string;
   createdAt: string;
+  projectCategory?: 'album' | 'studio_print';
+  sizeStr?: string;
+  targetDpi?: number;
 }
 
 export const projectStorage = {
@@ -15,7 +18,17 @@ export const projectStorage = {
     try {
       const raw = localStorage.getItem(PROJECTS_KEY);
       if (!raw) return [];
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      return parsed.map((p: ProjectIndexMeta) => {
+        if (!p.projectCategory) {
+          if (p.title?.toLowerCase().includes('print') || p.title?.toLowerCase().includes('estudio')) {
+            p.projectCategory = 'studio_print';
+          } else {
+            p.projectCategory = 'album';
+          }
+        }
+        return p;
+      });
     } catch (e) {
       console.error('Failed to parse vro_projects', e);
       return [];
@@ -67,11 +80,16 @@ export const projectStorage = {
       // Actualizar índice
       const index = projectStorage.getAllProjects();
       const existingIdx = index.findIndex(p => p.id === project.id);
+      const category = safeProject.projectCategory || (safeProject.type === 'type_studio_print' ? 'studio_print' : 'album');
+      const sizeStr = safeProject.size ? `${Math.round(safeProject.size.w_mm / 25.4)}×${Math.round(safeProject.size.h_mm / 25.4)} in` : undefined;
       const meta: ProjectIndexMeta = {
         id: safeProject.id,
         title: safeProject.title,
         createdAt: safeProject.createdAt || safeProject.updatedAt,
-        updatedAt: safeProject.updatedAt
+        updatedAt: safeProject.updatedAt,
+        projectCategory: category,
+        sizeStr,
+        targetDpi: safeProject.targetDpi || 300
       };
 
       if (existingIdx !== -1) {

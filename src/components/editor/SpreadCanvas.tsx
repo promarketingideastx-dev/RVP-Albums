@@ -1232,7 +1232,8 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
           
           const spreadIndex = project.spreads.findIndex((s) => s.id === activeSpreadId);
           const isLastSpread = spreadIndex === project.spreads.length - 1;
-          const isGhostDrop = isLastSpread && dropX > project.size.w_mm + 25;
+          const isStudio = project.projectCategory === 'studio_print';
+          const isGhostDrop = !isStudio && isLastSpread && dropX > project.size.w_mm + 25;
 
            // Phase 8.A / Phase 12: Nondestructive Drop Interceptor - Native OS Files
            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
@@ -1533,11 +1534,13 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
            <Group>
              <Rect x={project.size.w_mm * 0.2} y={project.size.h_mm * 0.25} width={project.size.w_mm * 0.6} height={project.size.h_mm * 0.5} fill="#d4d4d4" cornerRadius={4} listening={false} />
              <Text text="↓" x={0} y={project.size.h_mm * 0.5 - 15} width={project.size.w_mm} fontSize={18} fill="#666666" align="center" listening={false} />
-             <Text text="Drop images to Add Spread" x={0} y={project.size.h_mm * 0.5 + 10} width={project.size.w_mm} fontSize={12} fontFamily="Inter" fill="#666666" align="center" listening={false} />
+             <Text text={project.projectCategory === 'studio_print' ? "Arrastra tu foto o fondo aquí" : "Drop images to Add Spread"} x={0} y={project.size.h_mm * 0.5 + 10} width={project.size.w_mm} fontSize={12} fontFamily="Inter" fill="#666666" align="center" listening={false} />
            </Group>
         )}
 
         {(() => {
+            const isStudio = project.projectCategory === 'studio_print';
+            if (isStudio) return null; // A Studio Print is a single standalone document - never render ghost spreads or pages 3-4!
             const spreadIndex = project.spreads.findIndex((s) => s.id === activeSpreadId);
             const isLastSpread = spreadIndex === project.spreads.length - 1;
             return (isLastSpread && elements.length > 0) ? (

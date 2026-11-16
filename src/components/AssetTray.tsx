@@ -260,54 +260,56 @@ export default function AssetTray() {
              </div>
           </div>
           
-          {/* Phase 13: Auto-Book Builder Popover */}
-          <div className="relative">
-             <button 
-                onClick={() => setShowAutoBookMenu(!showAutoBookMenu)}
-                className={`px-4 py-1.5 border rounded-full text-xs font-bold tracking-wide transition-colors ${hasManagedSpreads ? 'border-purple-500 text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20' : showAutoBookMenu ? 'border-orange-500 bg-orange-50 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400' : 'border-blue-500 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20'}`}
-             >
-                ✨ {hasManagedSpreads ? t('rebalance_album') : t('auto_book_btn')}
-             </button>
-             {showAutoBookMenu && (
-               <div className="absolute right-0 bottom-[120%] mb-2 bg-white dark:bg-neutral-800 border border-orange-500 shadow-2xl rounded-xl p-4 w-64 z-[100] scale-in origin-bottom-right">
-                 <div className="flex justify-between items-center mb-3">
-                    <h3 className="font-bold text-sm text-neutral-900 dark:text-white">{hasManagedSpreads ? t('rebalance_album') : t('auto_book_title')}</h3>
-                    <button onClick={() => setShowAutoBookMenu(false)} className="text-neutral-400 hover:text-black dark:hover:text-white text-lg leading-none">✕</button>
-                 </div>
-                 <div className="flex items-center justify-between mb-4">
-                    <label className="text-xs font-medium text-neutral-600 dark:text-neutral-300">{t('photos_per_spread')}</label>
-                    <input 
-                      type="number" 
-                      min="1" max="25" 
-                      value={autoBookTarget}
-                      onChange={(e) => setAutoBookTarget(Math.max(1, parseInt(e.target.value) || 6))}
-                      className="w-16 border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-2 py-1 rounded-md text-sm text-center font-mono font-bold text-black dark:text-white focus:outline-none focus:ring-1 focus:ring-orange-500"
-                    />
-                 </div>
+          {/* Phase 13: Auto-Book Builder Popover (Only for Albums) */}
+          {project?.projectCategory !== 'studio_print' && (
+            <div className="relative">
+               <button 
+                  onClick={() => setShowAutoBookMenu(!showAutoBookMenu)}
+                  className={`px-4 py-1.5 border rounded-full text-xs font-bold tracking-wide transition-colors ${hasManagedSpreads ? 'border-purple-500 text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20' : showAutoBookMenu ? 'border-orange-500 bg-orange-50 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400' : 'border-blue-500 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20'}`}
+               >
+                  ✨ {hasManagedSpreads ? t('rebalance_album') : t('auto_book_btn')}
+               </button>
+               {showAutoBookMenu && (
+                 <div className="absolute right-0 bottom-[120%] mb-2 bg-white dark:bg-neutral-800 border border-orange-500 shadow-2xl rounded-xl p-4 w-64 z-[100] scale-in origin-bottom-right">
+                   <div className="flex justify-between items-center mb-3">
+                      <h3 className="font-bold text-sm text-neutral-900 dark:text-white">{hasManagedSpreads ? t('rebalance_album') : t('auto_book_title')}</h3>
+                      <button onClick={() => setShowAutoBookMenu(false)} className="text-neutral-400 hover:text-black dark:hover:text-white text-lg leading-none">✕</button>
+                   </div>
+                   <div className="flex items-center justify-between mb-4">
+                      <label className="text-xs font-medium text-neutral-600 dark:text-neutral-300">{t('photos_per_spread')}</label>
+                      <input 
+                        type="number" 
+                        min="1" max="25" 
+                        value={autoBookTarget} 
+                        onChange={(e) => setAutoBookTarget(Math.max(1, parseInt(e.target.value) || 6))}
+                        className="w-16 border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-2 py-1 rounded-md text-sm text-center font-mono font-bold text-black dark:text-white focus:outline-none focus:ring-1 focus:ring-orange-500" 
+                      />
+                   </div>
 
-                 {hasManagedSpreads && (
-                    <div className="flex bg-neutral-100 dark:bg-neutral-900 p-1 rounded-lg mb-4">
-                      {['COMPACT', 'BALANCED', 'AIRY'].map((m) => (
-                        <button 
-                          key={m}
-                          onClick={() => setRebalanceMode(m as 'COMPACT' | 'BALANCED' | 'AIRY')}
-                          className={`flex-1 text-[10px] py-1 font-bold rounded-md transition-colors ${rebalanceMode === m ? 'bg-orange-500 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200'}`}
-                        >
-                          {t(`reb_${m.toLowerCase()}`)}
-                        </button>
-                      ))}
-                    </div>
-                 )}
+                   {hasManagedSpreads && (
+                      <div className="flex bg-neutral-100 dark:bg-neutral-900 p-1 rounded-lg mb-4">
+                        {['COMPACT', 'BALANCED', 'AIRY'].map((m) => (
+                          <button 
+                            key={m}
+                            onClick={() => setRebalanceMode(m as 'COMPACT' | 'BALANCED' | 'AIRY')}
+                            className={`flex-1 text-[10px] py-1 font-bold rounded-md transition-colors ${rebalanceMode === m ? 'bg-orange-500 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200'}`}
+                          >
+                            {t(`reb_${m.toLowerCase()}`)}
+                          </button>
+                        ))}
+                      </div>
+                   )}
 
-                 <button 
-                   onClick={handleAutoBuildTrigger}
-                   className={`w-full text-white font-bold tracking-wide text-xs py-2.5 rounded-lg transition-transform active:scale-95 ${hasManagedSpreads ? 'bg-purple-600 hover:bg-purple-700' : 'bg-orange-600 hover:bg-orange-700'}`}
-                 >
-                   ➔ {hasManagedSpreads ? t('rebalance_album') : t('auto_book_btn')}
-                 </button>
-               </div>
-             )}
-          </div>
+                   <button 
+                     onClick={handleAutoBuildTrigger}
+                     className={`w-full text-white font-bold tracking-wide text-xs py-2.5 rounded-lg transition-transform active:scale-95 ${hasManagedSpreads ? 'bg-purple-600 hover:bg-purple-700' : 'bg-orange-600 hover:bg-orange-700'}`}
+                   >
+                     ➔ {hasManagedSpreads ? t('rebalance_album') : t('auto_book_btn')}
+                   </button>
+                 </div>
+               )}
+            </div>
+          )}
           <button 
             onClick={clearSelection}
             disabled={selectedAssetIds.size === 0}
