@@ -289,7 +289,12 @@ const EditorImage = ({
   const isStagingMode = element.stageType === 'staged';
   const stagingIndex = isStagingMode ? elements.filter(e => e.type === 'image' && e.stageType === 'staged').findIndex(e => e.id === element.id) : -1;
 
-  const [image] = useImage(element.previewUrl || element.src || 'https://via.placeholder.com/150');
+  const project = useEditorStore(state => state.project);
+  const isStudio = project?.projectCategory === 'studio_print';
+  const imageSrc = (isStudio && element.originalUrl) 
+    ? element.originalUrl 
+    : (element.previewUrl || element.src || 'https://via.placeholder.com/150');
+  const [image] = useImage(imageSrc);
   const isSelectedStaged = useEditorStore(state => state.selectedStagedElementIds.includes(element.id));
 
   useEffect(() => {
@@ -1353,8 +1358,9 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
             if (payload.type === 'image' || payload.type === 'decoration') {
                const idsToProcess = payload.assetIds || [payload.assetId];
                const stagedAssets = idsToProcess.map((id: string) => project.assets?.find(a => a.id === id)).filter(Boolean) as import('@/types/editor').ProjectAsset[];
+               const isStudio = project.projectCategory === 'studio_print';
                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-               const isFundyMode = (spread.autoLayout?.mode as any) === 'fundy-masonry-experimental' || spread.status === 'empty' || spread.elements.length === 0;
+               const isFundyMode = !isStudio && ((spread.autoLayout?.mode as any) === 'fundy-masonry-experimental' || spread.status === 'empty' || spread.elements.length === 0);
 
                if (payload.type === 'image' && isFundyMode && stagedAssets.length > 0) {
                     useEditorStore.getState().ingestAndDropToSpread(activeSpreadId, stagedAssets);
@@ -1366,10 +1372,25 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
                     stagedAssets.forEach((asset, idx) => {
                        const img = new window.Image();
                        img.onload = () => {
-                          const aspect = img.width / img.height;
-                          let w = 80;
-                          let h = 80 / aspect;
-                          if (h > 120) { h = 120; w = 120 * aspect; }
+                          let w: number;
+                          let h: number;
+                          let posX: number;
+                          let posY: number;
+
+                          if (isStudio && spread.elements.length === 0 && idx === 0) {
+                             // Edge-to-edge full bleed fit for single studio print
+                             w = project.size.w_mm;
+                             h = project.size.h_mm;
+                             posX = 0;
+                             posY = 0;
+                          } else {
+                             const aspect = img.width / img.height;
+                             w = 80;
+                             h = 80 / aspect;
+                             if (h > 120) { h = 120; w = 120 * aspect; }
+                             posX = dropX - (w / 2) + (idx * 25);
+                             posY = dropY - (h / 2) + (idx * 25);
+                          }
 
                           let didSwap = false;
                           // Only swap if it's the primary lead dragged item (first one)
@@ -1400,8 +1421,8 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
                                 previewBlobId: asset.previewBlobId,
                                 originalBlobId: asset.originalBlobId,
                                 assetId: asset.id,
-                                x_mm: dropX - (w / 2) + (idx * 25), // Waterfall cascade
-                                y_mm: dropY - (h / 2) + (idx * 25), // Waterfall cascade
+                                x_mm: posX,
+                                y_mm: posY,
                                 w_mm: w,
                                 h_mm: h,
                                 rotation_deg: 0,
