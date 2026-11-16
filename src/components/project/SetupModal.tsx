@@ -4,6 +4,7 @@ import { projectStorage } from '@/utils/projectStorage';
 
 interface SetupModalProps {
   initialFolder?: string;
+  initialCategory?: 'album' | 'studio_print';
   onCancel: () => void;
   onCreate: (
     name: string, 
@@ -49,12 +50,14 @@ interface CustomPresetStorage {
   hInches: number;
 }
 
-export default function SetupModal({ initialFolder, onCancel, onCreate }: SetupModalProps) {
+export default function SetupModal({ initialFolder, initialCategory, onCancel, onCreate }: SetupModalProps) {
   const t = useTranslations('Editor');
   const tStudio = useTranslations('Studio');
 
   // Top-level creation mode: Album or Studio Print
-  const [creationMode, setCreationMode] = useState<'studio' | 'album'>('studio');
+  const [creationMode, setCreationMode] = useState<'studio' | 'album'>(
+    initialCategory === 'album' ? 'album' : 'studio'
+  );
 
   // --- FOLDERS STATE ---
   const [folders, setFolders] = useState<string[]>([]);

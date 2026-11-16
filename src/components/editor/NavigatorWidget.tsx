@@ -43,26 +43,38 @@ export function NavigatorWidget({ scale, autoScale }: NavigatorProps) {
     return () => observer.disconnect();
   }, []);
 
-  // Sync Pan Snapping when transitioning from AutoFit to Absolute overrides
+  // Smooth Centered Zooming Engine: Keeps viewport center anchored
   const handleZoomChange = (val: number) => {
     if (!project) return;
     
     if (Math.abs(val - 1.0) < 0.01) {
+       const defaultPanX = (viewportDims.width - (project.size.w_mm * autoScale)) / 2;
+       const defaultPanY = (viewportDims.height - (project.size.h_mm * autoScale)) / 2;
+       setWorkspacePan({ x: defaultPanX, y: defaultPanY });
        setWorkspaceZoom(null);
     } else {
-       if (workspaceZoom === null && viewportDims.width > 0) {
-          // Snap intrinsic pan right before enforcing override zoom allowing clean visual jumps
-          const defaultPanX = (viewportDims.width - (project.size.w_mm * autoScale)) / 2;
-          const defaultPanY = (viewportDims.height - (project.size.h_mm * autoScale)) / 2;
-          
-          // Pre-calculate centered offset mapping
+       if (viewportDims.width > 0) {
+          const currentEffectiveScale = scale > 0 ? scale : autoScale;
+          const targetScale = autoScale * val;
+
+          const defaultPanX = (viewportDims.width - (project.size.w_mm * currentEffectiveScale)) / 2;
+          const defaultPanY = (viewportDims.height - (project.size.h_mm * currentEffectiveScale)) / 2;
+          const activePanX = workspaceZoom === null ? defaultPanX : workspacePan.x;
+          const activePanY = workspaceZoom === null ? defaultPanY : workspacePan.y;
+
+          // Viewport Center
           const cx = viewportDims.width / 2;
           const cy = viewportDims.height / 2;
-          const newScale = autoScale * val;
-          const mapPanX = cx - (cx - defaultPanX) * (newScale / autoScale);
-          const mapPanY = cy - (cy - defaultPanY) * (newScale / autoScale);
-          
-          setWorkspacePan({ x: mapPanX, y: mapPanY });
+
+          // World point (in mm) currently located at viewport center
+          const worldCenterX = (cx - activePanX) / currentEffectiveScale;
+          const worldCenterY = (cy - activePanY) / currentEffectiveScale;
+
+          // Adjust pan so the world center remains strictly locked to viewport center
+          const newPanX = cx - (worldCenterX * targetScale);
+          const newPanY = cy - (worldCenterY * targetScale);
+
+          setWorkspacePan({ x: newPanX, y: newPanY });
        }
        setWorkspaceZoom(val);
     }

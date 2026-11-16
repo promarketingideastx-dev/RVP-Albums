@@ -9,6 +9,7 @@ import { TYPOGRAPHY_PRESETS } from '@/lib/typography-presets';
 import { useEditorStore } from '@/store/useEditorStore';
 import { EditorElement } from '@/types/editor';
 import { extractAssetMetadataFromFile } from '@/utils/metadataEngine';
+import { processLocalImage } from '@/utils/imageIngestion';
 import useImage from 'use-image';
 
 // Register Global Custom WebGL ColorShift Filter for Additive Raw Math (Replaces luminance-based RGB / painter RGBA)
@@ -291,9 +292,9 @@ const EditorImage = ({
 
   const project = useEditorStore(state => state.project);
   const isStudio = project?.projectCategory === 'studio_print';
-  const imageSrc = (isStudio && element.originalUrl) 
-    ? element.originalUrl 
-    : (element.previewUrl || element.src || 'https://via.placeholder.com/150');
+  const imageSrc = isStudio
+    ? (element.originalUrl || element.previewUrl || element.src || 'https://via.placeholder.com/150')
+    : (element.previewUrl || element.originalUrl || element.src || 'https://via.placeholder.com/150');
   const [image] = useImage(imageSrc);
   const isSelectedStaged = useEditorStore(state => state.selectedStagedElementIds.includes(element.id));
 
@@ -488,26 +489,18 @@ const EditorImage = ({
         
         node.filters(filtersArray);
         
-        // SAFE PIXEL RATIO IMPLEMENTATION WITH MEMORY LIMITERS
+        // HIGH PERFORMANCE INTERACTIVE CACHE RATIO
+        // During interactive editing, cap preview canvas size to crisp screen resolution (max 1400px)
+        // so real-time slider drags run in <16ms at 60fps without freezing the UI thread.
+        // Full 300 DPI high-res caching is executed during actual file export in exportEngine.
         const naturalWidth = image.naturalWidth || image.width;
         const logicalWidth = element.w_mm;
         
-        // Since logicalWidth is in geometric mm, ratio must scale perfectly to reach native resolution.
-        // A hard limiter of 2.5 is disastrous here (mm coordinates are tiny).
-        let computedPixelRatio = logicalWidth > 0 ? (naturalWidth / logicalWidth) : 1;
-           
-        // Extreme Memory Safeguard: Cap the maximum absolute cache coordinate bound
-        // This ensures a 16K image doesn't crash DOM arrays, but targets ultra HD (4000-6000px).
-        const MAX_CACHE_BOUND = 4500; 
-        if (logicalWidth * computedPixelRatio > MAX_CACHE_BOUND) {
-            computedPixelRatio = MAX_CACHE_BOUND / logicalWidth;
-        }
+        const maxInteractiveWidth = 1400;
+        const targetWidth = Math.min(maxInteractiveWidth, Math.max(300, naturalWidth));
+        const computedPixelRatio = logicalWidth > 0 ? (targetWidth / logicalWidth) : 1;
 
-        if (process.env.NODE_ENV === 'development') {
-           console.log(`[Preview Pipeline] Caching ${element.id} | Nat: ${naturalWidth} | Logical DOM mm: ${logicalWidth} | Adjusted Safe Ratio: ${computedPixelRatio}`);
-        }
-
-        node.cache({ pixelRatio: computedPixelRatio, imageSmoothingEnabled: false });
+        node.cache({ pixelRatio: computedPixelRatio, imageSmoothingEnabled: true });
         node.getLayer()?.batchDraw();
       } else {
         // RAW Passthrough - Clear entirely
@@ -1240,36 +1233,86 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
           const isStudio = project.projectCategory === 'studio_print';
           const isGhostDrop = !isStudio && isLastSpread && dropX > project.size.w_mm + 25;
 
-           // Phase 8.A / Phase 12: Nondestructive Drop Interceptor - Native OS Files
+           // Native OS Files Drop Interceptor (Folders / Desktop)
            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
               const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
               if (files.length > 0) {
-                 const promises = files.map((file, i) => {
-                    return new Promise<import('@/types/editor').ProjectAsset>((resolve) => {
-                       const objectUrl = URL.createObjectURL(file);
-                       const img = new window.Image();
-                       img.onload = () => {
-                          const md = extractAssetMetadataFromFile(file, (useEditorStore.getState().project?.assets?.length || 0) + i, { w: img.width, h: img.height });
-                          resolve({
-                             id: 'asset_' + Date.now() + '_' + Math.random().toString(36).substring(2,9),
-                             name: file.name,
-                             previewUrl: objectUrl,
-                             originalUrl: objectUrl,
-                             width: img.width,
-                             height: img.height,
-                             orientation: md.orientation,
-                             aspectRatio: md.aspectRatio,
-                             metadata: md
+                 Promise.all(files.map(async (file, i) => {
+                    const { originalUrl, previewUrl, originalBlobId, previewBlobId, widthPx, heightPx } = await processLocalImage(file);
+                    const md = extractAssetMetadataFromFile(file, (useEditorStore.getState().project?.assets?.length || 0) + i, { w: widthPx || 0, h: heightPx || 0 });
+                    const asset: import('@/types/editor').ProjectAsset = {
+                       id: 'asset_' + Date.now() + '_' + Math.random().toString(36).substring(2,9),
+                       name: file.name,
+                       previewUrl,
+                       originalUrl,
+                       previewBlobId,
+                       originalBlobId,
+                       rating: 0,
+                       isFavorite: false,
+                       width: widthPx,
+                       height: heightPx,
+                       orientation: md.orientation,
+                       aspectRatio: md.aspectRatio,
+                       metadata: md
+                    };
+                    useEditorStore.getState().addAsset(asset);
+                    return asset;
+                 })).then(newAssets => {
+                    if (isStudio || spread.elements.length === 0) {
+                       // Studio Print / Empty Canvas: Proportional Auto-Fit & Auto-Center
+                       newAssets.forEach((asset, idx) => {
+                          const imgRatio = (asset.width && asset.height) ? (asset.width / asset.height) : (asset.aspectRatio || 1);
+                          const canvasW = project.size.w_mm;
+                          const canvasH = project.size.h_mm;
+                          const canvasRatio = canvasW / canvasH;
+
+                          let w: number;
+                          let h: number;
+                          let posX: number;
+                          let posY: number;
+
+                          if (Math.abs(imgRatio - canvasRatio) < 0.01) {
+                             w = canvasW;
+                             h = canvasH;
+                             posX = 0;
+                             posY = 0;
+                          } else {
+                             if (imgRatio > canvasRatio) {
+                                w = canvasW;
+                                h = canvasW / imgRatio;
+                                posX = 0;
+                                posY = (canvasH - h) / 2;
+                             } else {
+                                h = canvasH;
+                                w = canvasH * imgRatio;
+                                posX = (canvasW - w) / 2;
+                                posY = 0;
+                             }
+                          }
+
+                          useEditorStore.getState().addElement(activeSpreadId, {
+                             id: `el_${Date.now()}_${idx}`,
+                             type: 'image',
+                             previewUrl: asset.previewUrl,
+                             originalUrl: asset.originalUrl,
+                             previewBlobId: asset.previewBlobId,
+                             originalBlobId: asset.originalBlobId,
+                             assetId: asset.id,
+                             x_mm: posX,
+                             y_mm: posY,
+                             w_mm: w,
+                             h_mm: h,
+                             rotation_deg: 0,
+                             zIndex: spread.elements.length + idx
                           });
-                       };
-                       img.src = objectUrl;
-                    });
-                 });
-                 Promise.all(promises).then(newAssets => {
+                       });
+                       useEditorStore.getState().flushSave();
+                       return;
+                    }
+
                     if (isGhostDrop) {
                        import('uuid').then(({ v4: uuidv4 }) => {
                           const newSpreadId = uuidv4();
-                          
                           useEditorStore.setState(prev => {
                              if (!prev.project) return prev;
                              return { project: { ...prev.project, spreads: [...prev.project.spreads, { id: newSpreadId, elements: [], bg_color: '#FFFFFF', status: 'empty' as const }] } };
@@ -1290,6 +1333,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
                     } else {
                         useEditorStore.getState().ingestStagedPhotos(newAssets);
                     }
+                    useEditorStore.getState().flushSave();
                  });
                  // Stop default JSON payload parsing for these raw payloads
                  return; 
@@ -1377,12 +1421,32 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
                           let posX: number;
                           let posY: number;
 
-                          if (isStudio && spread.elements.length === 0 && idx === 0) {
-                             // Edge-to-edge full bleed fit for single studio print
-                             w = project.size.w_mm;
-                             h = project.size.h_mm;
-                             posX = 0;
-                             posY = 0;
+                          const imgRatio = (img.width && img.height) ? (img.width / img.height) : (asset.aspectRatio || 1);
+                          const canvasW = project.size.w_mm;
+                          const canvasH = project.size.h_mm;
+                          const canvasRatio = canvasW / canvasH;
+
+                          if (isStudio || spread.elements.length === 0) {
+                             if (Math.abs(imgRatio - canvasRatio) < 0.01) {
+                                // Proportions match canvas: 100% full canvas coverage
+                                w = canvasW;
+                                h = canvasH;
+                                posX = 0;
+                                posY = 0;
+                             } else {
+                                // Proportions differ: Fit proportionally inside canvas (contain) centered
+                                if (imgRatio > canvasRatio) {
+                                   w = canvasW;
+                                   h = canvasW / imgRatio;
+                                   posX = 0;
+                                   posY = (canvasH - h) / 2;
+                                } else {
+                                   h = canvasH;
+                                   w = canvasH * imgRatio;
+                                   posX = (canvasW - w) / 2;
+                                   posY = 0;
+                                }
+                             }
                           } else {
                              const aspect = img.width / img.height;
                              w = 80;

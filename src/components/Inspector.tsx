@@ -29,7 +29,7 @@ const LocalShadowPanel = ({ element, activeSpreadId, updateElement }: any) => {
           })}
           className="accent-teal-500"
         />
-        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">Enable Drop Shadow</span>
+        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">Habilitar Sombra</span>
       </label>
       {isShadowEnabled && (
         <div className="space-y-3">
@@ -46,8 +46,8 @@ const LocalShadowPanel = ({ element, activeSpreadId, updateElement }: any) => {
           <div>
             <div className="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400 mb-1">
               <label className="flex items-center gap-1.5">
-                Opacity
-                <button onClick={() => updateElement(activeSpreadId, element.id, { shadowOpacity: 0.5 })} className="text-neutral-400 hover:text-teal-500 transition-colors bg-neutral-100 dark:bg-neutral-800 rounded p-0.5" title="Reset"><RotateCcw className="w-2.5 h-2.5" /></button>
+                Opacidad
+                <button onClick={() => updateElement(activeSpreadId, element.id, { shadowOpacity: 0.5 })} className="text-neutral-400 hover:text-teal-500 transition-colors bg-neutral-100 dark:bg-neutral-800 rounded p-0.5" title="Restablecer"><RotateCcw className="w-2.5 h-2.5" /></button>
               </label>
               <span>{Math.round((element.shadowOpacity ?? 0.5) * 100)}%</span>
             </div>
@@ -60,8 +60,8 @@ const LocalShadowPanel = ({ element, activeSpreadId, updateElement }: any) => {
           <div>
             <div className="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400 mb-1">
               <label className="flex items-center gap-1.5">
-                Blur
-                <button onClick={() => updateElement(activeSpreadId, element.id, { shadowBlur: 15 })} className="text-neutral-400 hover:text-teal-500 transition-colors bg-neutral-100 dark:bg-neutral-800 rounded p-0.5" title="Reset"><RotateCcw className="w-2.5 h-2.5" /></button>
+                Desenfoque
+                <button onClick={() => updateElement(activeSpreadId, element.id, { shadowBlur: 15 })} className="text-neutral-400 hover:text-teal-500 transition-colors bg-neutral-100 dark:bg-neutral-800 rounded p-0.5" title="Restablecer"><RotateCcw className="w-2.5 h-2.5" /></button>
               </label>
               <span>{element.shadowBlur || 0}</span>
             </div>
@@ -74,8 +74,8 @@ const LocalShadowPanel = ({ element, activeSpreadId, updateElement }: any) => {
           <div>
             <div className="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400 mb-1">
               <label className="flex items-center gap-1.5">
-                Distance X
-                <button onClick={() => updateElement(activeSpreadId, element.id, { shadowOffsetX: 0 })} className="text-neutral-400 hover:text-teal-500 transition-colors bg-neutral-100 dark:bg-neutral-800 rounded p-0.5" title="Reset"><RotateCcw className="w-2.5 h-2.5" /></button>
+                Distancia X
+                <button onClick={() => updateElement(activeSpreadId, element.id, { shadowOffsetX: 0 })} className="text-neutral-400 hover:text-teal-500 transition-colors bg-neutral-100 dark:bg-neutral-800 rounded p-0.5" title="Restablecer"><RotateCcw className="w-2.5 h-2.5" /></button>
               </label>
               <span>{element.shadowOffsetX || 0}</span>
             </div>
@@ -88,8 +88,8 @@ const LocalShadowPanel = ({ element, activeSpreadId, updateElement }: any) => {
           <div>
             <div className="flex justify-between items-center text-xs text-neutral-500 dark:text-neutral-400 mb-1">
               <label className="flex items-center gap-1.5">
-                Distance Y
-                <button onClick={() => updateElement(activeSpreadId, element.id, { shadowOffsetY: 10 })} className="text-neutral-400 hover:text-teal-500 transition-colors bg-neutral-100 dark:bg-neutral-800 rounded p-0.5" title="Reset"><RotateCcw className="w-2.5 h-2.5" /></button>
+                Distancia Y
+                <button onClick={() => updateElement(activeSpreadId, element.id, { shadowOffsetY: 10 })} className="text-neutral-400 hover:text-teal-500 transition-colors bg-neutral-100 dark:bg-neutral-800 rounded p-0.5" title="Restablecer"><RotateCcw className="w-2.5 h-2.5" /></button>
               </label>
               <span>{element.shadowOffsetY || 0}</span>
             </div>
@@ -150,15 +150,30 @@ export default function Inspector() {
     }
   }, [x_mm, y_mm, w_mm, h_mm, rotation_deg, fillColor, selectedElementId]);
 
+  const isStudio = project?.projectCategory === 'studio_print';
+
   // Handle intelligent auto-switching of tabs when selecting elements
   useEffect(() => {
-    if (!selectedElementId && activeTab === 'properties') {
-      setActiveTab('global');
-    } else if (selectedElementId && activeTab === 'global') {
-      setActiveTab('properties');
+    if (!isStudio) {
+      if (!selectedElementId && activeTab === 'properties') {
+        setActiveTab('global');
+      } else if (selectedElementId && activeTab === 'global') {
+        setActiveTab('properties');
+      }
+    } else {
+      if (activeTab === 'layout' || activeTab === 'global') {
+        setActiveTab('properties');
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedElementId]);
+  }, [selectedElementId, isStudio, activeTab]);
+
+  // Guard active tab in Studio mode to only allow properties and layers
+  useEffect(() => {
+    if (isStudio && (activeTab === 'layout' || activeTab === 'global')) {
+      setActiveTab('properties');
+    }
+  }, [isStudio, activeTab]);
 
   if (!activeSpreadId) {
     return (
@@ -170,22 +185,38 @@ export default function Inspector() {
 
   const TabsHeader = () => (
     <div className="flex border-b border-neutral-200 dark:border-neutral-800 shrink-0">
-      <button onClick={() => setActiveTab('properties')} className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === 'properties' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'}`}>
-        <SlidersHorizontal className="w-4 h-4" /> Prop.
+      <button 
+        onClick={() => setActiveTab('properties')} 
+        className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === 'properties' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'}`}
+      >
+        <SlidersHorizontal className="w-4 h-4" /> {t('properties') || 'Prop.'}
       </button>
-      <button onClick={() => setActiveTab('layout')} className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === 'layout' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'}`}>
-        <LayoutTemplate className="w-4 h-4" /> Layout
-      </button>
-      <button onClick={() => setActiveTab('global')} className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === 'global' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'}`}>
-        <Globe className="w-4 h-4" /> Global
-      </button>
-      <button onClick={() => setActiveTab('layers')} className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === 'layers' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'}`}>
+      {!isStudio && (
+        <>
+          <button 
+            onClick={() => setActiveTab('layout')} 
+            className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === 'layout' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'}`}
+          >
+            <LayoutTemplate className="w-4 h-4" /> Layout
+          </button>
+          <button 
+            onClick={() => setActiveTab('global')} 
+            className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === 'global' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'}`}
+          >
+            <Globe className="w-4 h-4" /> Global
+          </button>
+        </>
+      )}
+      <button 
+        onClick={() => setActiveTab('layers')} 
+        className={`flex-1 py-3 text-[9px] font-bold uppercase tracking-wider flex flex-col items-center justify-center gap-1 transition-colors ${activeTab === 'layers' ? 'text-blue-500 border-b-2 border-blue-500' : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'}`}
+      >
         <Layers className="w-4 h-4" /> Capas
       </button>
     </div>
   );
 
-  if (activeTab === 'global') {
+  if (activeTab === 'global' && !isStudio) {
     return (
       <aside className="w-64 shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full overflow-hidden">
         <TabsHeader />
@@ -194,7 +225,7 @@ export default function Inspector() {
     );
   }
 
-  if (activeTab === 'layout') {
+  if (activeTab === 'layout' && !isStudio) {
     return (
       <aside className="w-64 shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full overflow-hidden">
         <TabsHeader />
@@ -262,6 +293,116 @@ export default function Inspector() {
       fillColor: localFill || '#000000',
       color: localFill || '#000000',
     });
+  };
+
+  // --- TAREA 2: Canvas Framing Handlers ---
+  const handleFramingFit = () => {
+    if (!project || !element || !activeSpreadId) return;
+    const canvasW = project.size.w_mm;
+    const canvasH = project.size.h_mm;
+    const asset = project.assets?.find(a => a.id === element.assetId);
+    const aspect = (asset?.width && asset?.height) 
+      ? (asset.width / asset.height) 
+      : (asset?.aspectRatio || (element.w_mm / element.h_mm) || 1);
+    const canvasRatio = canvasW / canvasH;
+
+    let newW: number;
+    let newH: number;
+    let newX: number;
+    let newY: number;
+
+    if (aspect > canvasRatio) {
+      newW = canvasW;
+      newH = Number((canvasW / aspect).toFixed(2));
+      newX = 0;
+      newY = Number(((canvasH - newH) / 2).toFixed(2));
+    } else {
+      newH = canvasH;
+      newW = Number((canvasH * aspect).toFixed(2));
+      newX = Number(((canvasW - newW) / 2).toFixed(2));
+      newY = 0;
+    }
+
+    updateElement(activeSpreadId, element.id, {
+      x_mm: newX,
+      y_mm: newY,
+      w_mm: newW,
+      h_mm: newH,
+      rotation_deg: 0
+    });
+  };
+
+  const handleFramingFill = () => {
+    if (!project || !element || !activeSpreadId) return;
+    const canvasW = project.size.w_mm;
+    const canvasH = project.size.h_mm;
+    const asset = project.assets?.find(a => a.id === element.assetId);
+    const aspect = (asset?.width && asset?.height) 
+      ? (asset.width / asset.height) 
+      : (asset?.aspectRatio || (element.w_mm / element.h_mm) || 1);
+    const canvasRatio = canvasW / canvasH;
+
+    let newW: number;
+    let newH: number;
+    let newX: number;
+    let newY: number;
+
+    if (aspect > canvasRatio) {
+      newH = canvasH;
+      newW = Number((canvasH * aspect).toFixed(2));
+      newX = Number(((canvasW - newW) / 2).toFixed(2));
+      newY = 0;
+    } else {
+      newW = canvasW;
+      newH = Number((canvasW / aspect).toFixed(2));
+      newX = 0;
+      newY = Number(((canvasH - newH) / 2).toFixed(2));
+    }
+
+    updateElement(activeSpreadId, element.id, {
+      x_mm: newX,
+      y_mm: newY,
+      w_mm: newW,
+      h_mm: newH,
+      rotation_deg: 0
+    });
+  };
+
+  const handleFramingActualSize = () => {
+    if (!project || !element || !activeSpreadId) return;
+    const canvasW = project.size.w_mm;
+    const canvasH = project.size.h_mm;
+    const dpi = project.targetDpi || 300;
+    const asset = project.assets?.find(a => a.id === element.assetId);
+    const nativeW = asset?.width || asset?.metadata?.widthPx;
+    const nativeH = asset?.height || asset?.metadata?.heightPx;
+
+    if (nativeW && nativeH) {
+      const newW = Number(((nativeW / dpi) * 25.4).toFixed(2));
+      const newH = Number(((nativeH / dpi) * 25.4).toFixed(2));
+      const newX = Number(((canvasW - newW) / 2).toFixed(2));
+      const newY = Number(((canvasH - newH) / 2).toFixed(2));
+
+      updateElement(activeSpreadId, element.id, {
+        x_mm: newX,
+        y_mm: newY,
+        w_mm: newW,
+        h_mm: newH
+      });
+    } else {
+      const newX = Number(((canvasW - element.w_mm) / 2).toFixed(2));
+      const newY = Number(((canvasH - element.h_mm) / 2).toFixed(2));
+      updateElement(activeSpreadId, element.id, { x_mm: newX, y_mm: newY });
+    }
+  };
+
+  const handleFramingCenter = () => {
+    if (!project || !element || !activeSpreadId) return;
+    const canvasW = project.size.w_mm;
+    const canvasH = project.size.h_mm;
+    const newX = Number(((canvasW - element.w_mm) / 2).toFixed(2));
+    const newY = Number(((canvasH - element.h_mm) / 2).toFixed(2));
+    updateElement(activeSpreadId, element.id, { x_mm: newX, y_mm: newY });
   };
 
   const InputField = ({ label, value, setter, min, max, step, onReset }: { label: string, value: string, setter: (val: string) => void, min?: number, max?: number, step?: string, onReset?: () => void }) => (
@@ -417,29 +558,79 @@ export default function Inspector() {
 
       {element.type === 'image' && (
         <div className="pt-3 mt-3 border-t border-neutral-200 dark:border-neutral-800">
-           {/* Phase 7.J: User Control Override */}
-           <div className="mb-4 bg-orange-50 dark:bg-orange-900/10 p-3 rounded-lg border border-orange-200 dark:border-orange-800/50">
+           {/* TAREA 2: Canvas Framing Controls */}
+           <div className="mb-4 bg-neutral-50 dark:bg-neutral-900/60 p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
              <div className="flex items-center justify-between mb-2">
-                 <h3 className="text-[10px] font-bold uppercase tracking-wider text-orange-800 dark:text-orange-200">Editorial Role</h3>
+               <h3 className="text-[10px] font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
+                 <span>📐</span> {t('framing_title') || 'Encuadre de Lienzo'}
+               </h3>
+               {project && (
+                 <span className="text-[9px] font-mono text-neutral-400">
+                   {project.targetDpi || 300} DPI
+                 </span>
+               )}
              </div>
-             <select 
-               className="w-full bg-white dark:bg-neutral-950 border border-orange-200 dark:border-orange-800 rounded px-2 py-1.5 text-sm focus:outline-none transition-shadow mb-1 text-orange-900 dark:text-orange-100 font-medium"
-               value={element.editorialRole || 'auto'}
-               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-               onChange={(e) => updateElement(activeSpreadId, element.id, { editorialRole: e.target.value as any })}
-             >
-                <option value="auto">System Auto</option>
-                <option value="hero">★ Forzar HERO</option>
-                <option value="supporting">■ Supporting</option>
-                <option value="filler">▼ Filler</option>
-             </select>
-             {element.assignmentReason && activeSpread?.autoLayout?.isActive && (
-                <p className="text-[10px] text-orange-800/80 dark:text-orange-200/80 leading-tight mt-1.5 border-t border-orange-200/50 dark:border-orange-800/50 pt-1.5">
-                   <strong className="block mb-0.5 opacity-75">Respuesta del Motor:</strong>
-                   {element.assignmentReason}
-                </p>
-             )}
+             <div className="grid grid-cols-2 gap-1.5">
+               <button
+                 type="button"
+                 onClick={handleFramingFit}
+                 className="px-2.5 py-1.5 bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-xs font-semibold rounded border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                 title="Ajustar la imagen completa dentro del lienzo manteniendo proporciones"
+               >
+                 <span>🔲</span> {t('framing_fit') || 'Encajar'}
+               </button>
+               <button
+                 type="button"
+                 onClick={handleFramingFill}
+                 className="px-2.5 py-1.5 bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-xs font-semibold rounded border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                 title="Cubrir el 100% del lienzo manteniendo proporciones"
+               >
+                 <span>🖼️</span> {t('framing_fill') || 'Rellenar'}
+               </button>
+               <button
+                 type="button"
+                 onClick={handleFramingActualSize}
+                 className="px-2.5 py-1.5 bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-xs font-semibold rounded border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                 title="Dimensionar según la resolución nativa al DPI del proyecto"
+               >
+                 <span>🎯</span> {t('framing_actual') || '100% DPI'}
+               </button>
+               <button
+                 type="button"
+                 onClick={handleFramingCenter}
+                 className="px-2.5 py-1.5 bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-xs font-semibold rounded border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                 title="Centrar en el lienzo sin alterar dimensiones"
+               >
+                 <span>➕</span> {t('framing_center') || 'Centrar'}
+               </button>
+             </div>
            </div>
+
+           {/* Album Editorial Role: only in Album mode */}
+           {!isStudio && (
+             <div className="mb-4 bg-orange-50 dark:bg-orange-900/10 p-3 rounded-lg border border-orange-200 dark:border-orange-800/50">
+               <div className="flex items-center justify-between mb-2">
+                   <h3 className="text-[10px] font-bold uppercase tracking-wider text-orange-800 dark:text-orange-200">Rol Editorial</h3>
+               </div>
+               <select 
+                 className="w-full bg-white dark:bg-neutral-950 border border-orange-200 dark:border-orange-800 rounded px-2 py-1.5 text-sm focus:outline-none transition-shadow mb-1 text-orange-900 dark:text-orange-100 font-medium"
+                 value={element.editorialRole || 'auto'}
+                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 onChange={(e) => updateElement(activeSpreadId, element.id, { editorialRole: e.target.value as any })}
+               >
+                  <option value="auto">Automático del Sistema</option>
+                  <option value="hero">★ Forzar Principal (Hero)</option>
+                  <option value="supporting">■ Secundaria (Supporting)</option>
+                  <option value="filler">▼ Relleno (Filler)</option>
+               </select>
+               {element.assignmentReason && activeSpread?.autoLayout?.isActive && (
+                  <p className="text-[10px] text-orange-800/80 dark:text-orange-200/80 leading-tight mt-1.5 border-t border-orange-200/50 dark:border-orange-800/50 pt-1.5">
+                     <strong className="block mb-0.5 opacity-75">Respuesta del Motor:</strong>
+                     {element.assignmentReason}
+                  </p>
+               )}
+             </div>
+           )}
            
             <div className="flex items-center justify-between mb-2">
              <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-800 dark:text-neutral-200">Filtros & LUTs Presets</h3>

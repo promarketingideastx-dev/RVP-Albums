@@ -6,17 +6,19 @@ import { useEditorStore } from '@/store/useEditorStore';
 import { useStore } from 'zustand';
 import { usePathname } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
-import { exportToPDF, exportToJPG } from '@/utils/exportEngine';
+import { exportToPDF, exportToJPG, ProfessionalExportOptions } from '@/utils/exportEngine';
 import { exportProjectToFile } from '@/utils/exportImport';
 import { auth } from '@/lib/firebase/config';
 import { signOut } from 'firebase/auth';
 import { storage } from '@/storage';
 import { v4 as uuidv4 } from 'uuid';
-import ExportModal, { ExportModalOptions } from './ExportModal';
+import ExportModal from './ExportModal';
 
 export default function Toolbar() {
   const t = useTranslations('Editor');
-  const { theme, setTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const pathname = usePathname();
   
   const selectedElementId = useEditorStore((state) => state.selectedElementId);
@@ -25,6 +27,7 @@ export default function Toolbar() {
   const sendBackward = useEditorStore((state) => state.sendBackward);
   const project = useEditorStore((state) => state.project);
   const unloadProject = useEditorStore((state) => state.unloadProject);
+  const flushSave = useEditorStore((state) => state.flushSave);
   const measurementUnit = useEditorStore((state) => state.measurementUnit);
   const toggleMeasurementUnit = useEditorStore((state) => state.toggleMeasurementUnit);
   const goToNextSpread = useEditorStore((state) => state.goToNextSpread);
@@ -66,6 +69,9 @@ export default function Toolbar() {
   const maxSpreads = project?.totalSpreads || Infinity;
   const isLastSpread = currentIdx >= 0 && currentIdx >= maxSpreads - 1;
 
+  const isStudio = project?.projectCategory === 'studio_print';
+  const isEs = pathname.startsWith('/es');
+
   // Remove legacy complex Pro Export States
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -82,34 +88,30 @@ export default function Toolbar() {
 
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
-  const handleAdvancedExport = async (options: ExportModalOptions) => {
+  const handleAdvancedExport = async (options: ProfessionalExportOptions) => {
       if (isExporting || !project) return;
-      setIsExportModalOpen(false);
       setIsExporting(true);
-      setExportProgress(0);
+      setExportProgress(10);
       setExportStatus('idle');
 
-      // Force render frame to unblock UI
-      await new Promise(resolve => setTimeout(resolve, 50));
-
       try {
-        if (options.type === 'pdf') {
+        if (options.format === 'pdf') {
            await exportToPDF(project, {
-               rangeStart: options.rangeStart ? options.rangeStart - 1 : undefined,
-               rangeEnd: options.rangeEnd ? options.rangeEnd - 1 : undefined,
-               onProgress: (current, total) => setExportProgress(Math.round((current / total) * 100))
+               ...options,
+               onProgress: (current: number, total: number) => setExportProgress(Math.round((current / total) * 100))
            });
         } else {
            await exportToJPG(project, {
-               type: options.type as 'print' | 'web',
-               webQuality: options.webQuality,
-               rangeStart: options.rangeStart ? options.rangeStart - 1 : undefined,
-               rangeEnd: options.rangeEnd ? options.rangeEnd - 1 : undefined,
-               onProgress: (current, total) => setExportProgress(Math.round((current / total) * 100))
+               ...options,
+               onProgress: (current: number, total: number) => setExportProgress(Math.round((current / total) * 100))
            });
         }
+        setExportProgress(100);
         setExportStatus('success');
-        setTimeout(() => setExportStatus('idle'), 2500);
+        setTimeout(() => {
+          setIsExportModalOpen(false);
+          setExportStatus('idle');
+        }, 600);
       } catch (err) {
         console.error("Export Failed:", err);
         setExportStatus('error');
@@ -120,9 +122,10 @@ export default function Toolbar() {
       }
   };
 
-  const swapLocale = () => {
+  const swapLocale = async () => {
     if (project?.id) {
       localStorage.setItem('rvp_last_open_project_id', project.id);
+      await flushSave();
     }
     const nextLocale = pathname.startsWith('/es') ? '/en' : '/es';
     window.location.href = nextLocale;
@@ -200,7 +203,10 @@ export default function Toolbar() {
       <header className="h-14 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 px-4 flex items-center justify-between relative z-40">
         <div className="flex items-center gap-3">
           <button 
-             onClick={unloadProject}
+             onClick={async () => {
+               await flushSave();
+               unloadProject();
+             }}
              className="w-8 h-8 flex items-center justify-center bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 rounded-full transition"
              title="Back to Projects"
           >
@@ -253,7 +259,7 @@ export default function Toolbar() {
                   <span className="text-[10px] opacity-75 font-normal">({project.targetDpi || 300} DPI)</span>
                 </span>
               </div>
-            ) : project && currentIdx !== -1 && (
+            ) : project && !isStudio && currentIdx !== -1 && (
               <div className="flex items-center gap-1 border-l border-neutral-200 dark:border-neutral-800 pl-3 ml-2">
                  <button
                     onClick={() => setEditorViewMode(editorViewMode === 'GRID' ? 'SINGLE' : 'GRID')}
@@ -304,29 +310,62 @@ export default function Toolbar() {
             
             {/* Global HUD Stats */}
             {project && (
-              <div className="flex items-center gap-4 border-l border-neutral-200 dark:border-neutral-800 pl-4 ml-4 text-xs font-mono tracking-tight">
-                 <div className="flex items-center gap-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded px-3 py-1">
-                    <div className="flex flex-col items-center" title="Total Pages">
-                       <span className="text-[9px] text-neutral-400 uppercase font-sans tracking-widest leading-none">Pgs</span>
-                       <span className="font-bold text-neutral-800 dark:text-neutral-200">{totalPages}</span>
-                    </div>
-                    <div className="flex flex-col items-center" title="Total Spreads">
-                       <span className="text-[9px] text-neutral-400 uppercase font-sans tracking-widest leading-none">Sprd</span>
-                       <span className="font-bold text-neutral-800 dark:text-neutral-200">{project.spreads.length}</span>
-                    </div>
-                 </div>
+              <div className="flex items-center gap-3 border-l border-neutral-200 dark:border-neutral-800 pl-3 ml-2 text-xs font-mono tracking-tight">
+                 {isStudio ? (
+                   <div className="flex items-center gap-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded px-3 py-1">
+                      <div className="flex flex-col items-center" title={isEs ? "Dimensiones del Lienzo" : "Canvas Size"}>
+                         <span className="text-[9px] text-neutral-400 uppercase font-sans tracking-widest leading-none">
+                            {isEs ? 'Lienzo' : 'Canvas'}
+                         </span>
+                         <span className="font-bold text-neutral-800 dark:text-neutral-200">
+                            {measurementUnit === 'in' 
+                               ? `${(project.size.w_mm / 25.4).toFixed(0)}×${(project.size.h_mm / 25.4).toFixed(0)}"` 
+                               : `${(project.size.w_mm / 10).toFixed(0)}×${(project.size.h_mm / 10).toFixed(0)} cm`}
+                         </span>
+                      </div>
+                      <div className="flex flex-col items-center" title={isEs ? "Resolución de Salida" : "Target Resolution"}>
+                         <span className="text-[9px] text-neutral-400 uppercase font-sans tracking-widest leading-none">
+                            {isEs ? 'Resolución' : 'Resolution'}
+                         </span>
+                         <span className="font-bold text-indigo-600 dark:text-indigo-400">
+                            {project.targetDpi || 300} DPI
+                         </span>
+                      </div>
+                   </div>
+                 ) : (
+                   <div className="flex items-center gap-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded px-3 py-1">
+                      <div className="flex flex-col items-center" title="Total Pages">
+                         <span className="text-[9px] text-neutral-400 uppercase font-sans tracking-widest leading-none">
+                            {isEs ? 'Págs' : 'Pgs'}
+                         </span>
+                         <span className="font-bold text-neutral-800 dark:text-neutral-200">{totalPages}</span>
+                      </div>
+                      <div className="flex flex-col items-center" title="Total Spreads">
+                         <span className="text-[9px] text-neutral-400 uppercase font-sans tracking-widest leading-none">
+                            {isEs ? 'Pliegos' : 'Sprd'}
+                         </span>
+                         <span className="font-bold text-neutral-800 dark:text-neutral-200">{project.spreads.length}</span>
+                      </div>
+                   </div>
+                 )}
 
                  <div className="flex items-center gap-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded px-3 py-1">
-                    <div className="flex flex-col items-center" title="Total Photos Uploaded">
-                       <span className="text-[9px] text-neutral-400 uppercase font-sans tracking-widest leading-none">Load</span>
+                    <div className="flex flex-col items-center" title={isEs ? "Fotos cargadas en el proyecto" : "Total Photos Uploaded"}>
+                       <span className="text-[9px] text-neutral-400 uppercase font-sans tracking-widest leading-none">
+                          {isEs ? 'Cargadas' : 'Load'}
+                       </span>
                        <span className="font-bold text-blue-600 dark:text-blue-400">{totalAssets}</span>
                     </div>
-                    <div className="flex flex-col items-center" title="Unique Photos Used (Asset ID)">
-                       <span className="text-[9px] text-neutral-400 uppercase font-sans tracking-widest leading-none">Used</span>
+                    <div className="flex flex-col items-center" title={isEs ? "Fotos colocadas en el lienzo" : "Photos on canvas"}>
+                       <span className="text-[9px] text-neutral-400 uppercase font-sans tracking-widest leading-none">
+                          {isEs ? 'En Uso' : 'Used'}
+                       </span>
                        <span className="font-bold text-green-600 dark:text-green-400">{uniquePhotosUsed}</span>
                     </div>
-                    <div className="flex flex-col items-center" title="Unused Photos">
-                       <span className="text-[9px] text-neutral-400 uppercase font-sans tracking-widest leading-none">Free</span>
+                    <div className="flex flex-col items-center" title={isEs ? "Fotos disponibles en bandeja" : "Unused Photos"}>
+                       <span className="text-[9px] text-neutral-400 uppercase font-sans tracking-widest leading-none">
+                          {isEs ? 'Libres' : 'Free'}
+                       </span>
                        <span className="font-bold text-neutral-600 dark:text-neutral-400">{uniquePhotosUnused}</span>
                     </div>
                  </div>
@@ -370,7 +409,7 @@ export default function Toolbar() {
                onClick={() => setIsMenuOpen(!isMenuOpen)}
                className="px-4 py-1.5 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium rounded hover:bg-black dark:hover:bg-neutral-200 transition flex items-center gap-1.5"
             >
-              Export
+              {isEs ? 'Exportar' : 'Export'}
               <svg className={`w-4 h-4 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
@@ -379,7 +418,7 @@ export default function Toolbar() {
              {isMenuOpen && (
               <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md shadow-lg py-1 animate-in fade-in slide-in-from-top-2 z-50">
                  <button onClick={() => { setIsMenuOpen(false); setIsExportModalOpen(true); }} className="w-full text-left px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition font-bold">
-                   ⚡ Advanced Export...
+                   ⚡ {isEs ? 'Exportación Profesional...' : 'Advanced Export...'}
                  </button>
                  <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1"></div>
                  
@@ -408,10 +447,18 @@ export default function Toolbar() {
             {t('language')}
           </button>
           <button 
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="text-sm w-24 py-1 border border-neutral-200 dark:border-neutral-800 rounded text-center hover:bg-neutral-50 dark:hover:bg-neutral-900 transition"
+            onClick={() => {
+              const current = resolvedTheme || theme;
+              setTheme(current === 'dark' ? 'light' : 'dark');
+            }}
+            className="text-sm px-2.5 py-1 border border-neutral-200 dark:border-neutral-800 rounded text-center hover:bg-neutral-50 dark:hover:bg-neutral-900 transition flex items-center gap-1 font-medium text-neutral-800 dark:text-neutral-200"
+            title={mounted && (resolvedTheme || theme) === 'dark' ? t('theme_light') : t('theme_dark')}
           >
-            {theme === 'dark' ? t('theme_light') : t('theme_dark')}
+            {mounted ? (
+              (resolvedTheme || theme) === 'dark' ? `☀️ ${t('theme_light')}` : `🌙 ${t('theme_dark')}`
+            ) : (
+              t('theme_dark')
+            )}
           </button>
           
           <button 
@@ -426,8 +473,14 @@ export default function Toolbar() {
       <ExportModal
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
-        onExport={handleAdvancedExport}
+        project={project}
+        activeSpreadId={activeSpreadId}
+        selectedElementId={selectedElementId}
+        currentSpreadIndex={currentIdx !== -1 ? currentIdx : 0}
         totalPages={totalPages}
+        onExport={handleAdvancedExport}
+        isExporting={isExporting}
+        exportProgress={exportProgress}
       />
     </>
   );

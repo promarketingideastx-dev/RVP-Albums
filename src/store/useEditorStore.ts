@@ -88,11 +88,15 @@ interface EditorState {
   removeGuide: (guideId: string) => void;
   clearGuides: () => void;
   setSequenceMode: (mode: 'ORIGINAL_ORDER' | 'CHRONOLOGICAL' | 'MANUAL_PRIORITY') => void;
+  flushSave: () => Promise<void>;
 }
+
+// Global Auto-Save Interceptor Debounce Handle
+let autoSaveTimeout: ReturnType<typeof setTimeout> | null = null;
 
 export const useEditorStore = create<EditorState>()(
   temporal(
-    (set) => ({
+    (set, get) => ({
   project: null,
   activeSpreadId: null,
   draggingStagedElementId: null,
@@ -130,7 +134,27 @@ export const useEditorStore = create<EditorState>()(
       editorViewMode: isStudio ? 'SINGLE' : 'GRID'
     });
   },
-  unloadProject: () => set({ project: null, activeSpreadId: null, selectedElementId: null, previewOriginalPhotoId: null }),
+  unloadProject: () => {
+    const currentProject = get().project;
+    if (currentProject && currentProject.id && currentProject.storageMode === 'local') {
+      if (autoSaveTimeout) {
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = null;
+      }
+      projectStorage.saveProject(currentProject);
+    }
+    set({ project: null, activeSpreadId: null, selectedElementId: null, previewOriginalPhotoId: null });
+  },
+  flushSave: async () => {
+    const currentProject = get().project;
+    if (currentProject && currentProject.id && currentProject.storageMode === 'local') {
+      if (autoSaveTimeout) {
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = null;
+      }
+      await projectStorage.saveProjectAsync(currentProject);
+    }
+  },
   setActiveSpread: (id) => set({ activeSpreadId: id }),
   setSequenceMode: (mode) => set((state) => {
     if (!state.project) return state;
@@ -1469,7 +1493,6 @@ export const useEditorStore = create<EditorState>()(
 );
 
 // Global Auto-Save Interceptor
-let autoSaveTimeout: ReturnType<typeof setTimeout> | null = null;
 useEditorStore.subscribe((state) => {
   if (state.project && state.project.id && state.project.storageMode === 'local') {
       if (autoSaveTimeout) clearTimeout(autoSaveTimeout);

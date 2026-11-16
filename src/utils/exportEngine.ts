@@ -1,7 +1,73 @@
-import { EditorProject, Spread } from '@/types/editor';
+import { EditorProject, Spread, EditorElement } from '@/types/editor';
 import { jsPDF } from 'jspdf';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+
+/**
+ * Professional JPEG Quality Scale (1-12) inspired by Adobe Photoshop.
+ * Note: This scale maps to HTML5 Canvas encoder quality (0.20 to 1.00).
+ * It provides intuitive tiering without claiming mathematical equivalence
+ * to proprietary Adobe Photoshop DCT quantization tables.
+ */
+export const JPEG_QUALITY_SCALE_MAP: Record<number, number> = {
+  1: 0.20,
+  2: 0.30,
+  3: 0.40,
+  4: 0.50, // Low (1-4)
+  5: 0.60,
+  6: 0.68,
+  7: 0.75, // Medium (5-7)
+  8: 0.82,
+  9: 0.88,
+  10: 0.92, // High (8-10)
+  11: 0.96,
+  12: 1.00, // Maximum (11-12)
+};
+
+export type QualityTier = 'low' | 'medium' | 'high' | 'maximum';
+
+export function getQualityTier(level: number): QualityTier {
+  if (level <= 4) return 'low';
+  if (level <= 7) return 'medium';
+  if (level <= 10) return 'high';
+  return 'maximum';
+}
+
+export function sanitizeFileName(name: string, fallback = 'Export'): string {
+  const sanitized = name.replace(/[/\\?%*:|"<>]/g, '_').trim().replace(/\s+/g, '_');
+  return sanitized || fallback;
+}
+
+export function base64ToBlob(base64DataUrl: string, mimeType = 'image/jpeg'): Blob {
+  const base64Clean = base64DataUrl.replace(/^data:image\/[a-z]+;base64,/, '');
+  const byteCharacters = atob(base64Clean);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+  return new Blob([byteArray], { type: mimeType });
+}
+
+export interface ProfessionalExportOptions {
+  moduleContext: 'album' | 'studio' | 'camera_raw';
+  format: 'jpg' | 'pdf';
+  rangeMode: 'current' | 'all' | 'custom' | 'selected';
+  rangeStart?: number; // 0-indexed
+  rangeEnd?: number;   // 0-indexed
+  activeSpreadIndex?: number;
+  selectedElementId?: string;
+  dpi: number;
+  jpegQualityLevel: number; // 1 - 12
+  fileNameBase: string;
+  sequentialDigits?: 2 | 3;
+  saveDestination: 'browser_download' | 'directory_picker';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  targetFileHandle?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  targetDirHandle?: any;
+  onProgress?: (current: number, total: number, message?: string) => void;
+}
 
 // Project Metadata structure subset
 interface ExportMeta {
@@ -442,16 +508,16 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
     }
   }
 
-  stage.add(layer);
-  layer.draw();
-
-  const dataURL = stage.toDataURL({ mimeType: 'image/jpeg', quality: meta.quality || 0.95 });
-
-  // Native Garbage Collection Cleanup
-  stage.destroy();
-  objectUrlsToRevoke.forEach(u => URL.revokeObjectURL(u));
-
-  return dataURL;
+  try {
+    stage.add(layer);
+    layer.draw();
+    const dataURL = stage.toDataURL({ mimeType: 'image/jpeg', quality: meta.quality || 0.95 });
+    return dataURL;
+  } finally {
+    // Native Garbage Collection Cleanup
+    stage.destroy();
+    objectUrlsToRevoke.forEach(u => URL.revokeObjectURL(u));
+  }
 }
 
 function loadHtmlImage(src: string): Promise<HTMLImageElement> {
@@ -477,7 +543,279 @@ export interface PDFExportOptions {
   onProgress?: (current: number, total: number) => void;
 }
 
-export async function exportToPDF(project: EditorProject, options?: PDFExportOptions): Promise<void> {
+export async function exportStudioPrintToJPG(project: EditorProject, options: ProfessionalExportOptions): Promise<void> {
+  const onProgress = options.onProgress;
+  const spread = project.spreads[options.activeSpreadIndex ?? 0] || project.spreads[0];
+  if (!spread) throw new Error('No spread found in studio project');
+
+  if (onProgress) onProgress(0, 1, 'Iniciando renderizado de estudio...');
+
+  const quality = JPEG_QUALITY_SCALE_MAP[options.jpegQualityLevel] ?? 1.0;
+  const pixelMultiplier = options.dpi / 25.4;
+
+  const base64Jpg = await exportSpreadToJPG(project, spread, {
+    size: project.size,
+    pixelMultiplier,
+    quality,
+  });
+
+  const blob = base64ToBlob(base64Jpg, 'image/jpeg');
+  const safeName = sanitizeFileName(options.fileNameBase || project.title || 'Studio_Print');
+  const w_in = Math.round(project.size.w_mm / 25.4);
+  const h_in = Math.round(project.size.h_mm / 25.4);
+  const fileName = `${safeName}_${w_in}x${h_in}.jpg`;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let fileHandle = options.targetFileHandle;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (!fileHandle && options.saveDestination === 'directory_picker' && typeof window !== 'undefined' && (window as any).showSaveFilePicker) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      fileHandle = await (window as any).showSaveFilePicker({
+        suggestedName: fileName,
+        types: [{
+          description: 'JPEG Image',
+          accept: { 'image/jpeg': ['.jpg', '.jpeg'] },
+        }],
+      });
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') return;
+      console.warn("SaveFilePicker failed, falling back to download:", err);
+    }
+  }
+
+  if (fileHandle) {
+    try {
+      const writable = await fileHandle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      if (onProgress) onProgress(1, 1);
+      return;
+    } catch (err) {
+      console.error("Failed to write to fileHandle, falling back to download:", err);
+    }
+  }
+
+  saveAs(blob, fileName);
+  if (onProgress) onProgress(1, 1);
+}
+
+export async function exportRawPhotoToJPG(project: EditorProject, options: ProfessionalExportOptions): Promise<void> {
+  const onProgress = options.onProgress;
+  const Konva = (await import('konva')).default;
+  const { get: idbGet } = await import('idb-keyval');
+
+  let targetElement: EditorElement | null = null;
+  for (const spread of project.spreads) {
+    const found = spread.elements.find(el => el.id === options.selectedElementId && (el.type === 'image' || el.type === 'decoration'));
+    if (found) {
+      targetElement = found;
+      break;
+    }
+  }
+
+  if (!targetElement) {
+    const activeSpread = project.spreads[options.activeSpreadIndex ?? 0] || project.spreads[0];
+    targetElement = activeSpread?.elements.find(el => el.type === 'image') || null;
+  }
+
+  if (!targetElement) {
+    throw new Error('No photograph selected for Camera Raw export.');
+  }
+
+  if (onProgress) onProgress(0, 1, 'Cargando fotografía original...');
+
+  let url = '';
+  if (targetElement.originalBlobId) {
+    const blob = await idbGet<Blob>(targetElement.originalBlobId);
+    if (blob) url = URL.createObjectURL(blob);
+  }
+  if (!url && targetElement.previewUrl) url = targetElement.previewUrl;
+  if (!url && targetElement.src) url = targetElement.src;
+
+  if (!url) throw new Error('Could not resolve image data for selected photograph.');
+
+  const imgObj = await loadHtmlImage(url);
+  const nativeW = imgObj.naturalWidth || 4000;
+  const nativeH = imgObj.naturalHeight || 3000;
+
+  const container = document.createElement('div');
+  const stage = new Konva.Stage({
+    container,
+    width: nativeW,
+    height: nativeH,
+  });
+
+  const layer = new Konva.Layer();
+  const kImg = new Konva.Image({
+    image: imgObj,
+    x: 0,
+    y: 0,
+    width: nativeW,
+    height: nativeH,
+    imageSmoothingEnabled: false,
+  });
+
+  // Apply filters & adjustments if present
+  const hasLegacyFilter = targetElement.photoFilter && targetElement.photoFilter !== 'none';
+  const hasAdj = targetElement.photoAdjustments && Object.values(targetElement.photoAdjustments).some(v => typeof v === 'number' && v !== 0);
+
+  if (hasLegacyFilter || hasAdj) {
+    const { LUT_LIBRARY } = await import('@/lib/lut-presets');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const filtersArray: any[] = [];
+    const intensity = targetElement.filterIntensity !== undefined ? targetElement.filterIntensity : 1;
+
+    if (hasLegacyFilter) {
+      const lut = LUT_LIBRARY.find(l => l.id === targetElement!.photoFilter);
+      if (lut) {
+        if (lut.contrast) { filtersArray.push(Konva.Filters.Contrast); kImg.contrast(lut.contrast * intensity); }
+        if (lut.brightness) { filtersArray.push(Konva.Filters.Brighten); kImg.brightness(lut.brightness * intensity); }
+        if (lut.grayscale) filtersArray.push(Konva.Filters.Grayscale);
+        if (lut.sepia) filtersArray.push(Konva.Filters.Sepia);
+        if (lut.invert) filtersArray.push(Konva.Filters.Invert);
+        if (lut.hue !== undefined || lut.saturation !== undefined || lut.luminance !== undefined) {
+          filtersArray.push(Konva.Filters.HSL);
+          if (lut.hue !== undefined) kImg.hue(lut.hue * intensity);
+          if (lut.saturation !== undefined) kImg.saturation(Math.max(-2, Math.min(2, lut.saturation * intensity)));
+          if (lut.luminance !== undefined) kImg.luminance(lut.luminance * intensity);
+        }
+      }
+    }
+
+    if (hasAdj) {
+      const adj = targetElement.photoAdjustments!;
+      const exposure = !adj.bypassLight ? (adj.exposure || 0) : 0;
+      const lightContrast = !adj.bypassLight ? (adj.lightContrast || 0) : 0;
+      const highlights = !adj.bypassLight ? (adj.highlights || 0) : 0;
+      const shadows = !adj.bypassLight ? (adj.shadows || 0) : 0;
+      const whites = !adj.bypassLight ? (adj.whites || 0) : 0;
+      const blacks = !adj.bypassLight ? (adj.blacks || 0) : 0;
+
+      const temperature = !adj.bypassColor ? (adj.temperature || 0) : 0;
+      const tint = !adj.bypassColor ? (adj.tint || 0) : 0;
+      const vibrance = !adj.bypassColor ? (adj.vibrance || 0) : 0;
+      const saturation = !adj.bypassColor ? (adj.saturation || 0) : 0;
+
+      const texture = !adj.bypassEffects ? (adj.texture || 0) : 0;
+      const clarity = !adj.bypassEffects ? (adj.clarity || 0) : 0;
+      const dehaze = !adj.bypassEffects ? (adj.dehaze || 0) : 0;
+      const grain = !adj.bypassEffects ? (adj.grain || 0) : 0;
+      const blur = !adj.bypassEffects ? (adj.blur || 0) : 0;
+
+      if (exposure || highlights || shadows || whites || blacks) {
+        filtersArray.push(Konva.Filters.Brighten);
+        let totalBrightness = exposure / 200;
+        if (highlights) totalBrightness += (highlights / 100) * 0.15;
+        if (whites) totalBrightness += (whites / 100) * 0.08;
+        if (shadows) totalBrightness += (shadows / 100) * 0.15;
+        if (blacks) totalBrightness += (blacks / 100) * 0.08;
+        kImg.brightness(Math.max(-1, Math.min(1, totalBrightness)));
+      }
+
+      if (lightContrast || clarity || dehaze || texture) {
+        filtersArray.push(Konva.Filters.Contrast);
+        let totalContrast = lightContrast * 0.6;
+        if (clarity) totalContrast += (clarity / 100) * 20;
+        if (dehaze) totalContrast += (dehaze / 100) * 15;
+        if (texture) totalContrast += (texture / 100) * 10;
+        kImg.contrast(Math.max(-100, Math.min(100, totalContrast)));
+      }
+
+      if (saturation || vibrance) {
+        if (!filtersArray.includes(Konva.Filters.HSL)) filtersArray.push(Konva.Filters.HSL);
+        let totalSat = saturation;
+        if (vibrance) totalSat += (vibrance * 0.5);
+        kImg.saturation(Math.max(-2, Math.min(2, totalSat / 100)));
+        kImg.hue(0);
+      }
+
+      if (temperature || tint) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if (!filtersArray.includes((Konva.Filters as any).ColorShift)) filtersArray.push((Konva.Filters as any).ColorShift);
+        let r = 0, g = 0, b = 0;
+        if (temperature) {
+          const tempNorm = temperature / 100;
+          r += tempNorm * 15;
+          b -= tempNorm * 15;
+        }
+        if (tint) {
+          const tintNorm = tint / 100;
+          g += tintNorm * 10;
+          r += tintNorm * 2.5;
+          b += tintNorm * 2.5;
+        }
+        kImg.setAttr('redShift', r);
+        kImg.setAttr('greenShift', g);
+        kImg.setAttr('blueShift', b);
+      }
+
+      if (grain) {
+        filtersArray.push(Konva.Filters.Noise);
+        kImg.noise(Math.max(0, (grain / 100) * 0.5));
+      }
+      if (blur) {
+        filtersArray.push(Konva.Filters.Blur);
+        kImg.blurRadius(Math.max(0, blur / 5));
+      }
+    }
+
+    kImg.filters(filtersArray);
+    kImg.cache({ pixelRatio: 1, imageSmoothingEnabled: false });
+  }
+
+  layer.add(kImg);
+  stage.add(layer);
+  layer.draw();
+
+  const quality = JPEG_QUALITY_SCALE_MAP[options.jpegQualityLevel] ?? 1.0;
+  const dataURL = stage.toDataURL({ mimeType: 'image/jpeg', quality });
+
+  stage.destroy();
+  if (url.startsWith('blob:')) URL.revokeObjectURL(url);
+
+  const blob = base64ToBlob(dataURL, 'image/jpeg');
+  const safeName = sanitizeFileName(options.fileNameBase || 'CameraRaw_Photo');
+  const fileName = `${safeName}.jpg`;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let fileHandle = options.targetFileHandle;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (!fileHandle && options.saveDestination === 'directory_picker' && typeof window !== 'undefined' && (window as any).showSaveFilePicker) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      fileHandle = await (window as any).showSaveFilePicker({
+        suggestedName: fileName,
+        types: [{
+          description: 'JPEG Image',
+          accept: { 'image/jpeg': ['.jpg', '.jpeg'] },
+        }],
+      });
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') return;
+      console.warn("SaveFilePicker failed, falling back to download:", err);
+    }
+  }
+
+  if (fileHandle) {
+    try {
+      const writable = await fileHandle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      if (onProgress) onProgress(1, 1);
+      return;
+    } catch (err) {
+      console.error("Failed to write to fileHandle, falling back to download:", err);
+    }
+  }
+
+  saveAs(blob, fileName);
+  if (onProgress) onProgress(1, 1);
+}
+
+export async function exportToPDF(project: EditorProject, options?: PDFExportOptions | ProfessionalExportOptions): Promise<void> {
   const onProgress = options?.onProgress;
   const pdfW = project.size.w_mm;
   const pdfH = project.size.h_mm;
@@ -490,34 +828,51 @@ export async function exportToPDF(project: EditorProject, options?: PDFExportOpt
   });
   
   const total = project.spreads.length;
-  const safeTitle = project.title.replace(/[^a-z0-9_ -]/gi, '').trim().replace(/\s+/g, '_') || 'Album';
+  const isProf = options && 'fileNameBase' in options;
+  const safeTitle = sanitizeFileName(isProf ? options.fileNameBase : (project.title || 'Album'));
   
-  const startIdx = Math.max(0, options?.rangeStart ?? 0);
-  const endIdx = Math.min(total - 1, options?.rangeEnd ?? (total - 1));
-  const processCount = endIdx - startIdx + 1;
+  let startIdx = 0;
+  let endIdx = total - 1;
 
-  const hasMassiveSpreads = processCount > 30;
-  const safePixelMultiplier = hasMassiveSpreads ? 6 : 12;
-  
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[Export Pipeline] Starting PDF Render: ${safeTitle}.pdf | Spreads: ${startIdx+1}-${endIdx+1} | Multiplier: ${safePixelMultiplier}x`);
+  if (isProf) {
+    const profOpts = options as ProfessionalExportOptions;
+    if (profOpts.rangeMode === 'current') {
+      startIdx = Math.max(0, Math.min(total - 1, profOpts.activeSpreadIndex ?? 0));
+      endIdx = startIdx;
+    } else if (profOpts.rangeMode === 'custom') {
+      startIdx = Math.max(0, profOpts.rangeStart ?? 0);
+      endIdx = Math.min(total - 1, profOpts.rangeEnd ?? (total - 1));
+    }
+  } else if (options) {
+    const pdfOpts = options as PDFExportOptions;
+    startIdx = Math.max(0, pdfOpts.rangeStart ?? 0);
+    endIdx = Math.min(total - 1, pdfOpts.rangeEnd ?? (total - 1));
   }
+
+  const processCount = endIdx - startIdx + 1;
+  const targetDpi = isProf ? (options as ProfessionalExportOptions).dpi : 300;
+  const pixelMultiplier = targetDpi / 25.4;
 
   let pagesAdded = 0;
   for (let i = startIdx; i <= endIdx; i++) {
     const spread = project.spreads[i];
     
-    // Skip completely empty pages (only pages with actual photos, text or shapes are exported)
+    // Skip completely empty pages
     const hasValidContent = spread.elements.some(el => {
        if (el.type === 'text' || el.type === 'shape') return true;
        if ((el.type === 'image' || el.type === 'decoration') && (el.originalBlobId || el.previewUrl || el.src)) return true;
        return false;
     });
-    // Ignore background. A spread with nothing but background is strictly empty.
     if (!hasValidContent) continue;
     
-    // Always full quality for PDF matching print logic
-    const base64Jpg = await exportSpreadToJPG(project, spread, { size: project.size, pixelMultiplier: safePixelMultiplier, quality: 1.0 });
+    // Memory relaxation gap between spreads
+    await new Promise(r => setTimeout(r, 25));
+
+    const base64Jpg = await exportSpreadToJPG(project, spread, {
+      size: project.size,
+      pixelMultiplier,
+      quality: 1.0,
+    });
     
     if (pagesAdded > 0) doc.addPage([pdfW, pdfH], orientation);
     doc.addImage(base64Jpg, 'JPEG', 0, 0, pdfW, pdfH, undefined, 'FAST');
@@ -527,105 +882,212 @@ export async function exportToPDF(project: EditorProject, options?: PDFExportOpt
   }
   
   const filename = `${safeTitle}.pdf`;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let fileHandle = isProf ? (options as ProfessionalExportOptions).targetFileHandle : null;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (!fileHandle && isProf && options && (options as ProfessionalExportOptions).saveDestination === 'directory_picker' && typeof window !== 'undefined' && (window as any).showSaveFilePicker) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      fileHandle = await (window as any).showSaveFilePicker({
+        suggestedName: filename,
+        types: [{
+          description: 'PDF Document',
+          accept: { 'application/pdf': ['.pdf'] },
+        }],
+      });
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') return;
+      console.warn("SaveFilePicker failed for PDF, falling back to download:", err);
+    }
+  }
+
+  if (fileHandle) {
+    try {
+      const writable = await fileHandle.createWritable();
+      const pdfBlob = doc.output('blob');
+      await writable.write(pdfBlob);
+      await writable.close();
+      return;
+    } catch (err) {
+      console.error("Failed to write to PDF fileHandle:", err);
+    }
+  }
+
   doc.save(filename);
 }
 
-export async function exportToJPG(project: EditorProject, options: AdvancedExportOptions): Promise<void> {
-  const { onProgress, type, webQuality } = options;
-  const safeTitle = project.title.replace(/[^a-z0-9_ -]/gi, '').trim().replace(/\s+/g, '_') || 'Album';
-  
-  const total = project.spreads.length;
-  const startIdx = Math.max(0, options.rangeStart ?? 0);
-  const endIdx = Math.min(total - 1, options.rangeEnd ?? (total - 1));
-  const processCount = endIdx - startIdx + 1;
+export async function exportToJPG(project: EditorProject, options: AdvancedExportOptions | ProfessionalExportOptions): Promise<void> {
+  const isProf = 'moduleContext' in options;
 
-  // Quality Rules
-  let pixelMultiplier = 12;
-  let jpQuality = 1.0;
-  
-  if (type === 'web') {
-     pixelMultiplier = 4; // Web base
-     if (webQuality === 'low') { jpQuality = 0.6; pixelMultiplier = 2; }
-     else if (webQuality === 'medium') { jpQuality = 0.75; pixelMultiplier = 3; }
-     else { jpQuality = 0.9; pixelMultiplier = 4; } // high
-  } else {
-     // Print mode
-     const hasMassiveSpreads = processCount > 30;
-     pixelMultiplier = hasMassiveSpreads ? 6 : 12;
+  if (isProf) {
+    const profOpts = options as ProfessionalExportOptions;
+    if (profOpts.moduleContext === 'studio') {
+      return exportStudioPrintToJPG(project, profOpts);
+    }
+    if (profOpts.moduleContext === 'camera_raw') {
+      return exportRawPhotoToJPG(project, profOpts);
+    }
   }
 
-  // Attempt direct folder write first
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let dirHandle: any = null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (typeof window !== 'undefined' && (window as any).showDirectoryPicker) {
-     try {
-       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-       dirHandle = await (window as any).showDirectoryPicker({ id: 'export', mode: 'readwrite' });
-     } catch (err) {
-       if ((err as Error).name === 'AbortError') {
-          // User deliberately cancelled the picker, we abort the entire process
+  // Album export
+  const onProgress = options.onProgress;
+  const safeTitle = sanitizeFileName(isProf ? (options as ProfessionalExportOptions).fileNameBase : (project.title || 'Album'));
+  const total = project.spreads.length;
+
+  let startIdx = 0;
+  let endIdx = total - 1;
+  let pixelMultiplier = 12;
+  let jpQuality = 1.0;
+  let sequentialDigits = 3;
+
+  if (isProf) {
+    const profOpts = options as ProfessionalExportOptions;
+    if (profOpts.rangeMode === 'current') {
+      startIdx = Math.max(0, Math.min(total - 1, profOpts.activeSpreadIndex ?? 0));
+      endIdx = startIdx;
+    } else if (profOpts.rangeMode === 'custom') {
+      startIdx = Math.max(0, profOpts.rangeStart ?? 0);
+      endIdx = Math.min(total - 1, profOpts.rangeEnd ?? (total - 1));
+    }
+    pixelMultiplier = (profOpts.dpi || 300) / 25.4;
+    jpQuality = JPEG_QUALITY_SCALE_MAP[profOpts.jpegQualityLevel] ?? 1.0;
+    sequentialDigits = profOpts.sequentialDigits || 3;
+  } else {
+    const advOpts = options as AdvancedExportOptions;
+    startIdx = Math.max(0, advOpts.rangeStart ?? 0);
+    endIdx = Math.min(total - 1, advOpts.rangeEnd ?? (total - 1));
+    if (advOpts.type === 'web') {
+      pixelMultiplier = 4;
+      if (advOpts.webQuality === 'low') { jpQuality = 0.6; pixelMultiplier = 2; }
+      else if (advOpts.webQuality === 'medium') { jpQuality = 0.75; pixelMultiplier = 3; }
+      else { jpQuality = 0.9; pixelMultiplier = 4; }
+    } else {
+      const hasMassiveSpreads = (endIdx - startIdx + 1) > 30;
+      pixelMultiplier = hasMassiveSpreads ? 6 : 12;
+    }
+  }
+
+  const processCount = endIdx - startIdx + 1;
+
+  // Single spread export optimization: Direct JPG download (no unnecessary ZIP!)
+  if (processCount === 1) {
+    const spread = project.spreads[startIdx];
+    if (spread) {
+      if (onProgress) onProgress(0, 1);
+      const base64Jpg = await exportSpreadToJPG(project, spread, {
+        size: project.size,
+        pixelMultiplier,
+        quality: jpQuality,
+      });
+      const blob = base64ToBlob(base64Jpg, 'image/jpeg');
+      const idxStr = String(startIdx + 1).padStart(sequentialDigits, '0');
+      const singleFileName = `${safeTitle}_${idxStr}.jpg`;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let fileHandle = isProf ? (options as ProfessionalExportOptions).targetFileHandle : null;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (!fileHandle && isProf && (options as ProfessionalExportOptions).saveDestination === 'directory_picker' && typeof window !== 'undefined' && (window as any).showSaveFilePicker) {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          fileHandle = await (window as any).showSaveFilePicker({
+            suggestedName: singleFileName,
+            types: [{
+              description: 'JPEG Image',
+              accept: { 'image/jpeg': ['.jpg', '.jpeg'] },
+            }],
+          });
+        } catch (err) {
+          if ((err as Error).name === 'AbortError') return;
+          console.warn("SaveFilePicker failed, falling back to download:", err);
+        }
+      }
+
+      if (fileHandle) {
+        try {
+          const writable = await fileHandle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+          if (onProgress) onProgress(1, 1);
           return;
-       }
-       console.warn("Directory picker failed, falling back to ZIP:", err);
-     }
+        } catch (err) {
+          console.error("Failed to write to fileHandle:", err);
+        }
+      }
+
+      saveAs(blob, singleFileName);
+      if (onProgress) onProgress(1, 1);
+      return;
+    }
+  }
+
+  // Multiple spreads export
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let dirHandle: any = isProf ? (options as ProfessionalExportOptions).targetDirHandle : null;
+  const wantDir = isProf ? (options as ProfessionalExportOptions).saveDestination === 'directory_picker' : true;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (!dirHandle && wantDir && typeof window !== 'undefined' && (window as any).showDirectoryPicker) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      dirHandle = await (window as any).showDirectoryPicker({ id: 'rvp-export', mode: 'readwrite' });
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') return;
+      console.warn("Directory picker failed, falling back to ZIP:", err);
+    }
   }
 
   const zip = !dirHandle ? new JSZip() : null;
   const folder = zip ? (zip.folder(safeTitle) || zip) : null;
-  
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[Export Pipeline] JPG Mode: ${type} | Quality: ${jpQuality} | Multiplier: ${pixelMultiplier}x | Spreads: ${startIdx+1}-${endIdx+1} | Output: ${dirHandle ? 'Direct Folder' : 'ZIP'}`);
-  }
 
   let processedCount = 0;
   for (let i = startIdx; i <= endIdx; i++) {
     const spread = project.spreads[i];
 
-    // Skip completely empty pages
+    // Skip empty spreads
     const hasValidContent = spread.elements.some(el => {
-       if (el.type === 'text' || el.type === 'shape') return true;
-       if ((el.type === 'image' || el.type === 'decoration') && (el.originalBlobId || el.previewUrl || el.src)) return true;
-       return false;
+      if (el.type === 'text' || el.type === 'shape') return true;
+      if ((el.type === 'image' || el.type === 'decoration') && (el.originalBlobId || el.previewUrl || el.src)) return true;
+      return false;
     });
     if (!hasValidContent) continue;
 
-    const base64Jpg = await exportSpreadToJPG(project, spread, { size: project.size, pixelMultiplier, quality: jpQuality });
-    
+    // Memory relaxation gap
+    await new Promise(r => setTimeout(r, 25));
+
+    const base64Jpg = await exportSpreadToJPG(project, spread, {
+      size: project.size,
+      pixelMultiplier,
+      quality: jpQuality,
+    });
+
     const base64Data = base64Jpg.replace(/^data:image\/jpeg;base64,/, "");
-    const idxStr = String(i + 1).padStart(2, '0');
-    
-    // Naming Rule: Keep current naming with a Web prefix if it's web.
-    const typePrefix = type === 'web' ? 'Web_' : '';
-    const fileName = `${safeTitle}_${typePrefix}Spread_${idxStr}.jpg`;
+    const idxStr = String(i + 1).padStart(sequentialDigits, '0');
+    const fileName = `${safeTitle}_${idxStr}.jpg`;
 
     if (dirHandle) {
-       try {
-          const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
-          const writable = await fileHandle.createWritable();
-          // Convert base64 to Blob to write directly
-          const bstr = atob(base64Data);
-          let n = bstr.length;
-          const u8arr = new Uint8Array(n);
-          while(n--) { u8arr[n] = bstr.charCodeAt(n); }
-          const blob = new Blob([u8arr], {type: 'image/jpeg'});
-          await writable.write(blob);
-          await writable.close();
-       } catch (err) {
-          console.error(`Failed to write file ${fileName} to directory`, err);
-       }
+      try {
+        const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
+        const writable = await fileHandle.createWritable();
+        const blob = base64ToBlob(base64Jpg, 'image/jpeg');
+        await writable.write(blob);
+        await writable.close();
+      } catch (err) {
+        console.error(`Failed to write file ${fileName} to directory`, err);
+      }
     } else if (folder) {
-       folder.file(fileName, base64Data, { base64: true });
+      folder.file(fileName, base64Data, { base64: true });
     }
-    
+
     processedCount++;
     if (onProgress) onProgress(processedCount, processCount);
   }
-  
-  // Finish ZIP fallback if needed
+
   if (!dirHandle && zip) {
-     const content = await zip.generateAsync({ type: "blob" });
-     const filename = `${safeTitle}.zip`;
-     saveAs(content, filename);
+    const content = await zip.generateAsync({ type: "blob" });
+    const filename = `${safeTitle}.zip`;
+    saveAs(content, filename);
   }
 }
+

@@ -1,16 +1,15 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
-
+import { useAuth } from '@/context/AuthContext';
 import { useLocale, useTranslations } from 'next-intl';
 
 export default function LoginPage() {
-  const router = useRouter();
   const locale = useLocale();
   const tAuth = useTranslations('Auth');
+  const { user, loading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -18,6 +17,13 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resetSuccess, setResetSuccess] = useState(false);
+
+  // If user is already authenticated, redirect directly into the workspace
+  useEffect(() => {
+    if (!authLoading && user) {
+      window.location.href = `/${locale}`;
+    }
+  }, [user, authLoading, locale]);
 
   const swapLocale = () => {
      window.location.href = locale === 'es' ? '/en/login' : '/es/login';
@@ -30,19 +36,31 @@ export default function LoginPage() {
 
     try {
       if (mode === 'login') {
-        await signInWithEmailAndPassword(auth, email, password);
+        await signInWithEmailAndPassword(auth, email.trim(), password);
       } else {
-        await createUserWithEmailAndPassword(auth, email, password);
+        await createUserWithEmailAndPassword(auth, email.trim(), password);
       }
-      router.push('/');
+      window.location.href = `/${locale}`;
     } catch (error) {
       const err = error as { code?: string; message?: string };
       if (err.code === 'auth/invalid-credential') {
-        setError('Las credenciales son incorrectas.');
+        setError(
+          locale === 'es'
+            ? 'Las credenciales son incorrectas o esta cuenta aún no ha sido registrada con contraseña.'
+            : 'Invalid credentials or this account is not registered yet with password.'
+        );
       } else if (err.code === 'auth/email-already-in-use') {
-        setError('Este correo ya está registrado.');
+        setError(
+          locale === 'es'
+            ? 'Este correo ya está registrado. Inicia sesión con tu contraseña.'
+            : 'This email is already in use. Please sign in.'
+        );
       } else if (err.code === 'auth/weak-password') {
-        setError('La contraseña debe tener al menos 6 caracteres.');
+        setError(
+          locale === 'es'
+            ? 'La contraseña debe tener al menos 6 caracteres.'
+            : 'The password must be at least 6 characters long.'
+        );
       } else {
         setError(err.message || 'Se produjo un error inesperado al procesar la autenticación.');
       }
@@ -57,14 +75,28 @@ export default function LoginPage() {
     setResetSuccess(false);
     try {
       const provider = new GoogleAuthProvider();
-      // Configure for safer popup handling preventing tracking blockers globally
       provider.setCustomParameters({ prompt: 'select_account' });
-      await signInWithPopup(auth, provider);
-      router.push('/');
+      const result = await signInWithPopup(auth, provider);
+      if (result && result.user) {
+        window.location.href = `/${locale}`;
+      }
     } catch (e) {
       const err = e as { code?: string, message?: string };
-      // Gracefully ignore if the user simply closed the popup
-      if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+         // Gracefully ignore closed popup
+      } else if (err.code === 'auth/popup-blocked') {
+         setError(
+           locale === 'es'
+             ? 'La ventana emergente de Google fue bloqueada por el navegador. Por favor permite las ventanas emergentes (popups) en este sitio e intenta de nuevo.'
+             : 'Google popup was blocked by browser. Please allow popups for this site and try again.'
+         );
+      } else if (err.code === 'auth/unauthorized-domain') {
+         setError(
+           locale === 'es'
+             ? 'El dominio localhost no está autorizado en Firebase Authentication. Agrega localhost en los Dominios Autorizados de Firebase.'
+             : 'Domain localhost is not authorized in Firebase Console.'
+         );
+      } else {
          setError(`${tAuth('googleSignInFailed')} [${err.code || 'unknown'}]: ${err.message || ''}`);
       }
     } finally {
@@ -89,6 +121,17 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  if (user && !authLoading) {
+    return (
+      <div className="fixed inset-0 min-h-screen bg-neutral-50 dark:bg-neutral-950 flex flex-col items-center justify-center p-4">
+        <div className="w-8 h-8 border-2 border-neutral-900 dark:border-white border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400 font-medium">
+          {locale === 'es' ? 'Accediendo a tu espacio de trabajo...' : 'Entering workspace...'}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 min-h-screen bg-neutral-50 dark:bg-neutral-950 flex flex-col items-center justify-center p-4">
@@ -181,8 +224,22 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm p-3 rounded-lg border border-red-200 dark:border-red-900/50">
-                {error}
+              <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm p-4 rounded-xl border border-red-200 dark:border-red-900/50 space-y-2">
+                <div>{error}</div>
+                {mode === 'login' && email && password && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode('register');
+                      setError(null);
+                    }}
+                    className="block text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer pt-1"
+                  >
+                    {locale === 'es'
+                      ? `→ Haz clic aquí para registrar "${email}" con esta contraseña`
+                      : `→ Click here to register "${email}" with this password`}
+                  </button>
+                )}
               </div>
             )}
 

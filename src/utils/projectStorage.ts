@@ -1,4 +1,6 @@
 import { EditorProject } from '@/types/editor';
+import { saveProjectToDB, deleteProjectFromDB } from '@/utils/persistence';
+import { generateAndSaveThumbnail } from '@/utils/thumbnailGenerator';
 
 const PROJECTS_KEY = 'vro_projects';
 const FOLDERS_KEY = 'vro_project_folders';
@@ -159,6 +161,11 @@ export const projectStorage = {
       const serialized = JSON.stringify(safeProject);
       localStorage.setItem(`vro_proj_${project.id}`, serialized);
 
+      // Asynchronously sync to IndexedDB
+      saveProjectToDB(safeProject).catch(err => {
+        console.warn('Background saveProjectToDB failed:', err);
+      });
+
       // Extract rich metadata for index card
       const index = projectStorage.getAllProjects();
       const existingIdx = index.findIndex(p => p.id === project.id);
@@ -175,10 +182,13 @@ export const projectStorage = {
       const pixelResolution = pxW && pxH ? `${pxW} × ${pxH} px` : undefined;
       const totalElements = safeProject.spreads.reduce((acc, s) => acc + (s.elements?.length || 0), 0);
       
-      // Thumbnail candidate from first image element or asset
-      const firstImageEl = safeProject.spreads[0]?.elements.find(el => el.type === 'image');
-      const firstAsset = safeProject.assets?.[0];
-      const thumbnailPreviewId = firstImageEl?.previewBlobId || firstAsset?.previewBlobId;
+      // Real composition thumbnail key in IndexedDB
+      const thumbnailPreviewId = `thumb_${safeProject.id}`;
+
+      // Trigger background real composition thumbnail generation
+      generateAndSaveThumbnail(project).catch(err => {
+        console.warn('Background generateAndSaveThumbnail failed:', err);
+      });
 
       const meta: ProjectIndexMeta = {
         id: safeProject.id,
@@ -210,6 +220,48 @@ export const projectStorage = {
     }
   },
 
+  saveProjectAsync: async (project: EditorProject): Promise<boolean> => {
+    if (typeof window === 'undefined') return false;
+    try {
+      // 1. Synchronous localStorage save
+      projectStorage.saveProject(project);
+
+      // 2. Await IndexedDB persistence
+      const safeProject: EditorProject = {
+        ...project,
+        updatedAt: new Date().toISOString(),
+        spreads: project.spreads.map(spread => ({
+            ...spread,
+            elements: spread.elements.map(el => {
+                if (el.type === 'image') {
+                    const newEl = { ...el } as typeof el & { previewUrl?: string; originalUrl?: string };
+                    delete newEl.previewUrl;
+                    delete newEl.originalUrl;
+                    return newEl;
+                }
+                return el;
+            })
+        })),
+        assets: project.assets?.map(a => {
+            const newAsset = { ...a } as typeof a & { previewUrl?: string; originalUrl?: string };
+            delete newAsset.previewUrl;
+            delete newAsset.originalUrl;
+            return newAsset;
+        })
+      };
+
+      await Promise.allSettled([
+        saveProjectToDB(safeProject),
+        generateAndSaveThumbnail(project)
+      ]);
+
+      return true;
+    } catch (e) {
+      console.error('Failed to save project asynchronously', e);
+      return false;
+    }
+  },
+
   deleteProject: (projectId: string): boolean => {
     if (typeof window === 'undefined') return false;
     try {
@@ -217,6 +269,13 @@ export const projectStorage = {
       const index = projectStorage.getAllProjects();
       const filtered = index.filter(p => p.id !== projectId);
       localStorage.setItem(PROJECTS_KEY, JSON.stringify(filtered));
+
+      // Also clean up from IndexedDB
+      deleteProjectFromDB(projectId).catch(err => {
+        console.warn('deleteProjectFromDB failed:', err);
+      });
+      import('idb-keyval').then(({ del }) => del(`thumb_${projectId}`)).catch(() => {});
+
       return true;
     } catch (e) {
       console.error('Failed to delete project', e);

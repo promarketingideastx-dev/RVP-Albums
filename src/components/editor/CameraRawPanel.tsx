@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { EditorElement, PhotoAdjustments } from '@/types/editor';
 import { useEditorStore } from '@/store/useEditorStore';
 
@@ -8,6 +9,8 @@ interface CameraRawPanelProps {
 }
 
 export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPanelProps) {
+  const pathname = usePathname();
+  const isEs = pathname?.startsWith('/es') ?? true;
   const updateElement = useEditorStore((state) => state.updateElement);
   
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
@@ -17,7 +20,6 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
     colorMixer: true,
     detail: true
   });
-  
 
   const toggleSection = (section: string) => {
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
@@ -25,13 +27,35 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
 
   const currentAdj = element.photoAdjustments || {};
 
+  // Local state for instant thumb response
+  const [localAdj, setLocalAdj] = useState<Partial<PhotoAdjustments>>(currentAdj);
+  useEffect(() => {
+    setLocalAdj(element.photoAdjustments || {});
+  }, [element.photoAdjustments]);
+
+  const rafRef = useRef<number | null>(null);
+  const pendingUpdatesRef = useRef<Partial<PhotoAdjustments>>({});
+
   const handleUpdate = (key: keyof PhotoAdjustments, value: number | boolean) => {
-    updateElement(activeSpreadId, element.id, {
-      photoAdjustments: {
-        ...currentAdj,
-        [key]: value
-      }
-    });
+    // 1. Instant local update for 60fps slider UI
+    setLocalAdj(prev => ({ ...prev, [key]: value }));
+
+    // 2. Scheduled store update via RAF to eliminate UI thread lag
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    pendingUpdatesRef.current[key] = value as any;
+    if (rafRef.current === null) {
+      rafRef.current = requestAnimationFrame(() => {
+        const queued = { ...pendingUpdatesRef.current };
+        pendingUpdatesRef.current = {};
+        rafRef.current = null;
+        updateElement(activeSpreadId, element.id, {
+          photoAdjustments: {
+            ...(element.photoAdjustments || {}),
+            ...queued
+          }
+        });
+      });
+    }
   };
 
   const handleResetSection = (section: 'light' | 'color' | 'effects') => {
@@ -44,17 +68,17 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
        payload = { texture: 0, clarity: 0, dehaze: 0, vignette: 0, grain: 0, blur: 0, bypassEffects: false };
     }
     
+    setLocalAdj(prev => ({ ...prev, ...payload }));
     updateElement(activeSpreadId, element.id, {
       photoAdjustments: {
-        ...currentAdj,
+        ...(element.photoAdjustments || {}),
         ...payload
       }
     });
   };
 
-
   const renderSlider = (label: string, key: keyof PhotoAdjustments, min: number, max: number, defaultValue: number = 0, trackGradient?: string) => {
-    const value = currentAdj[key] as number ?? defaultValue;
+    const value = (localAdj[key] as number) ?? defaultValue;
     
     return (
       <div className="mb-3 px-3">
@@ -95,7 +119,6 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
       </div>
     );
   };
-  
 
   return (
     <div className="bg-[#2d2d2d] border border-[#1e1e1e] rounded-md overflow-hidden select-none font-sans text-left mt-4" style={{ color: '#d1d1d1' }}>
@@ -103,10 +126,10 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
       {/* Top Profile Strip */}
       <div className="px-3 py-2 border-b border-[#222] flex items-center justify-between">
          <div className="flex items-center gap-4">
-           <span className="text-[11px] font-semibold text-[#e1e1e1]">Profile</span>
+           <span className="text-[11px] font-semibold text-[#e1e1e1]">{isEs ? 'Perfil' : 'Profile'}</span>
            <select className="bg-[#383838] border border-[#222] text-[#d1d1d1] text-[10px] px-2 py-0.5 rounded w-32 focus:outline-none">
-             <option>Color</option>
-             <option>Monochrome</option>
+             <option>{isEs ? 'Color' : 'Color'}</option>
+             <option>{isEs ? 'Monocromático' : 'Monochrome'}</option>
            </select>
          </div>
          <div className="text-[#a1a1a1] cursor-pointer hover:text-white">
@@ -123,13 +146,13 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
           <span className="text-[10px] mr-2 text-[#a1a1a1]">
             {openSections.light ? '▼' : '▶'}
           </span>
-          <span className="text-[12px] font-semibold">Light</span>
+          <span className="text-[12px] font-semibold">{isEs ? 'Luz' : 'Light'}</span>
           <div className="ml-auto flex items-center gap-2 text-[#777]">
              <div 
-                 className={`p-1 ${currentAdj.bypassLight ? 'text-[#444]' : 'hover:text-white'}`}
-                 onClick={(e) => { e.stopPropagation(); handleUpdate('bypassLight', !currentAdj.bypassLight); }}
+                 className={`p-1 ${localAdj.bypassLight ? 'text-[#444]' : 'hover:text-white'}`}
+                 onClick={(e) => { e.stopPropagation(); handleUpdate('bypassLight', !localAdj.bypassLight); }}
              >
-                {currentAdj.bypassLight ? (
+                {localAdj.bypassLight ? (
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>
                 ) : (
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
@@ -137,7 +160,7 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
              </div>
              <div 
                  className="p-1 hover:text-white"
-                 title="Reset Light"
+                 title={isEs ? 'Restablecer Luz' : 'Reset Light'}
                  onClick={(e) => { e.stopPropagation(); handleResetSection('light'); }}
              >
                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
@@ -146,12 +169,12 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
         </div>
         {openSections.light && (
           <div className="pb-2 pt-1 transition-all">
-            {renderSlider('Exposure', 'exposure', -5, 5, 0)}
-            {renderSlider('Contrast', 'lightContrast', -100, 100, 0)}
-            {renderSlider('Highlights', 'highlights', -100, 100, 0)}
-            {renderSlider('Shadows', 'shadows', -100, 100, 0)}
-            {renderSlider('Whites', 'whites', -100, 100, 0)}
-            {renderSlider('Blacks', 'blacks', -100, 100, 0)}
+            {renderSlider(isEs ? 'Exposición' : 'Exposure', 'exposure', -5, 5, 0)}
+            {renderSlider(isEs ? 'Contraste' : 'Contrast', 'lightContrast', -100, 100, 0)}
+            {renderSlider(isEs ? 'Iluminaciones' : 'Highlights', 'highlights', -100, 100, 0)}
+            {renderSlider(isEs ? 'Sombras' : 'Shadows', 'shadows', -100, 100, 0)}
+            {renderSlider(isEs ? 'Blancos' : 'Whites', 'whites', -100, 100, 0)}
+            {renderSlider(isEs ? 'Negros' : 'Blacks', 'blacks', -100, 100, 0)}
           </div>
         )}
       </div>
@@ -163,13 +186,13 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
           onClick={() => toggleSection('color')}
         >
           <span className="text-[10px] mr-2 text-[#a1a1a1]">{openSections.color ? '▼' : '▶'}</span>
-          <span className="text-[12px] font-semibold">Color</span>
+          <span className="text-[12px] font-semibold">{isEs ? 'Color' : 'Color'}</span>
           <div className="ml-auto flex items-center gap-2 text-[#777]">
              <div 
-                 className={`p-1 ${currentAdj.bypassColor ? 'text-[#444]' : 'hover:text-white'}`}
-                 onClick={(e) => { e.stopPropagation(); handleUpdate('bypassColor', !currentAdj.bypassColor); }}
+                 className={`p-1 ${localAdj.bypassColor ? 'text-[#444]' : 'hover:text-white'}`}
+                 onClick={(e) => { e.stopPropagation(); handleUpdate('bypassColor', !localAdj.bypassColor); }}
              >
-                {currentAdj.bypassColor ? (
+                {localAdj.bypassColor ? (
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>
                 ) : (
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
@@ -177,7 +200,7 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
              </div>
              <div 
                  className="p-1 hover:text-white"
-                 title="Reset Color"
+                 title={isEs ? 'Restablecer Color' : 'Reset Color'}
                  onClick={(e) => { e.stopPropagation(); handleResetSection('color'); }}
              >
                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
@@ -187,21 +210,21 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
         {openSections.color && (
           <div className="pb-2 pt-1">
             <div className="flex items-center gap-2 px-3 mb-4 mt-1">
-              <span className="text-[11px] font-medium text-[#d1d1d1] flex-1">White balance</span>
-              <select className="bg-[#383838] border border-[#222] text-[#d1d1d1] text-[10px] px-2 py-0.5 rounded w-24 focus:outline-none">
-                <option>As Shot</option>
-                <option>Auto</option>
-                <option>Custom</option>
+              <span className="text-[11px] font-medium text-[#d1d1d1] flex-1">{isEs ? 'Balance de Blancos' : 'White balance'}</span>
+              <select className="bg-[#383838] border border-[#222] text-[#d1d1d1] text-[10px] px-2 py-0.5 rounded w-28 focus:outline-none">
+                <option>{isEs ? 'Como se tomó' : 'As Shot'}</option>
+                <option>{isEs ? 'Automático' : 'Auto'}</option>
+                <option>{isEs ? 'Personalizado' : 'Custom'}</option>
               </select>
               <div className="w-5 h-5 flex flex-shrink-0 items-center justify-center text-[#a1a1a1] hover:text-white cursor-pointer ml-1">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.71 5.63l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-3.12 3.12-1.93-1.91-1.41 1.41 1.42 1.42L3 16.25V21h4.75l8.92-8.92 1.42 1.42 1.41-1.41-1.92-1.92 3.12-3.12c.4-.4.4-1.03.01-1.42zM6.92 19L5 17.08l8.06-8.06 1.92 1.92L6.92 19z"/></svg>
               </div>
             </div>
             
-            {renderSlider('Temperature', 'temperature', -100, 100, 0, 'linear-gradient(to right, #2a52be, #ece8dc, #fcd821)')}
-            {renderSlider('Tint', 'tint', -100, 100, 0, 'linear-gradient(to right, #41e755, #ece8dc, #e83fd5)')}
-            {renderSlider('Vibrance', 'vibrance', -100, 100, 0)}
-            {renderSlider('Saturation', 'saturation', -100, 100, 0, 'linear-gradient(to right, #7a7a7a, #e6b222)')}
+            {renderSlider(isEs ? 'Temperatura' : 'Temperature', 'temperature', -100, 100, 0, 'linear-gradient(to right, #2a52be, #ece8dc, #fcd821)')}
+            {renderSlider(isEs ? 'Matiz' : 'Tint', 'tint', -100, 100, 0, 'linear-gradient(to right, #41e755, #ece8dc, #e83fd5)')}
+            {renderSlider(isEs ? 'Intensidad' : 'Vibrance', 'vibrance', -100, 100, 0)}
+            {renderSlider(isEs ? 'Saturación' : 'Saturation', 'saturation', -100, 100, 0, 'linear-gradient(to right, #7a7a7a, #e6b222)')}
           </div>
         )}
       </div>
@@ -213,13 +236,13 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
           onClick={() => toggleSection('effects')}
         >
           <span className="text-[10px] mr-2 text-[#a1a1a1]">{openSections.effects ? '▼' : '▶'}</span>
-          <span className="text-[12px] font-semibold">Effects</span>
+          <span className="text-[12px] font-semibold">{isEs ? 'Efectos' : 'Effects'}</span>
           <div className="ml-auto flex items-center gap-2 text-[#777]">
              <div 
-                 className={`p-1 ${currentAdj.bypassEffects ? 'text-[#444]' : 'hover:text-white'}`}
-                 onClick={(e) => { e.stopPropagation(); handleUpdate('bypassEffects', !currentAdj.bypassEffects); }}
+                 className={`p-1 ${localAdj.bypassEffects ? 'text-[#444]' : 'hover:text-white'}`}
+                 onClick={(e) => { e.stopPropagation(); handleUpdate('bypassEffects', !localAdj.bypassEffects); }}
              >
-                {currentAdj.bypassEffects ? (
+                {localAdj.bypassEffects ? (
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>
                 ) : (
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
@@ -227,7 +250,7 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
              </div>
              <div 
                  className="p-1 hover:text-white"
-                 title="Reset Effects"
+                 title={isEs ? 'Restablecer Efectos' : 'Reset Effects'}
                  onClick={(e) => { e.stopPropagation(); handleResetSection('effects'); }}
              >
                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
@@ -236,17 +259,14 @@ export default function CameraRawPanel({ element, activeSpreadId }: CameraRawPan
         </div>
         {openSections.effects && (
           <div className="pb-2 pt-1">
-            {renderSlider('Texture', 'texture', -100, 100, 0)}
-            {renderSlider('Clarity', 'clarity', -100, 100, 0)}
-            {renderSlider('Dehaze', 'dehaze', -100, 100, 0)}
-            {renderSlider('Vignette', 'vignette', -100, 100, 0)}
-            {renderSlider('Grain', 'grain', 0, 100, 0)}
+            {renderSlider(isEs ? 'Textura' : 'Texture', 'texture', -100, 100, 0)}
+            {renderSlider(isEs ? 'Claridad' : 'Clarity', 'clarity', -100, 100, 0)}
+            {renderSlider(isEs ? 'Borrar Neblina' : 'Dehaze', 'dehaze', -100, 100, 0)}
+            {renderSlider(isEs ? 'Viñeta' : 'Vignette', 'vignette', -100, 100, 0)}
+            {renderSlider(isEs ? 'Granulado' : 'Grain', 'grain', 0, 100, 0)}
           </div>
         )}
       </div>
-      
-
-      
     </div>
   );
 }

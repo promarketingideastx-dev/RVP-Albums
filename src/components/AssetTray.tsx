@@ -1,5 +1,6 @@
 import React, { useRef, useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
+import { usePathname } from 'next/navigation';
 import { useEditorStore } from '@/store/useEditorStore';
 import { ProjectAsset } from '@/types/editor';
 import { processLocalImage } from '@/utils/imageIngestion';
@@ -8,6 +9,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 export default function AssetTray() {
   const t = useTranslations('Editor');
+  const pathname = usePathname();
+  const isEs = pathname?.startsWith('/es') ?? true;
   const project = useEditorStore((state) => state.project);
   const addAsset = useEditorStore((state) => state.addAsset);
   const removeAsset = useEditorStore((state) => state.removeAsset);
@@ -234,7 +237,7 @@ export default function AssetTray() {
             </div>
           </div>
           <span className="text-sm font-medium text-neutral-400 dark:text-neutral-500 ml-4 hidden md:inline">
-            Showing {visibleAssets.length} of {assets.length} images
+            {isEs ? `Mostrando ${visibleAssets.length} de ${assets.length} fotos` : `Showing ${visibleAssets.length} of ${assets.length} images`}
           </span>
         </div>
 
@@ -249,7 +252,7 @@ export default function AssetTray() {
              >
                <option value="ORIGINAL_ORDER">⏳ {t('originalOrder')} </option>
                <option value="CHRONOLOGICAL">📅 {t('chronological')}</option>
-               <option value="MANUAL_PRIORITY">⭐ Priority</option>
+               <option value="MANUAL_PRIORITY">⭐ {isEs ? 'Prioridad' : 'Priority'}</option>
              </select>
              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-neutral-500">
                 <svg className="fill-current h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
@@ -315,13 +318,13 @@ export default function AssetTray() {
             disabled={selectedAssetIds.size === 0}
             className="px-4 py-1.5 bg-neutral-800 dark:bg-neutral-900 border border-neutral-700 text-white hover:bg-neutral-700 dark:hover:bg-neutral-800 rounded-full text-xs font-semibold tracking-wide transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {selectedAssetIds.size > 0 ? `CLEAR (${selectedAssetIds.size})` : 'CLEAR'}
+            {selectedAssetIds.size > 0 ? (isEs ? `Desmarcar (${selectedAssetIds.size})` : `Clear (${selectedAssetIds.size})`) : (isEs ? 'Desmarcar' : 'Clear')}
           </button>
           <button
             onClick={() => fileInputRef.current?.click()}
             className="px-6 py-1.5 bg-neutral-800 text-white hover:bg-neutral-700 rounded-full text-xs font-semibold tracking-wide transition-colors flex items-center gap-2"
           >
-            <span>+</span> ADD PHOTOS
+            <span>+</span> {isEs ? 'Añadir Fotos' : 'Add Photos'}
           </button>
           <input
             type="file"

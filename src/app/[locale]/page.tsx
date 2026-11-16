@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState, useRef } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useEditorStore } from '@/store/useEditorStore';
 import { useDebouncedCallback } from 'use-debounce';
 import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Toolbar from '@/components/Toolbar';
 import Inspector from '@/components/Inspector';
@@ -18,6 +17,7 @@ import { EditorProject } from '@/types/editor';
 
 export default function AppPage() {
   const t = useTranslations('Editor');
+  const locale = useLocale();
   const loadProject = useEditorStore((state) => state.loadProject);
   const project = useEditorStore((state) => state.project);
   const activeSpreadId = useEditorStore((state) => state.activeSpreadId);
@@ -27,17 +27,17 @@ export default function AppPage() {
   const [viewMode, setViewMode] = useState<'initializing' | 'picker' | 'editor'>('initializing');
   const [showSetup, setShowSetup] = useState(false);
   const [defaultFolderForNew, setDefaultFolderForNew] = useState<string | undefined>(undefined);
+  const [defaultCategoryForNew, setDefaultCategoryForNew] = useState<'album' | 'studio_print' | undefined>(undefined);
   const [mounted, setMounted] = useState(false);
   const [init, setInit] = useState(false);
 
   const { user, loading } = useAuth();
-  const router = useRouter();
 
   useEffect(() => {
     if (!loading && !user) {
-      window.location.href = '/es/login';
+      window.location.href = `/${locale}/login`;
     }
-  }, [user, loading, router]);
+  }, [user, loading, locale]);
 
   useEffect(() => {
     setMounted(true);
@@ -58,38 +58,13 @@ export default function AppPage() {
           if (recoveringProject) {
             // Attempt full hydration if blobs exist
             try {
-               const { loadProjectFromDB } = await import('@/utils/persistence');
+               const { loadProjectFromDB, hydrateProjectBlobs } = await import('@/utils/persistence');
                const hydratedDB = await loadProjectFromDB(lastSessionId);
-               if (hydratedDB) recoveringProject = hydratedDB;
-               
-               // Memory patching for initial boot
-               const { get: idbGet } = await import('idb-keyval');
-
-               // Patch assets
-               if (recoveringProject.assets) {
-                  recoveringProject.assets = await Promise.all(recoveringProject.assets.map(async (asset) => {
-                     const newAsset = { ...asset };
-                     if (!newAsset.previewUrl && newAsset.previewBlobId) {
-                         const blob = await idbGet<Blob>(newAsset.previewBlobId);
-                         if (blob) newAsset.previewUrl = URL.createObjectURL(blob);
-                     }
-                     return newAsset;
-                  }));
+               if (hydratedDB) {
+                 recoveringProject = hydratedDB;
+               } else {
+                 recoveringProject = await hydrateProjectBlobs(recoveringProject);
                }
-
-               // Patch spread elements
-               recoveringProject.spreads = await Promise.all(recoveringProject.spreads.map(async (spread) => {
-                  const hydratedElements = await Promise.all(spread.elements.map(async (el) => {
-                     if (el.type === 'image' && !el.previewUrl && el.previewBlobId) {
-                         const newEl = { ...el };
-                         const blob = await idbGet<Blob>(el.previewBlobId);
-                         if (blob) newEl.previewUrl = URL.createObjectURL(blob);
-                         return newEl;
-                     }
-                     return el;
-                  }));
-                  return { ...spread, elements: hydratedElements };
-               }));
             } catch (e) {
                console.warn("Hydration boot upgrade bypassed.", e);
             }
@@ -177,33 +152,9 @@ export default function AppPage() {
           elements: s.elements || []
         }));
 
-        // In-memory memory patching for missing blobs!
-        const { get: idbGet } = await import('idb-keyval');
-        
-        if (projectToLoad.assets) {
-            projectToLoad.assets = await Promise.all(projectToLoad.assets.map(async (asset) => {
-               const newAsset = { ...asset };
-               if (!newAsset.previewUrl && newAsset.previewBlobId) {
-                   const blob = await idbGet<Blob>(newAsset.previewBlobId);
-                   if (blob) newAsset.previewUrl = URL.createObjectURL(blob);
-               }
-               return newAsset;
-            }));
-        }
-
-        // Patch spread elements
-        projectToLoad.spreads = await Promise.all(projectToLoad.spreads.map(async (spread) => {
-            const hydratedElements = await Promise.all(spread.elements.map(async (el) => {
-               if (el.type === 'image' && !el.previewUrl && el.previewBlobId) {
-                   const newEl = { ...el };
-                   const blob = await idbGet<Blob>(el.previewBlobId);
-                   if (blob) newEl.previewUrl = URL.createObjectURL(blob);
-                   return newEl;
-               }
-               return el;
-            }));
-            return { ...spread, elements: hydratedElements };
-        }));
+        // Fully hydrate Blobs for both Asset Tray and Spread Elements
+        const { hydrateProjectBlobs } = await import('@/utils/persistence');
+        projectToLoad = await hydrateProjectBlobs(projectToLoad);
 
         loadProject(projectToLoad);
         setViewMode('editor');
@@ -469,16 +420,19 @@ export default function AppPage() {
       <>
         <ProjectManager 
           onOpenProject={handleOpenProject} 
-          onNewProject={(folder) => {
+          onNewProject={(folder, category) => {
             setDefaultFolderForNew(folder);
+            setDefaultCategoryForNew(category);
             setShowSetup(true);
           }} 
         />
         {showSetup && (
           <SetupModal 
             initialFolder={defaultFolderForNew}
+            initialCategory={defaultCategoryForNew}
             onCancel={() => {
               setDefaultFolderForNew(undefined);
+              setDefaultCategoryForNew(undefined);
               setShowSetup(false);
             }} 
             onCreate={handleCreateProject} 

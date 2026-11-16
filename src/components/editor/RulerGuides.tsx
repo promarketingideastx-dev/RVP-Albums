@@ -56,11 +56,12 @@ export function RulerGuides({ scale, project, unit, panX, panY }: RulerGuidesPro
      window.addEventListener('pointerup', onUp);
   };
   
-  const isLastSpread = activeSpreadId && project.spreads[project.spreads.length - 1]?.id === activeSpreadId;
+  const isStudio = project.projectCategory === 'studio_print';
+  const isLastSpread = !isStudio && activeSpreadId && project.spreads[project.spreads.length - 1]?.id === activeSpreadId;
   const isLastSpreadEmpty = isLastSpread && project.spreads.find(s => s.id === activeSpreadId)?.elements.length === 0;
   
   const spreadGap = 50; // mm
-  const totalWidth = (isLastSpread && !isLastSpreadEmpty) ? (project.size.w_mm * 2) + spreadGap : project.size.w_mm;
+  const totalWidth = (!isStudio && isLastSpread && !isLastSpreadEmpty) ? (project.size.w_mm * 2) + spreadGap : project.size.w_mm;
 
   const wPixels = totalWidth * scale;
   const hPixels = project.size.h_mm * scale;
