@@ -272,7 +272,7 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
                           {isSel && <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>}
                         </div>
                         <span className="text-[11px] text-neutral-400 dark:text-neutral-500">{cp.wInches} x {cp.hInches} in</span>
-                        <span className="text-[10px] text-orange-600 dark:text-orange-400 mt-2 font-medium">★ Preset Guardado</span>
+                        <span className="text-[10px] text-orange-600 dark:text-orange-400 mt-2 font-medium">{tStudio('preset_saved_tag')}</span>
                       </div>
                     );
                   })}
@@ -326,11 +326,11 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
                     </div>
 
                     <div className="flex-1 min-w-[200px]">
-                      <label className="text-[10px] font-bold uppercase text-neutral-500 mb-1 block">Nombre del Preset (Opcional)</label>
+                      <label className="text-[10px] font-bold uppercase text-neutral-500 mb-1 block">{tStudio('preset_name_optional')}</label>
                       <div className="flex gap-2">
                         <input 
                           type="text"
-                          placeholder="ej. Marco 12x18 Sala"
+                          placeholder={tStudio('preset_placeholder')}
                           value={studioCustomName}
                           onChange={(e) => setStudioCustomName(e.target.value)}
                           className="flex-1 px-3 py-1.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 text-sm text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500"
