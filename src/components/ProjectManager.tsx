@@ -4,10 +4,139 @@ import { projectStorage, ProjectIndexMeta } from '@/utils/projectStorage';
 import { get as idbGet } from 'idb-keyval';
 import { useTheme } from 'next-themes';
 import { usePathname } from 'next/navigation';
+import { 
+  Folder, 
+  FolderPlus, 
+  Trash2, 
+  ArrowRight, 
+  ArrowLeft, 
+  Image as ImageIcon, 
+  Camera, 
+  BookOpen, 
+  Sparkles, 
+  Download, 
+  Plus, 
+  Globe, 
+  Sun, 
+  Moon, 
+  X,
+  ChevronDown,
+  HardDriveDownload
+} from 'lucide-react';
 
 interface ProjectManagerProps {
   onOpenProject: (id: string) => void;
   onNewProject: (defaultFolder?: string, defaultCategory?: 'album' | 'studio_print') => void;
+}
+
+// Subcomponent for Premium Delete Confirmation Modal
+interface DeleteConfirmationModalProps {
+  isOpen: boolean;
+  title: string;
+  itemName: string;
+  itemType: 'folder' | 'project';
+  warningMessage: string;
+  confirmBtnText: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+function DeleteConfirmationModal({
+  isOpen,
+  title,
+  itemName,
+  itemType,
+  warningMessage,
+  confirmBtnText,
+  onConfirm,
+  onCancel,
+}: DeleteConfirmationModalProps) {
+  const t = useTranslations('Editor');
+
+  // Dismiss on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancel();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onCancel]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+      onClick={onCancel}
+    >
+      <div 
+        className="relative w-full max-w-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-6 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Subtle accent glow in corner */}
+        <div className="absolute -top-12 -right-12 w-32 h-32 bg-red-500/10 rounded-full blur-2xl pointer-events-none" />
+
+        {/* Header Icon + Close */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900/60 flex items-center justify-center text-red-600 dark:text-red-400 shadow-sm">
+            <Trash2 className="w-6 h-6" />
+          </div>
+          <button
+            onClick={onCancel}
+            className="w-8 h-8 rounded-full text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-center transition"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Title */}
+        <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
+          {title}
+        </h3>
+
+        {/* Item badge card */}
+        <div className="my-4 p-3.5 bg-neutral-50 dark:bg-neutral-950/80 border border-neutral-200 dark:border-neutral-800 rounded-2xl flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-orange-100 dark:bg-orange-950/80 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0">
+            {itemType === 'folder' ? <Folder className="w-5 h-5" /> : <ImageIcon className="w-5 h-5" />}
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 dark:text-neutral-500 block">
+              {itemType === 'folder' ? t('folder_collection') : t('badge_studio')}
+            </span>
+            <p className="font-bold text-sm text-neutral-900 dark:text-neutral-100 truncate">
+              {itemName}
+            </p>
+          </div>
+        </div>
+
+        {/* Warning Message */}
+        <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed mb-6">
+          {warningMessage}
+        </p>
+
+        {/* Action Buttons */}
+        <div className="flex items-center justify-end gap-3 pt-3 border-t border-neutral-100 dark:border-neutral-800/80">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-4 py-2.5 rounded-xl border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-semibold text-xs transition"
+          >
+            {t('modal_cancel')}
+          </button>
+
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 active:scale-98 text-white font-bold text-xs shadow-lg shadow-red-600/25 transition flex items-center gap-2"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>{confirmBtnText}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // Subcomponent for each Project Card
@@ -97,7 +226,11 @@ function ProjectCardItem({
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-900 dark:to-neutral-950 text-neutral-500 dark:text-neutral-400 rounded-xl">
-            <span className="text-4xl mb-2 opacity-60">{isStudio ? '🖼️' : '📖'}</span>
+            {isStudio ? (
+              <ImageIcon className="w-10 h-10 mb-2 opacity-40 text-orange-500" />
+            ) : (
+              <BookOpen className="w-10 h-10 mb-2 opacity-40 text-blue-500" />
+            )}
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
               {proj.sizeStr || (isStudio ? 'Lienzo de Estudio' : 'Álbum Fotográfico')}
             </span>
@@ -111,12 +244,12 @@ function ProjectCardItem({
         <div className="absolute top-3 left-3 flex items-center gap-2">
           {isStudio ? (
             <span className="px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold bg-orange-100/90 dark:bg-orange-950/90 backdrop-blur-md border border-orange-300 dark:border-orange-700/80 text-orange-800 dark:text-orange-300 flex items-center gap-1.5 shadow-md">
-              <span>🖼️</span>
+              <ImageIcon className="w-3 h-3" />
               <span>{proj.sizeStr || 'Estudio'}</span>
             </span>
           ) : (
             <span className="px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold bg-blue-100/90 dark:bg-blue-950/90 backdrop-blur-md border border-blue-300 dark:border-blue-700/80 text-blue-800 dark:text-blue-300 flex items-center gap-1.5 shadow-md">
-              <span>📖</span>
+              <BookOpen className="w-3 h-3" />
               <span>Álbum</span>
             </span>
           )}
@@ -134,7 +267,7 @@ function ProjectCardItem({
             className="w-8 h-8 rounded-xl bg-white/90 dark:bg-neutral-900/90 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white border border-neutral-300 dark:border-neutral-700 backdrop-blur-md flex items-center justify-center text-xs transition shadow-md"
             title={t('export_rvp_tooltip')}
           >
-            💾
+            <HardDriveDownload className="w-3.5 h-3.5" />
           </button>
 
           {/* Delete Button */}
@@ -143,7 +276,7 @@ function ProjectCardItem({
             className="w-8 h-8 rounded-xl bg-white/90 dark:bg-neutral-900/90 hover:bg-red-50 dark:hover:bg-red-950/80 text-neutral-500 hover:text-red-600 dark:hover:text-red-400 border border-neutral-300 dark:border-neutral-700 backdrop-blur-md flex items-center justify-center text-xs transition shadow-md"
             title={t('delete')}
           >
-            🗑️
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
 
@@ -154,9 +287,9 @@ function ProjectCardItem({
               onClick={() => setShowFolderMenu(!showFolderMenu)}
               className="px-2.5 py-1 rounded-md text-[10px] font-semibold bg-white/90 dark:bg-black/80 hover:bg-white dark:hover:bg-black text-neutral-800 dark:text-neutral-300 hover:text-black dark:hover:text-white border border-neutral-300 dark:border-white/10 backdrop-blur-md flex items-center gap-1.5 transition shadow-sm"
             >
-              <span>📁</span>
+              <Folder className="w-3 h-3 text-orange-500" />
               <span className="truncate max-w-[120px]">{proj.folder || 'Sin Carpeta'}</span>
-              <span className="text-[9px] opacity-60">▾</span>
+              <ChevronDown className="w-2.5 h-2.5 opacity-60" />
             </button>
 
             {/* Folder Dropdown Menu */}
@@ -172,7 +305,7 @@ function ProjectCardItem({
                   }}
                   className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-2 ${!proj.folder ? 'bg-orange-600 text-white font-bold' : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900'}`}
                 >
-                  <span>📁</span>
+                  <Folder className="w-3.5 h-3.5 opacity-70" />
                   <span>{t('folder_general')}</span>
                 </button>
                 {folders.map(f => (
@@ -184,7 +317,7 @@ function ProjectCardItem({
                     }}
                     className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-2 truncate ${proj.folder === f ? 'bg-orange-600 text-white font-bold' : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900'}`}
                   >
-                    <span>📁</span>
+                    <Folder className="w-3.5 h-3.5 opacity-70" />
                     <span className="truncate">{f}</span>
                   </button>
                 ))}
@@ -237,8 +370,9 @@ function ProjectCardItem({
             </div>
           </div>
 
-          <span className="font-bold text-orange-600 dark:text-orange-500 group-hover:translate-x-1 transition-transform flex items-center gap-1 text-xs">
-            {t('open_project')} →
+          <span className="font-bold text-orange-600 dark:text-orange-500 group-hover:translate-x-1 transition-transform flex items-center gap-1.5 text-xs">
+            <span>{t('open_project')}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </span>
         </div>
       </div>
@@ -246,7 +380,7 @@ function ProjectCardItem({
   );
 }
 
-// Subcomponent for each Folder Card
+// Subcomponent for each Folder Card (Premium Refined)
 function FolderCardItem({
   name,
   isGeneral,
@@ -278,44 +412,45 @@ function FolderCardItem({
   return (
     <div
       onClick={onOpen}
-      className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-6 cursor-pointer hover:border-orange-500/80 hover:bg-neutral-50 dark:hover:bg-neutral-900/90 hover:shadow-2xl hover:scale-[1.01] transition-all group flex flex-col justify-between relative overflow-hidden shadow-sm"
+      className="bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-3xl p-6 cursor-pointer hover:border-orange-500/70 dark:hover:border-orange-500/80 hover:bg-gradient-to-b hover:from-white hover:to-orange-50/20 dark:hover:from-neutral-900 dark:hover:to-orange-950/10 hover:shadow-xl hover:shadow-orange-500/5 hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between relative overflow-hidden shadow-sm"
     >
-      {/* Background Accent Glow */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-orange-600/5 rounded-full blur-2xl group-hover:bg-orange-600/10 transition-colors pointer-events-none" />
+      {/* Background Accent Glow on hover */}
+      <div className="absolute top-0 right-0 w-36 h-36 bg-orange-600/5 rounded-full blur-2xl group-hover:bg-orange-600/10 transition-colors pointer-events-none" />
 
       {/* Top Header */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-neutral-100 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 flex items-center justify-center text-2xl group-hover:scale-110 group-hover:border-orange-500/50 transition-all shadow-sm">
-            📁
+          {/* Refined Vector Folder Icon */}
+          <div className="w-12 h-12 rounded-2xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200/80 dark:border-neutral-700/60 flex items-center justify-center text-orange-600 dark:text-orange-400 group-hover:scale-105 group-hover:border-orange-500/40 transition-all shadow-sm">
+            <Folder className="w-6 h-6 text-orange-500 dark:text-orange-400 transition-transform group-hover:scale-110" />
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-neutral-100 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300">
+            <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-neutral-100 dark:bg-neutral-800/90 border border-neutral-200/70 dark:border-neutral-700/60 text-neutral-700 dark:text-neutral-300 shadow-sm">
               {count} {count === 1 ? 'proyecto' : 'proyectos'}
             </span>
 
             {!isGeneral && onDelete && (
               <button
                 onClick={onDelete}
-                className="w-7 h-7 rounded-lg text-neutral-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs"
+                className="w-8 h-8 rounded-xl text-neutral-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 border border-transparent hover:border-red-200 dark:hover:border-red-900/50 transition-all flex items-center justify-center opacity-70 group-hover:opacity-100"
                 title={t('delete_folder')}
               >
-                🗑️
+                <Trash2 className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
         </div>
 
         {/* Folder Name */}
-        <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2 group-hover:text-orange-500 transition-colors flex items-center gap-2">
-          <span>{name}</span>
+        <h3 className="text-xl font-bold tracking-tight text-neutral-900 dark:text-white mb-2 group-hover:text-orange-500 dark:group-hover:text-orange-400 transition-colors flex items-center gap-2">
+          <span className="truncate">{name}</span>
         </h3>
 
         {/* Folder Metadata ONLY */}
-        <div className="space-y-1.5 text-xs text-neutral-500 dark:text-neutral-400 mt-3 border-t border-neutral-100 dark:border-neutral-800/80 pt-3">
+        <div className="space-y-2 text-xs text-neutral-500 dark:text-neutral-400 mt-3 border-t border-neutral-100 dark:border-neutral-800/80 pt-3">
           <div className="flex items-center justify-between">
-            <span className="text-neutral-400 dark:text-neutral-500">Contenido:</span>
+            <span className="text-neutral-400 dark:text-neutral-500 text-[11px] uppercase tracking-wider font-semibold">Contenido:</span>
             <span className="font-medium text-neutral-700 dark:text-neutral-300">
               {count === 0 ? 'Sin archivos' : `${albumCount > 0 ? `${albumCount} Álbumes` : ''} ${albumCount > 0 && studioCount > 0 ? '•' : ''} ${studioCount > 0 ? `${studioCount} Estudios` : ''}`}
             </span>
@@ -323,20 +458,21 @@ function FolderCardItem({
 
           {latestDate && (
             <div className="flex items-center justify-between text-[11px]">
-              <span className="text-neutral-400 dark:text-neutral-500">Última actividad:</span>
-              <span className="text-neutral-600 dark:text-neutral-400 font-mono">{latestDate}</span>
+              <span className="text-neutral-400 dark:text-neutral-500 text-[11px] uppercase tracking-wider font-semibold">Última actividad:</span>
+              <span className="text-neutral-600 dark:text-neutral-300 font-mono font-medium">{latestDate}</span>
             </div>
           )}
         </div>
       </div>
 
       {/* Bottom Footer */}
-      <div className="mt-6 pt-3 border-t border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between text-xs">
-        <span className="text-neutral-400 dark:text-neutral-500 font-medium group-hover:text-neutral-600 dark:group-hover:text-neutral-400">
+      <div className="mt-6 pt-3.5 border-t border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between text-xs">
+        <span className="text-neutral-400 dark:text-neutral-500 font-medium group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
           Explorar carpeta
         </span>
-        <span className="font-bold text-orange-600 dark:text-orange-500 group-hover:translate-x-1 transition-transform flex items-center gap-1">
-          {t('view_folder')}
+        <span className="font-bold text-orange-600 dark:text-orange-500 group-hover:translate-x-1 transition-transform flex items-center gap-1.5">
+          <span>{t('view_folder')}</span>
+          <ArrowRight className="w-3.5 h-3.5" />
         </span>
       </div>
     </div>
@@ -369,6 +505,19 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
 
+  // Premium Delete Confirmation Modal state
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    type: 'folder' | 'project';
+    idOrName: string;
+    displayName: string;
+  }>({
+    isOpen: false,
+    type: 'folder',
+    idOrName: '',
+    displayName: ''
+  });
+
   // File import ref
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -383,10 +532,13 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
 
   const handleDeleteProject = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm(t('confirm_delete_project'))) {
-      projectStorage.deleteProject(id);
-      refreshData();
-    }
+    const proj = projects.find(p => p.id === id);
+    setDeleteModal({
+      isOpen: true,
+      type: 'project',
+      idOrName: id,
+      displayName: proj?.title || t('untitled')
+    });
   };
 
   const handleMoveFolder = (projectId: string, folderName: string) => {
@@ -405,12 +557,25 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
 
   const handleDeleteFolder = (folderName: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm(t('confirm_delete_folder', { name: folderName }))) {
-      const updated = projectStorage.deleteFolder(folderName);
+    setDeleteModal({
+      isOpen: true,
+      type: 'folder',
+      idOrName: folderName,
+      displayName: folderName
+    });
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteModal.type === 'folder') {
+      const updated = projectStorage.deleteFolder(deleteModal.idOrName);
       setFolders(updated);
-      if (currentFolder === folderName) setCurrentFolder(null);
+      if (currentFolder === deleteModal.idOrName) setCurrentFolder(null);
+      refreshData();
+    } else {
+      projectStorage.deleteProject(deleteModal.idOrName);
       refreshData();
     }
+    setDeleteModal(prev => ({ ...prev, isOpen: false }));
   };
 
   // Import .rvp File Handler
@@ -473,7 +638,8 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
       return {
         name: 'Photo Studio',
         subtitle: 'Retoque, Capas y Lienzos a 300 DPI',
-        icon: '🖼️',
+        tagline: t('module_studio_tagline'),
+        icon: <ImageIcon className="w-5 h-5 text-orange-500" />,
         badge: t('module_studio_badge'),
         color: 'orange',
         newProjectBtn: '+ Nuevo Lienzo',
@@ -484,7 +650,8 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
       return {
         name: 'Camera Raw Pro',
         subtitle: 'Revelado Fotográfico RAW y Gestión de Color',
-        icon: '📸',
+        tagline: t('module_raw_tagline'),
+        icon: <Camera className="w-5 h-5 text-emerald-500" />,
         badge: t('module_raw_badge'),
         color: 'emerald',
         newProjectBtn: '+ Revelar Foto',
@@ -495,7 +662,8 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
       return {
         name: 'Album Designer',
         subtitle: 'Maquetación Profesional de Álbumes Fotográficos',
-        icon: '📖',
+        tagline: t('module_album_tagline'),
+        icon: <BookOpen className="w-5 h-5 text-blue-500" />,
         badge: t('module_album_badge'),
         color: 'blue',
         newProjectBtn: '+ Nuevo Álbum',
@@ -607,19 +775,23 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
               <div className="flex items-center gap-2.5 self-start md:self-auto">
                 <button
                   onClick={swapLocale}
-                  className="px-3.5 py-2 bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-bold text-xs rounded-xl border border-neutral-300 dark:border-neutral-700 transition flex items-center gap-1.5 shadow-sm"
+                  className="px-3.5 py-2 bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-bold text-xs rounded-xl border border-neutral-300 dark:border-neutral-700 transition flex items-center gap-2 shadow-sm"
                   title="Cambiar Idioma / Switch Language"
                 >
-                  <span>🌐</span>
+                  <Globe className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
                   <span>{pathname.startsWith('/es') ? 'EN' : 'ES'}</span>
                 </button>
 
                 <button
                   onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  className="px-3.5 py-2 bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-bold text-xs rounded-xl border border-neutral-300 dark:border-neutral-700 transition flex items-center gap-1.5 shadow-sm"
+                  className="px-3.5 py-2 bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-bold text-xs rounded-xl border border-neutral-300 dark:border-neutral-700 transition flex items-center gap-2 shadow-sm"
                   title="Cambiar Tema Día / Noche"
                 >
-                  <span>{theme === 'dark' ? '☀️' : '🌙'}</span>
+                  {theme === 'dark' ? (
+                    <Sun className="w-4 h-4 text-amber-500" />
+                  ) : (
+                    <Moon className="w-4 h-4 text-blue-500" />
+                  )}
                   <span>{theme === 'dark' ? t('theme_day') : t('theme_night')}</span>
                 </button>
               </div>
@@ -628,7 +800,7 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
             {/* Suite Welcome Hero */}
             <div className="text-center max-w-2xl mx-auto mb-12 pt-2">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-100 dark:bg-orange-950/60 border border-orange-200 dark:border-orange-800/60 text-orange-800 dark:text-orange-300 text-xs font-bold mb-4 shadow-sm">
-                <span>✨</span>
+                <Sparkles className="w-3.5 h-3.5 text-orange-500" />
                 <span>Suite Fotográfica Integral</span>
               </div>
               <h2 className="text-3xl md:text-4xl font-black text-neutral-900 dark:text-white tracking-tight mb-3">
@@ -639,36 +811,47 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
               </p>
             </div>
 
-            {/* THE 3 SUITE APPLICATION CARDS */}
+            {/* THE 3 SUITE APPLICATION CARDS (Premium Refined) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
               {/* 1. PHOTO STUDIO */}
               <div 
                 onClick={() => { setSelectedApp('studio'); setCurrentFolder(null); setSearchQuery(''); }}
-                className="bg-white dark:bg-neutral-900 border-2 border-orange-200 dark:border-orange-950/80 hover:border-orange-500 dark:hover:border-orange-500 rounded-3xl p-7 transition-all duration-300 shadow-md hover:shadow-2xl hover:scale-[1.02] flex flex-col justify-between group relative overflow-hidden cursor-pointer"
+                className="bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-3xl p-7 transition-all duration-300 shadow-sm hover:shadow-2xl hover:border-orange-500/60 dark:hover:border-orange-500/60 hover:-translate-y-1.5 flex flex-col justify-between group relative overflow-hidden cursor-pointer"
               >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl group-hover:bg-orange-500/20 pointer-events-none transition-colors" />
+                {/* Radial Accent Glow on hover */}
+                <div className="absolute top-0 right-0 w-40 h-40 bg-orange-500/5 rounded-full blur-3xl group-hover:bg-orange-500/15 pointer-events-none transition-colors duration-500" />
+
                 <div>
                   <div className="flex items-center justify-between mb-5">
-                    <div className="w-14 h-14 rounded-2xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 flex items-center justify-center text-3xl shadow-sm group-hover:scale-110 transition-transform">
-                      🖼️
+                    <div className="w-14 h-14 rounded-2xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200/80 dark:border-orange-800/60 flex items-center justify-center text-orange-600 dark:text-orange-400 shadow-sm group-hover:scale-105 group-hover:border-orange-500/40 transition-all duration-300">
+                      <ImageIcon className="w-7 h-7 text-orange-600 dark:text-orange-400 transition-transform group-hover:scale-110" />
                     </div>
-                    <span className="px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-orange-100 dark:bg-orange-950/80 text-orange-800 dark:text-orange-300 border border-orange-200 dark:border-orange-800/60 uppercase">
-                      {t('module_studio_badge')}
-                    </span>
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-orange-50 dark:bg-orange-950/70 text-orange-800 dark:text-orange-300 border border-orange-200/80 dark:border-orange-800/60 uppercase tracking-wider shadow-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                      <span>{t('module_studio_badge')}</span>
+                    </div>
                   </div>
 
-                  <h3 className="text-2xl font-black text-neutral-900 dark:text-white mb-2 group-hover:text-orange-500 transition-colors">
-                    {t('module_studio_title')}
-                  </h3>
+                  <div className="mb-2">
+                    <h3 className="text-2xl font-black text-neutral-900 dark:text-white tracking-tight group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+                      {t('module_studio_title')}
+                    </h3>
+                    <p className="text-[11px] font-semibold text-orange-600 dark:text-orange-400 uppercase tracking-wider mt-0.5">
+                      {t('module_studio_tagline')}
+                    </p>
+                  </div>
+
                   <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed mb-6">
                     {t('module_studio_desc')}
                   </p>
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between py-3 border-t border-neutral-100 dark:border-neutral-800/80 mb-4 text-xs text-neutral-500">
-                    <span>Proyectos guardados:</span>
-                    <span className="font-mono font-bold text-neutral-800 dark:text-neutral-200">{counts.studios}</span>
+                  <div className="flex items-center justify-between py-3 border-t border-neutral-100 dark:border-neutral-800/80 mb-5 text-xs">
+                    <span className="text-neutral-500 dark:text-neutral-400 font-medium">Proyectos guardados:</span>
+                    <span className="px-2.5 py-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800/80 font-mono font-bold text-neutral-800 dark:text-neutral-200 text-xs border border-neutral-200/60 dark:border-neutral-700/50 shadow-sm">
+                      {counts.studios}
+                    </span>
                   </div>
 
                   <button
@@ -678,10 +861,11 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
                       setCurrentFolder(null);
                       setSearchQuery('');
                     }}
-                    className="w-full py-3.5 px-4 bg-orange-600 hover:bg-orange-700 active:scale-98 text-white rounded-2xl font-bold text-xs transition-all shadow-md shadow-orange-600/20 flex items-center justify-center gap-2 group-hover:shadow-lg"
+                    className="w-full py-3.5 px-5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 active:scale-[0.99] text-white rounded-2xl font-bold text-xs transition-all duration-200 shadow-md shadow-orange-600/20 hover:shadow-lg hover:shadow-orange-600/30 flex items-center justify-center gap-2 group/btn"
                   >
-                    <span>🖼️</span>
-                    <span>Entrar a Photo Studio →</span>
+                    <ImageIcon className="w-4 h-4" />
+                    <span>Entrar a Photo Studio</span>
+                    <ArrowRight className="w-4 h-4 ml-1 group-hover/btn:translate-x-1 transition-transform" />
                   </button>
                 </div>
               </div>
@@ -689,31 +873,42 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
               {/* 2. CAMERA RAW PRO */}
               <div 
                 onClick={() => { setSelectedApp('raw'); setCurrentFolder(null); setSearchQuery(''); }}
-                className="bg-white dark:bg-neutral-900 border-2 border-emerald-200 dark:border-emerald-950/80 hover:border-emerald-500 dark:hover:border-emerald-500 rounded-3xl p-7 transition-all duration-300 shadow-md hover:shadow-2xl hover:scale-[1.02] flex flex-col justify-between group relative overflow-hidden cursor-pointer"
+                className="bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-3xl p-7 transition-all duration-300 shadow-sm hover:shadow-2xl hover:border-emerald-500/60 dark:hover:border-emerald-500/60 hover:-translate-y-1.5 flex flex-col justify-between group relative overflow-hidden cursor-pointer"
               >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 pointer-events-none transition-colors" />
+                {/* Radial Accent Glow on hover */}
+                <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/5 rounded-full blur-3xl group-hover:bg-emerald-500/15 pointer-events-none transition-colors duration-500" />
+
                 <div>
                   <div className="flex items-center justify-between mb-5">
-                    <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-3xl shadow-sm group-hover:scale-110 transition-transform">
-                      📸
+                    <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-sm group-hover:scale-105 group-hover:border-emerald-500/40 transition-all duration-300">
+                      <Camera className="w-7 h-7 text-emerald-600 dark:text-emerald-400 transition-transform group-hover:scale-110" />
                     </div>
-                    <span className="px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 uppercase">
-                      {t('module_raw_badge')}
-                    </span>
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 uppercase tracking-wider shadow-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>{t('module_raw_badge')}</span>
+                    </div>
                   </div>
 
-                  <h3 className="text-2xl font-black text-neutral-900 dark:text-white mb-2 group-hover:text-emerald-500 transition-colors">
-                    {t('module_raw_title')}
-                  </h3>
+                  <div className="mb-2">
+                    <h3 className="text-2xl font-black text-neutral-900 dark:text-white tracking-tight group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                      {t('module_raw_title')}
+                    </h3>
+                    <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mt-0.5">
+                      {t('module_raw_tagline')}
+                    </p>
+                  </div>
+
                   <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed mb-6">
                     {t('module_raw_desc')}
                   </p>
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between py-3 border-t border-neutral-100 dark:border-neutral-800/80 mb-4 text-xs text-neutral-500">
-                    <span>Proyectos guardados:</span>
-                    <span className="font-mono font-bold text-neutral-800 dark:text-neutral-200">{counts.studios}</span>
+                  <div className="flex items-center justify-between py-3 border-t border-neutral-100 dark:border-neutral-800/80 mb-5 text-xs">
+                    <span className="text-neutral-500 dark:text-neutral-400 font-medium">Proyectos guardados:</span>
+                    <span className="px-2.5 py-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800/80 font-mono font-bold text-neutral-800 dark:text-neutral-200 text-xs border border-neutral-200/60 dark:border-neutral-700/50 shadow-sm">
+                      {counts.studios}
+                    </span>
                   </div>
 
                   <button
@@ -723,10 +918,11 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
                       setCurrentFolder(null);
                       setSearchQuery('');
                     }}
-                    className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white rounded-2xl font-bold text-xs transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 group-hover:shadow-lg"
+                    className="w-full py-3.5 px-5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.99] text-white rounded-2xl font-bold text-xs transition-all duration-200 shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-600/30 flex items-center justify-center gap-2 group/btn"
                   >
-                    <span>📸</span>
-                    <span>Entrar a Camera Raw Pro →</span>
+                    <Camera className="w-4 h-4" />
+                    <span>Entrar a Camera Raw Pro</span>
+                    <ArrowRight className="w-4 h-4 ml-1 group-hover/btn:translate-x-1 transition-transform" />
                   </button>
                 </div>
               </div>
@@ -734,31 +930,42 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
               {/* 3. ALBUM DESIGNER */}
               <div 
                 onClick={() => { setSelectedApp('album'); setCurrentFolder(null); setSearchQuery(''); }}
-                className="bg-white dark:bg-neutral-900 border-2 border-blue-200 dark:border-blue-950/80 hover:border-blue-500 dark:hover:border-blue-500 rounded-3xl p-7 transition-all duration-300 shadow-md hover:shadow-2xl hover:scale-[1.02] flex flex-col justify-between group relative overflow-hidden cursor-pointer"
+                className="bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-3xl p-7 transition-all duration-300 shadow-sm hover:shadow-2xl hover:border-blue-500/60 dark:hover:border-blue-500/60 hover:-translate-y-1.5 flex flex-col justify-between group relative overflow-hidden cursor-pointer"
               >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 pointer-events-none transition-colors" />
+                {/* Radial Accent Glow on hover */}
+                <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500/5 rounded-full blur-3xl group-hover:bg-blue-500/15 pointer-events-none transition-colors duration-500" />
+
                 <div>
                   <div className="flex items-center justify-between mb-5">
-                    <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-3xl shadow-sm group-hover:scale-110 transition-transform">
-                      📖
+                    <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/60 flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-sm group-hover:scale-105 group-hover:border-blue-500/40 transition-all duration-300">
+                      <BookOpen className="w-7 h-7 text-blue-600 dark:text-blue-400 transition-transform group-hover:scale-110" />
                     </div>
-                    <span className="px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 uppercase">
-                      {t('module_album_badge')}
-                    </span>
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-blue-50 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/60 uppercase tracking-wider shadow-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                      <span>{t('module_album_badge')}</span>
+                    </div>
                   </div>
 
-                  <h3 className="text-2xl font-black text-neutral-900 dark:text-white mb-2 group-hover:text-blue-500 transition-colors">
-                    {t('module_album_title')}
-                  </h3>
+                  <div className="mb-2">
+                    <h3 className="text-2xl font-black text-neutral-900 dark:text-white tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      {t('module_album_title')}
+                    </h3>
+                    <p className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mt-0.5">
+                      {t('module_album_tagline')}
+                    </p>
+                  </div>
+
                   <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed mb-6">
                     {t('module_album_desc')}
                   </p>
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between py-3 border-t border-neutral-100 dark:border-neutral-800/80 mb-4 text-xs text-neutral-500">
-                    <span>Álbumes guardados:</span>
-                    <span className="font-mono font-bold text-neutral-800 dark:text-neutral-200">{counts.albums}</span>
+                  <div className="flex items-center justify-between py-3 border-t border-neutral-100 dark:border-neutral-800/80 mb-5 text-xs">
+                    <span className="text-neutral-500 dark:text-neutral-400 font-medium">Álbumes guardados:</span>
+                    <span className="px-2.5 py-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800/80 font-mono font-bold text-neutral-800 dark:text-neutral-200 text-xs border border-neutral-200/60 dark:border-neutral-700/50 shadow-sm">
+                      {counts.albums}
+                    </span>
                   </div>
 
                   <button
@@ -768,10 +975,11 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
                       setCurrentFolder(null);
                       setSearchQuery('');
                     }}
-                    className="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 active:scale-98 text-white rounded-2xl font-bold text-xs transition-all shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 group-hover:shadow-lg"
+                    className="w-full py-3.5 px-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.99] text-white rounded-2xl font-bold text-xs transition-all duration-200 shadow-md shadow-blue-600/20 hover:shadow-lg hover:shadow-blue-600/30 flex items-center justify-center gap-2 group/btn"
                   >
-                    <span>📖</span>
-                    <span>Entrar a Album Designer →</span>
+                    <BookOpen className="w-4 h-4" />
+                    <span>Entrar a Album Designer</span>
+                    <ArrowRight className="w-4 h-4 ml-1 group-hover/btn:translate-x-1 transition-transform" />
                   </button>
                 </div>
               </div>
@@ -794,11 +1002,12 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
                   }}
                   className="px-4 py-2.5 bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 rounded-2xl text-xs font-bold transition flex items-center gap-2 shadow-sm hover:scale-[1.02] active:scale-95"
                 >
+                  <ArrowLeft className="w-3.5 h-3.5" />
                   <span>{t('back_to_suite')}</span>
                 </button>
 
                 <div className="flex items-center gap-3">
-                  <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-2xl shadow-md ${
+                  <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shadow-md ${
                     selectedApp === 'studio' ? 'bg-orange-500/10 border border-orange-500/30' :
                     selectedApp === 'raw' ? 'bg-emerald-500/10 border border-emerald-500/30' :
                     'bg-blue-500/10 border border-blue-500/30'
@@ -823,48 +1032,52 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
               <div className="flex items-center gap-2.5 self-start md:self-auto flex-wrap">
                 <button
                   onClick={swapLocale}
-                  className="px-3 py-2 bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-bold text-xs rounded-xl border border-neutral-300 dark:border-neutral-700 transition flex items-center gap-1.5 shadow-sm"
+                  className="px-3.5 py-2 bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-bold text-xs rounded-xl border border-neutral-300 dark:border-neutral-700 transition flex items-center gap-2 shadow-sm"
                   title="Cambiar Idioma / Switch Language"
                 >
-                  <span>🌐</span>
+                  <Globe className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
                   <span>{pathname.startsWith('/es') ? 'EN' : 'ES'}</span>
                 </button>
 
                 <button
                   onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  className="px-3 py-2 bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-bold text-xs rounded-xl border border-neutral-300 dark:border-neutral-700 transition flex items-center gap-1.5 shadow-sm"
+                  className="px-3.5 py-2 bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-bold text-xs rounded-xl border border-neutral-300 dark:border-neutral-700 transition flex items-center gap-2 shadow-sm"
                   title="Cambiar Tema Día / Noche"
                 >
-                  <span>{theme === 'dark' ? '☀️' : '🌙'}</span>
+                  {theme === 'dark' ? (
+                    <Sun className="w-4 h-4 text-amber-500" />
+                  ) : (
+                    <Moon className="w-4 h-4 text-blue-500" />
+                  )}
                   <span>{theme === 'dark' ? t('theme_day') : t('theme_night')}</span>
                 </button>
 
                 <button
                   onClick={() => setIsCreatingFolder(true)}
-                  className="px-3.5 py-2 bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold text-xs rounded-xl border border-neutral-300 dark:border-neutral-700 transition flex items-center gap-1.5 shadow-sm"
+                  className="px-3.5 py-2 bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold text-xs rounded-xl border border-neutral-300 dark:border-neutral-700 transition flex items-center gap-2 shadow-sm"
                 >
-                  <span>📁</span>
+                  <FolderPlus className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
                   <span>{t('btn_new_folder')}</span>
                 </button>
 
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-3.5 py-2 bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold text-xs rounded-xl border border-neutral-300 dark:border-neutral-700 transition flex items-center gap-1.5 shadow-sm"
+                  className="px-3.5 py-2 bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold text-xs rounded-xl border border-neutral-300 dark:border-neutral-700 transition flex items-center gap-2 shadow-sm"
                   title={t('btn_import_rvp')}
                 >
-                  <span>📥</span>
+                  <Download className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
                   <span>{t('btn_import_rvp')}</span>
                 </button>
 
                 <button 
                   onClick={() => onNewProject(currentFolder === '__general__' ? undefined : currentFolder || undefined, appInfo?.defaultCategory)}
-                  className={`px-5 py-2 text-white font-bold text-xs rounded-xl transition-all shadow-lg flex items-center gap-1.5 hover:scale-[1.02] active:scale-95 ${
+                  className={`px-5 py-2 text-white font-bold text-xs rounded-xl transition-all shadow-lg flex items-center gap-2 hover:scale-[1.02] active:scale-95 ${
                     selectedApp === 'studio' ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-600/25' :
                     selectedApp === 'raw' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/25' :
                     'bg-blue-600 hover:bg-blue-700 shadow-blue-600/25'
                   }`}
                 >
-                  <span>+</span>
+                  <Plus className="w-4 h-4" />
                   <span>{appInfo?.newProjectBtn || t('newProject')}</span>
                 </button>
               </div>
@@ -876,7 +1089,7 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
                   <div>
                     <h3 className="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-                      <span>📁</span>
+                      <FolderPlus className="w-4 h-4 text-orange-500" />
                       <span>Crear Nueva Carpeta / Colección</span>
                     </h3>
                     <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
@@ -902,9 +1115,9 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
                     </button>
                     <button
                       onClick={() => setIsCreatingFolder(false)}
-                      className="px-3 py-2 text-neutral-400 hover:text-black dark:hover:text-white text-xs"
+                      className="px-3 py-2 text-neutral-400 hover:text-black dark:hover:text-white text-xs flex items-center justify-center"
                     >
-                      ✕
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -1023,7 +1236,7 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
 
                     {appRecentProjects.length === 0 && (
                       <div className="col-span-full py-16 text-center border-2 border-dashed border-neutral-300 dark:border-neutral-800 rounded-3xl flex flex-col items-center justify-center p-8 bg-white/50 dark:bg-neutral-900/30">
-                        <span className="text-4xl mb-3 opacity-60">📂</span>
+                        <Folder className="w-12 h-12 text-neutral-300 dark:text-neutral-700 mb-3" />
                         <p className="text-base font-bold text-neutral-700 dark:text-neutral-300 mb-1">
                           {searchQuery ? 'No se encontraron proyectos' : `Sin proyectos en ${appInfo?.name}`}
                         </p>
@@ -1032,13 +1245,14 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
                         </p>
                         <button 
                           onClick={() => onNewProject(undefined, appInfo?.defaultCategory)}
-                          className={`px-5 py-2.5 rounded-xl text-white text-xs font-bold transition shadow-md ${
+                          className={`px-5 py-2.5 rounded-xl text-white text-xs font-bold transition shadow-md flex items-center gap-1.5 ${
                             selectedApp === 'studio' ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-600/30' :
                             selectedApp === 'raw' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30' :
                             'bg-blue-600 hover:bg-blue-700 shadow-blue-600/30'
                           }`}
                         >
-                          + {appInfo?.newProjectBtn || t('newProject')}
+                          <Plus className="w-4 h-4" />
+                          <span>{appInfo?.newProjectBtn || t('newProject')}</span>
                         </button>
                       </div>
                     )}
@@ -1060,22 +1274,27 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
                       }}
                       className="px-4 py-2 bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-neutral-300 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm"
                     >
-                      ← Volver a {appInfo?.name}
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      <span>Volver a {appInfo?.name}</span>
                     </button>
 
-                    <div>
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-2xl">📁</span>
-                        <h2 className="text-2xl font-black text-neutral-900 dark:text-white">
-                          {currentFolder === '__general__' ? t('folder_general') : currentFolder}
-                        </h2>
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-neutral-200 dark:bg-neutral-800 text-orange-600 dark:text-orange-400">
-                          {appProjectsInCurrentFolder.length} proyectos
-                        </span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200/80 dark:border-orange-800/60 flex items-center justify-center text-orange-600 dark:text-orange-400 shadow-sm">
+                        <Folder className="w-5 h-5 text-orange-500" />
                       </div>
-                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5 ml-8">
-                        Proyectos de {appInfo?.name} almacenados en esta carpeta
-                      </p>
+                      <div>
+                        <div className="flex items-center gap-2.5">
+                          <h2 className="text-2xl font-black text-neutral-900 dark:text-white">
+                            {currentFolder === '__general__' ? t('folder_general') : currentFolder}
+                          </h2>
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-neutral-200 dark:bg-neutral-800 text-orange-600 dark:text-orange-400">
+                            {appProjectsInCurrentFolder.length} proyectos
+                          </span>
+                        </div>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                          Proyectos de {appInfo?.name} almacenados en esta carpeta
+                        </p>
+                      </div>
                     </div>
                   </div>
 
@@ -1085,7 +1304,7 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
                       onClick={() => fileInputRef.current?.click()}
                       className="px-4 py-2 bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold text-xs rounded-xl border border-neutral-300 dark:border-neutral-700 transition flex items-center gap-2 shadow-sm"
                     >
-                      <span>📥</span>
+                      <Download className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
                       <span>{t('btn_import_rvp')}</span>
                     </button>
 
@@ -1097,7 +1316,7 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
                         'bg-blue-600 hover:bg-blue-700 shadow-blue-600/25'
                       }`}
                     >
-                      <span>+</span>
+                      <Plus className="w-4 h-4" />
                       <span>{t('new_project_in_folder')}</span>
                     </button>
                   </div>
@@ -1156,18 +1375,19 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
                   {/* Empty Folder State */}
                   {appProjectsInCurrentFolder.length === 0 && (
                     <div className="col-span-full py-20 text-center border-2 border-dashed border-neutral-300 dark:border-neutral-800 rounded-3xl flex flex-col items-center justify-center p-8 bg-white/50 dark:bg-neutral-900/30">
-                      <span className="text-5xl mb-3">📁</span>
+                      <Folder className="w-12 h-12 text-neutral-300 dark:text-neutral-700 mb-3" />
                       <p className="text-base font-bold text-neutral-700 dark:text-neutral-300 mb-1">{t('folder_empty')}</p>
                       <p className="text-xs text-neutral-500 mb-6">{t('folder_empty_desc')}</p>
                       <button 
                         onClick={() => onNewProject(currentFolder === '__general__' ? undefined : currentFolder, appInfo?.defaultCategory)}
-                        className={`px-6 py-2.5 rounded-xl text-white text-xs font-bold transition shadow-lg ${
+                        className={`px-6 py-2.5 rounded-xl text-white text-xs font-bold transition shadow-lg flex items-center gap-1.5 ${
                           selectedApp === 'studio' ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-600/30' :
                           selectedApp === 'raw' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30' :
                           'bg-blue-600 hover:bg-blue-700 shadow-blue-600/30'
                         }`}
                       >
-                        + {t('new_project_in_folder')}
+                        <Plus className="w-4 h-4" />
+                        <span>{t('new_project_in_folder')}</span>
                       </button>
                     </div>
                   )}
@@ -1178,6 +1398,18 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
         )}
 
       </div>
+
+      {/* Premium Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        title={deleteModal.type === 'folder' ? t('modal_delete_folder_title') : t('modal_delete_project_title')}
+        itemName={deleteModal.displayName}
+        itemType={deleteModal.type}
+        warningMessage={deleteModal.type === 'folder' ? t('modal_delete_folder_desc') : t('modal_delete_project_desc')}
+        confirmBtnText={deleteModal.type === 'folder' ? t('modal_delete_folder_btn') : t('modal_delete_project_btn')}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }
