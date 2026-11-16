@@ -1,5 +1,30 @@
 export type ElementType = 'image' | 'text' | 'shape' | 'decoration' | 'group';
 
+export interface HslChannel {
+  h: number;
+  s: number;
+  l: number;
+}
+
+export interface ToneCurveAdjustments {
+  highlights: number; // -100 to +100
+  lights: number;     // -100 to +100
+  darks: number;      // -100 to +100
+  shadows: number;    // -100 to +100
+}
+
+export interface PointColorAdjustment {
+  enabled: boolean;
+  sampleHex: string;  // e.g. '#e08253'
+  sampleH: number;    // 0 to 360
+  sampleS: number;    // 0 to 100
+  sampleL: number;    // 0 to 100
+  hueShift: number;   // -100 to +100
+  satShift: number;   // -100 to +100
+  lumShift: number;   // -100 to +100
+  range: number;      // 10 to 100 (tolerance range)
+}
+
 export interface PhotoAdjustments {
    exposure: number;
    lightContrast: number;
@@ -20,15 +45,20 @@ export interface PhotoAdjustments {
    bypassLight?: boolean;
    bypassColor?: boolean;
    bypassEffects?: boolean;
-   hsl: {
-      reds: { h: number; s: number; l: number };
-      oranges: { h: number; s: number; l: number };
-      yellows: { h: number; s: number; l: number };
-      greens: { h: number; s: number; l: number };
-      aquas: { h: number; s: number; l: number };
-      blues: { h: number; s: number; l: number };
-      purples: { h: number; s: number; l: number };
-      magentas: { h: number; s: number; l: number };
+   bypassCurve?: boolean;
+   bypassColorMixer?: boolean;
+   bypassPointColor?: boolean;
+   curve?: ToneCurveAdjustments;
+   pointColor?: PointColorAdjustment;
+   hsl?: {
+      reds: HslChannel;
+      oranges: HslChannel;
+      yellows: HslChannel;
+      greens: HslChannel;
+      aquas: HslChannel;
+      blues: HslChannel;
+      purples: HslChannel;
+      magentas: HslChannel;
    };
 }
 

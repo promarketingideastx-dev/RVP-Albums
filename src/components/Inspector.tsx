@@ -1671,7 +1671,16 @@ export default function Inspector() {
               disabled={isLocked}
               className="w-full bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-700 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow mb-4 disabled:opacity-50"
               value={element.photoFilter || 'none'}
-              onChange={(e) => scheduleElementUpdate(activeSpreadId, element.id, { photoFilter: e.target.value }, true)}
+              onChange={(e) => {
+                const nextFilter = e.target.value;
+                const nextIntensity = nextFilter === 'posterize' ? 4 : nextFilter === 'blur' ? 5 : nextFilter === 'noise' ? 0.2 : 1;
+                scheduleElementUpdate(
+                  activeSpreadId,
+                  element.id,
+                  { photoFilter: nextFilter, filterIntensity: nextIntensity },
+                  true
+                );
+              }}
             >
               <option value="none">{t('filter_none')}</option>
               {Array.from(new Set(LUT_LIBRARY.map((l) => l.category))).map((category) => (

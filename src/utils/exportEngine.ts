@@ -8,6 +8,7 @@ import {
   convertSRGBBufferToAdobeRGB1998,
   injectPrintMetadataIntoDataURL,
 } from '@/utils/colorManagement';
+import { applyRawAdjustmentsToKonvaNode, registerKonvaRawFilters } from '@/utils/rawImagePipeline';
 
 /**
  * Professional JPEG Quality Scale (1-12) inspired by Adobe Photoshop.
@@ -296,150 +297,28 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
 
           // Handle Photo Filters Headless Single Layer
           const hasLegacyFilter = el.photoFilter && el.photoFilter !== 'none';
-          const hasAdj = el.photoAdjustments && Object.values(el.photoAdjustments).some(v => typeof v === 'number' && v !== 0);
+          const hasAdj = Boolean(
+            el.photoAdjustments &&
+            (
+              Object.entries(el.photoAdjustments).some(([, v]) => typeof v === 'number' && v !== 0) ||
+              (el.photoAdjustments.curve && Object.values(el.photoAdjustments.curve).some(v => v !== 0)) ||
+              (el.photoAdjustments.hsl && Object.values(el.photoAdjustments.hsl).some(ch => ch.h !== 0 || ch.s !== 0 || ch.l !== 0)) ||
+              (el.photoAdjustments.pointColor && el.photoAdjustments.pointColor.enabled)
+            )
+          );
 
           if (hasLegacyFilter || hasAdj) {
-            const { LUT_LIBRARY } = await import('@/lib/lut-presets');
-            
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const filtersArray: any[] = [];
+            registerKonvaRawFilters(Konva);
             const intensity = el.filterIntensity !== undefined ? el.filterIntensity : 1;
-            
-            if (hasLegacyFilter) {
-               const lut = LUT_LIBRARY.find(l => l.id === el.photoFilter);
-               if (lut) {
-                  if (lut.contrast && lut.contrast !== 0) {
-                     filtersArray.push(Konva.Filters.Contrast);
-                     kImg.contrast(lut.contrast * intensity);
-                  }
-                  if (lut.brightness && lut.brightness !== 0) {
-                     filtersArray.push(Konva.Filters.Brighten);
-                     kImg.brightness(lut.brightness * intensity);
-                  }
-                  if (lut.grayscale) filtersArray.push(Konva.Filters.Grayscale);
-                  if (lut.sepia) filtersArray.push(Konva.Filters.Sepia);
-                  if (lut.invert) filtersArray.push(Konva.Filters.Invert);
-                  
-                  if (lut.hue !== undefined || lut.saturation !== undefined || lut.luminance !== undefined) {
-                     filtersArray.push(Konva.Filters.HSL);
-                     if (lut.hue !== undefined) kImg.hue(lut.hue * intensity);
-                     if (lut.saturation !== undefined) kImg.saturation(Math.max(-2, Math.min(2, lut.saturation * intensity)));
-                     if (lut.luminance !== undefined) kImg.luminance(lut.luminance * intensity);
-                  }
-               } else {
-                  switch(el.photoFilter) {
-                    case 'sepia': filtersArray.push(Konva.Filters.Sepia); break;
-                    case 'grayscale': filtersArray.push(Konva.Filters.Grayscale); break;
-                    case 'invert': filtersArray.push(Konva.Filters.Invert); break;
-                    case 'blur': 
-                      filtersArray.push(Konva.Filters.Blur); 
-                      kImg.blurRadius(intensity * 5); 
-                      break;
-                    case 'noise': 
-                      filtersArray.push(Konva.Filters.Noise); 
-                      kImg.noise(intensity); 
-                      break;
-                    case 'posterize': 
-                      filtersArray.push(Konva.Filters.Posterize); 
-                      kImg.levels(intensity * 4); 
-                      break;
-                  }
-               }
-            }
-
-            if (hasAdj) {
-              const adj = el.photoAdjustments!;
-              
-              const bypassLight = adj.bypassLight || false;
-              const bypassColor = adj.bypassColor || false;
-              const bypassEffects = adj.bypassEffects || false;
-
-              const exposure = !bypassLight ? (adj.exposure || 0) : 0;
-              const lightContrast = !bypassLight ? (adj.lightContrast || 0) : 0;
-              const highlights = !bypassLight ? (adj.highlights || 0) : 0;
-              const shadows = !bypassLight ? (adj.shadows || 0) : 0;
-              const whites = !bypassLight ? (adj.whites || 0) : 0;
-              const blacks = !bypassLight ? (adj.blacks || 0) : 0;
-
-              const temperature = !bypassColor ? (adj.temperature || 0) : 0;
-              const tint = !bypassColor ? (adj.tint || 0) : 0;
-              const vibrance = !bypassColor ? (adj.vibrance || 0) : 0;
-              const saturation = !bypassColor ? (adj.saturation || 0) : 0;
-
-              const texture = !bypassEffects ? (adj.texture || 0) : 0;
-              const clarity = !bypassEffects ? (adj.clarity || 0) : 0;
-              const dehaze = !bypassEffects ? (adj.dehaze || 0) : 0;
-              const grain = !bypassEffects ? (adj.grain || 0) : 0;
-              const blur = !bypassEffects ? (adj.blur || 0) : 0;
-
-              if (exposure || highlights || shadows || whites || blacks) {
-                 filtersArray.push(Konva.Filters.Brighten);
-                 let totalBrightness = exposure / 200;
-                 if (highlights) totalBrightness += (highlights / 100) * 0.15;
-                 if (whites) totalBrightness += (whites / 100) * 0.08;
-                 if (shadows) totalBrightness += (shadows / 100) * 0.15;
-                 if (blacks) totalBrightness += (blacks / 100) * 0.08;
-                 kImg.brightness(Math.max(-1, Math.min(1, totalBrightness)));
-              }
-              
-              if (lightContrast || clarity || dehaze || texture) {
-                 filtersArray.push(Konva.Filters.Contrast);
-                 let totalContrast = lightContrast * 0.6;
-                 if (clarity) totalContrast += (clarity / 100) * 20;
-                 if (dehaze) totalContrast += (dehaze / 100) * 15;
-                 if (texture) totalContrast += (texture / 100) * 10;
-                 kImg.contrast(Math.max(-100, Math.min(100, totalContrast))); 
-              }
-              
-              // Advanced Color: Vibrance and Saturation
-              if (saturation || vibrance) {
-                 if (!filtersArray.includes(Konva.Filters.HSL)) filtersArray.push(Konva.Filters.HSL);
-                 let totalSat = saturation;
-                 if (vibrance) totalSat += (vibrance * 0.5); 
-                 kImg.saturation(Math.max(-2, Math.min(2, totalSat / 100))); 
-                 kImg.hue(0);
-              }
-              
-              // Advanced Color: Temperature and Tint (Thermal Curves via Custom Additive ColorShift)
-              if (temperature || tint) {
-                 // CRITICAL FIX: Custom WebGL Filter used to securely add offsets to pixel color natively 
-                 // avoiding RGBA solid overlaps and avoiding RGB luminance grayscale blackouts.
-                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                 if (!filtersArray.includes((Konva.Filters as any).ColorShift)) filtersArray.push((Konva.Filters as any).ColorShift);
-                 
-                 let r = 0, g = 0, b = 0;
-                 const TEMP_STRENGTH = 15;
-                 const TINT_STRENGTH = 10;
-                 
-                 if (temperature) {
-                     const tempNormalized = temperature / 100;
-                     r = r + tempNormalized * TEMP_STRENGTH;   
-                     b = b - tempNormalized * TEMP_STRENGTH;   
-                 }
-                 if (tint) {
-                     const tintNormalized = tint / 100;
-                     g = g + tintNormalized * TINT_STRENGTH;  
-                     r = r + tintNormalized * (TINT_STRENGTH * 0.25);  
-                     b = b + tintNormalized * (TINT_STRENGTH * 0.25);   
-                 }
-                 
-                 kImg.setAttr('redShift', r);
-                 kImg.setAttr('greenShift', g);
-                 kImg.setAttr('blueShift', b);
-              }
-              
-              if (grain) {
-                 filtersArray.push(Konva.Filters.Noise);
-                 kImg.noise(Math.max(0, (grain / 100) * 0.5));
-              }
-              
-              if (blur) {
-                 filtersArray.push(Konva.Filters.Blur);
-                 kImg.blurRadius(Math.max(0, blur / 5));
-              }
-            }
-
-            kImg.filters(filtersArray);
+            const finalFilters = applyRawAdjustmentsToKonvaNode(
+              kImg,
+              el.photoAdjustments || {},
+              [],
+              Konva,
+              el.photoFilter,
+              intensity
+            );
+            kImg.filters(finalFilters);
             
             // EXPORT PIPELINE GUARANTEE: Full Native Resolution Cache Locking with VRAM Limits
             const isMassiveAsset = imgObj.naturalWidth > 6000 || imgObj.naturalHeight > 6000;
@@ -710,111 +589,29 @@ export async function exportRawPhotoToJPG(project: EditorProject, options: Profe
     imageSmoothingEnabled: false,
   });
 
-  // Apply filters & adjustments if present
   const hasLegacyFilter = targetElement.photoFilter && targetElement.photoFilter !== 'none';
-  const hasAdj = targetElement.photoAdjustments && Object.values(targetElement.photoAdjustments).some(v => typeof v === 'number' && v !== 0);
+  const hasAdj = Boolean(
+    targetElement.photoAdjustments &&
+    (
+      Object.entries(targetElement.photoAdjustments).some(([, v]) => typeof v === 'number' && v !== 0) ||
+      (targetElement.photoAdjustments.curve && Object.values(targetElement.photoAdjustments.curve).some(v => v !== 0)) ||
+      (targetElement.photoAdjustments.hsl && Object.values(targetElement.photoAdjustments.hsl).some(ch => ch.h !== 0 || ch.s !== 0 || ch.l !== 0)) ||
+      (targetElement.photoAdjustments.pointColor && targetElement.photoAdjustments.pointColor.enabled)
+    )
+  );
 
   if (hasLegacyFilter || hasAdj) {
-    const { LUT_LIBRARY } = await import('@/lib/lut-presets');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const filtersArray: any[] = [];
+    registerKonvaRawFilters(Konva);
     const intensity = targetElement.filterIntensity !== undefined ? targetElement.filterIntensity : 1;
-
-    if (hasLegacyFilter) {
-      const lut = LUT_LIBRARY.find(l => l.id === targetElement!.photoFilter);
-      if (lut) {
-        if (lut.contrast) { filtersArray.push(Konva.Filters.Contrast); kImg.contrast(lut.contrast * intensity); }
-        if (lut.brightness) { filtersArray.push(Konva.Filters.Brighten); kImg.brightness(lut.brightness * intensity); }
-        if (lut.grayscale) filtersArray.push(Konva.Filters.Grayscale);
-        if (lut.sepia) filtersArray.push(Konva.Filters.Sepia);
-        if (lut.invert) filtersArray.push(Konva.Filters.Invert);
-        if (lut.hue !== undefined || lut.saturation !== undefined || lut.luminance !== undefined) {
-          filtersArray.push(Konva.Filters.HSL);
-          if (lut.hue !== undefined) kImg.hue(lut.hue * intensity);
-          if (lut.saturation !== undefined) kImg.saturation(Math.max(-2, Math.min(2, lut.saturation * intensity)));
-          if (lut.luminance !== undefined) kImg.luminance(lut.luminance * intensity);
-        }
-      }
-    }
-
-    if (hasAdj) {
-      const adj = targetElement.photoAdjustments!;
-      const exposure = !adj.bypassLight ? (adj.exposure || 0) : 0;
-      const lightContrast = !adj.bypassLight ? (adj.lightContrast || 0) : 0;
-      const highlights = !adj.bypassLight ? (adj.highlights || 0) : 0;
-      const shadows = !adj.bypassLight ? (adj.shadows || 0) : 0;
-      const whites = !adj.bypassLight ? (adj.whites || 0) : 0;
-      const blacks = !adj.bypassLight ? (adj.blacks || 0) : 0;
-
-      const temperature = !adj.bypassColor ? (adj.temperature || 0) : 0;
-      const tint = !adj.bypassColor ? (adj.tint || 0) : 0;
-      const vibrance = !adj.bypassColor ? (adj.vibrance || 0) : 0;
-      const saturation = !adj.bypassColor ? (adj.saturation || 0) : 0;
-
-      const texture = !adj.bypassEffects ? (adj.texture || 0) : 0;
-      const clarity = !adj.bypassEffects ? (adj.clarity || 0) : 0;
-      const dehaze = !adj.bypassEffects ? (adj.dehaze || 0) : 0;
-      const grain = !adj.bypassEffects ? (adj.grain || 0) : 0;
-      const blur = !adj.bypassEffects ? (adj.blur || 0) : 0;
-
-      if (exposure || highlights || shadows || whites || blacks) {
-        filtersArray.push(Konva.Filters.Brighten);
-        let totalBrightness = exposure / 200;
-        if (highlights) totalBrightness += (highlights / 100) * 0.15;
-        if (whites) totalBrightness += (whites / 100) * 0.08;
-        if (shadows) totalBrightness += (shadows / 100) * 0.15;
-        if (blacks) totalBrightness += (blacks / 100) * 0.08;
-        kImg.brightness(Math.max(-1, Math.min(1, totalBrightness)));
-      }
-
-      if (lightContrast || clarity || dehaze || texture) {
-        filtersArray.push(Konva.Filters.Contrast);
-        let totalContrast = lightContrast * 0.6;
-        if (clarity) totalContrast += (clarity / 100) * 20;
-        if (dehaze) totalContrast += (dehaze / 100) * 15;
-        if (texture) totalContrast += (texture / 100) * 10;
-        kImg.contrast(Math.max(-100, Math.min(100, totalContrast)));
-      }
-
-      if (saturation || vibrance) {
-        if (!filtersArray.includes(Konva.Filters.HSL)) filtersArray.push(Konva.Filters.HSL);
-        let totalSat = saturation;
-        if (vibrance) totalSat += (vibrance * 0.5);
-        kImg.saturation(Math.max(-2, Math.min(2, totalSat / 100)));
-        kImg.hue(0);
-      }
-
-      if (temperature || tint) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if (!filtersArray.includes((Konva.Filters as any).ColorShift)) filtersArray.push((Konva.Filters as any).ColorShift);
-        let r = 0, g = 0, b = 0;
-        if (temperature) {
-          const tempNorm = temperature / 100;
-          r += tempNorm * 15;
-          b -= tempNorm * 15;
-        }
-        if (tint) {
-          const tintNorm = tint / 100;
-          g += tintNorm * 10;
-          r += tintNorm * 2.5;
-          b += tintNorm * 2.5;
-        }
-        kImg.setAttr('redShift', r);
-        kImg.setAttr('greenShift', g);
-        kImg.setAttr('blueShift', b);
-      }
-
-      if (grain) {
-        filtersArray.push(Konva.Filters.Noise);
-        kImg.noise(Math.max(0, (grain / 100) * 0.5));
-      }
-      if (blur) {
-        filtersArray.push(Konva.Filters.Blur);
-        kImg.blurRadius(Math.max(0, blur / 5));
-      }
-    }
-
-    kImg.filters(filtersArray);
+    const finalFilters = applyRawAdjustmentsToKonvaNode(
+      kImg,
+      targetElement.photoAdjustments || {},
+      [],
+      Konva,
+      targetElement.photoFilter,
+      intensity
+    );
+    kImg.filters(finalFilters);
     kImg.cache({ pixelRatio: 1, imageSmoothingEnabled: false });
   }
 

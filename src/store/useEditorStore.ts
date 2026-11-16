@@ -22,6 +22,13 @@ interface EditorState {
   previewOriginalPhotoId: string | null;
   setPreviewOriginalPhotoId: (elementId: string | null) => void;
 
+  beforeAfterMode: 'off' | 'split' | 'sideBySide';
+  beforeAfterSplitPosition: number; // 0.0 to 1.0 (default 0.5)
+  isBeforeAfterModalOpen: boolean;
+  setBeforeAfterMode: (mode: 'off' | 'split' | 'sideBySide') => void;
+  setBeforeAfterSplitPosition: (pos: number) => void;
+  setIsBeforeAfterModalOpen: (open: boolean) => void;
+
   workspaceZoom: number | null; // null = dynamic auto-fit. number = user override scale.
   setWorkspaceZoom: (zoom: number | null) => void;
 
@@ -106,12 +113,18 @@ export const useEditorStore = create<EditorState>()(
   selectedStagedElementIds: [],
   measurementUnit: 'in',
   previewOriginalPhotoId: null,
+  beforeAfterMode: 'off',
+  beforeAfterSplitPosition: 0.5,
+  isBeforeAfterModalOpen: false,
   workspaceZoom: null,
   workspacePan: { x: 0, y: 0 },
   editorViewMode: 'GRID',
 
   toggleMeasurementUnit: () => set((state) => ({ measurementUnit: state.measurementUnit === 'in' ? 'cm' : 'in' })),
   setPreviewOriginalPhotoId: (id) => set({ previewOriginalPhotoId: id }),
+  setBeforeAfterMode: (mode) => set({ beforeAfterMode: mode }),
+  setBeforeAfterSplitPosition: (pos) => set({ beforeAfterSplitPosition: Math.max(0.01, Math.min(0.99, pos)) }),
+  setIsBeforeAfterModalOpen: (open) => set({ isBeforeAfterModalOpen: open }),
   setWorkspaceZoom: (zoom) => set({ workspaceZoom: zoom }),
   setWorkspacePan: (pan) => set((state) => ({ workspacePan: typeof pan === 'function' ? pan(state.workspacePan) : pan })),
   setEditorViewMode: (mode) => set((state) => {
@@ -144,7 +157,7 @@ export const useEditorStore = create<EditorState>()(
       }
       projectStorage.saveProject(currentProject);
     }
-    set({ project: null, activeSpreadId: null, selectedElementId: null, previewOriginalPhotoId: null });
+    set({ project: null, activeSpreadId: null, selectedElementId: null, previewOriginalPhotoId: null, beforeAfterMode: 'off', beforeAfterSplitPosition: 0.5, isBeforeAfterModalOpen: false });
   },
   flushSave: async () => {
     const currentProject = get().project;

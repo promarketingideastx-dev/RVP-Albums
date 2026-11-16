@@ -16,7 +16,6 @@ import {
   EyeOff,
   Trash2,
 } from 'lucide-react';
-import { LUT_LIBRARY } from '@/lib/lut-presets';
 import { TYPOGRAPHY_PRESETS } from '@/lib/typography-presets';
 import { useEditorStore } from '@/store/useEditorStore';
 import { EditorElement } from '@/types/editor';
@@ -29,6 +28,7 @@ import {
   worldPointToNormalizedPivot,
   findTopmostElementAtPoint,
 } from '@/utils/transformGeometry';
+import { applyRawAdjustmentsToKonvaNode, registerKonvaRawFilters } from '@/utils/rawImagePipeline';
 import useImage from 'use-image';
 
 // Register Global Custom WebGL ColorShift Filter for Additive Raw Math (Replaces luminance-based RGB / painter RGBA)
@@ -379,6 +379,9 @@ const EditorImage = React.memo(function EditorImage({
   const lastSwappedIdRef = useRef<string | null>(null);
   const updateElement = useEditorStore((state) => state.updateElement);
   const previewOriginalPhotoId = useEditorStore((state) => state.previewOriginalPhotoId);
+  const beforeAfterMode = useEditorStore((state) => state.beforeAfterMode);
+  const beforeAfterSplitPosition = useEditorStore((state) => state.beforeAfterSplitPosition);
+  const setBeforeAfterSplitPosition = useEditorStore((state) => state.setBeforeAfterSplitPosition);
   const globalStyles = useEditorStore((state) => state.project?.globalImageStyles);
   const projectSize = useEditorStore((state) => state.project?.size) || { w_mm: 1000, h_mm: 1000 };
   const prevSpreadId = useEditorStore((state) => {
@@ -402,10 +405,14 @@ const EditorImage = React.memo(function EditorImage({
 
   useEffect(() => {
     if (isSelected && !element.locked && trRef.current && groupRef.current) {
-      trRef.current.nodes([groupRef.current]);
-      trRef.current.getLayer().batchDraw();
+      if (beforeAfterMode === 'split') {
+        trRef.current.nodes([]);
+      } else {
+        trRef.current.nodes([groupRef.current]);
+      }
+      trRef.current.getLayer()?.batchDraw();
     }
-  }, [isSelected, element.locked]);
+  }, [isSelected, element.locked, beforeAfterMode]);
 
   // Object-Fit Cover Math ONLY for Album Auto-Layout slots (never crop free Photo Studio layers or decorations!)
   let computedCrop = undefined;
@@ -442,178 +449,69 @@ const EditorImage = React.memo(function EditorImage({
     }
   }
 
+  const filterRafRef = useRef<number | null>(null);
+
   // Handle Photo Filters Natively via SINGLE LAYER pipeline
   useLayoutEffect(() => {
     if (filterLayerRef.current && image) {
       const node = filterLayerRef.current;
       const hasLegacyFilter = element.photoFilter && element.photoFilter !== 'none';
-      const hasAdj = element.photoAdjustments && Object.values(element.photoAdjustments).some(v => typeof v === 'number' && v !== 0);
+      const hasAdj = Boolean(
+        element.photoAdjustments &&
+        (
+          Object.entries(element.photoAdjustments).some(([, v]) => typeof v === 'number' && v !== 0) ||
+          (element.photoAdjustments.curve && Object.values(element.photoAdjustments.curve).some(v => v !== 0)) ||
+          (element.photoAdjustments.hsl && Object.values(element.photoAdjustments.hsl).some(ch => ch.h !== 0 || ch.s !== 0 || ch.l !== 0)) ||
+          (element.photoAdjustments.pointColor && element.photoAdjustments.pointColor.enabled)
+        )
+      );
       
       if ((hasLegacyFilter || hasAdj) && element.id !== previewOriginalPhotoId) {
-        node.clearCache(); // NEVER reprocess cached image - clear first
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const filtersArray: any[] = [];
-        const intensity = element.filterIntensity !== undefined ? element.filterIntensity : 1;
-        
-        if (hasLegacyFilter) {
-          const lut = LUT_LIBRARY.find(l => l.id === element.photoFilter);
+        if (filterRafRef.current) cancelAnimationFrame(filterRafRef.current);
+        filterRafRef.current = requestAnimationFrame(() => {
+          if (!filterLayerRef.current) return;
+          const currentNode = filterLayerRef.current;
+          currentNode.clearCache();
+          registerKonvaRawFilters(Konva);
+          const intensity = element.filterIntensity !== undefined ? element.filterIntensity : 1;
           
-          if (lut) {
-             if (lut.contrast && lut.contrast !== 0) {
-                filtersArray.push(Konva.Filters.Contrast);
-                node.contrast(lut.contrast * intensity);
-             }
-             if (lut.brightness && lut.brightness !== 0) {
-                filtersArray.push(Konva.Filters.Brighten);
-                node.brightness(lut.brightness * intensity);
-             }
-             if (lut.grayscale) filtersArray.push(Konva.Filters.Grayscale);
-             if (lut.sepia) filtersArray.push(Konva.Filters.Sepia);
-             if (lut.invert) filtersArray.push(Konva.Filters.Invert);
-             
-             if (lut.hue !== undefined || lut.saturation !== undefined || lut.luminance !== undefined) {
-                filtersArray.push(Konva.Filters.HSL);
-                if (lut.hue !== undefined) node.hue(lut.hue * intensity);
-                if (lut.saturation !== undefined) node.saturation(Math.max(-2, Math.min(2, lut.saturation * intensity)));
-                if (lut.luminance !== undefined) node.luminance(lut.luminance * intensity);
-             }
-          } else {
-             // Fallback for legacy basic filters
-             switch(element.photoFilter) {
-               case 'sepia': filtersArray.push(Konva.Filters.Sepia); break;
-               case 'grayscale': filtersArray.push(Konva.Filters.Grayscale); break;
-               case 'invert': filtersArray.push(Konva.Filters.Invert); break;
-               case 'blur': 
-                 filtersArray.push(Konva.Filters.Blur); 
-                 node.blurRadius(intensity * 5); 
-                 break;
-               case 'noise': 
-                 filtersArray.push(Konva.Filters.Noise); 
-                 node.noise(intensity); 
-                 break;
-               case 'posterize': 
-                 filtersArray.push(Konva.Filters.Posterize); 
-                 node.levels(intensity * 4); 
-                 break;
-             }
-          }
-        }
+          // Single unified raw & photographic LUT processing pipeline
+          const finalFilters = applyRawAdjustmentsToKonvaNode(
+            currentNode,
+            element.photoAdjustments || {},
+            [],
+            Konva,
+            element.photoFilter,
+            intensity
+          );
+          
+          currentNode.filters(finalFilters);
+          
+          // HIGH PERFORMANCE INTERACTIVE CACHE RATIO
+          // During interactive editing, cap preview canvas size to crisp screen resolution (max 720px)
+          // so real-time slider drags run in ~3ms (>60fps) without blocking the UI thread.
+          // Full 300 DPI high-res caching is executed during actual file export in exportEngine.
+          const naturalWidth = image.naturalWidth || image.width;
+          const logicalWidth = element.w_mm;
+          
+          const maxInteractiveWidth = 720;
+          const targetWidth = Math.min(maxInteractiveWidth, Math.max(300, naturalWidth));
+          const computedPixelRatio = logicalWidth > 0 ? (targetWidth / logicalWidth) : 1;
 
-        // Apply new Pro Adjustments
-        if (hasAdj) {
-          const adj = element.photoAdjustments!;
-          
-          const bypassLight = adj.bypassLight || false;
-          const bypassColor = adj.bypassColor || false;
-          const bypassEffects = adj.bypassEffects || false;
-
-          const exposure = !bypassLight ? (adj.exposure || 0) : 0;
-          const lightContrast = !bypassLight ? (adj.lightContrast || 0) : 0;
-          const highlights = !bypassLight ? (adj.highlights || 0) : 0;
-          const shadows = !bypassLight ? (adj.shadows || 0) : 0;
-          const whites = !bypassLight ? (adj.whites || 0) : 0;
-          const blacks = !bypassLight ? (adj.blacks || 0) : 0;
-
-          const temperature = !bypassColor ? (adj.temperature || 0) : 0;
-          const tint = !bypassColor ? (adj.tint || 0) : 0;
-          const vibrance = !bypassColor ? (adj.vibrance || 0) : 0;
-          const saturation = !bypassColor ? (adj.saturation || 0) : 0;
-
-          const texture = !bypassEffects ? (adj.texture || 0) : 0;
-          const clarity = !bypassEffects ? (adj.clarity || 0) : 0;
-          const dehaze = !bypassEffects ? (adj.dehaze || 0) : 0;
-          const grain = !bypassEffects ? (adj.grain || 0) : 0;
-          const blur = !bypassEffects ? (adj.blur || 0) : 0;
-          
-          if (exposure || highlights || shadows || whites || blacks) {
-             filtersArray.push(Konva.Filters.Brighten);
-             let totalBrightness = exposure / 200;
-             if (highlights) totalBrightness += (highlights / 100) * 0.15;
-             if (whites) totalBrightness += (whites / 100) * 0.08;
-             if (shadows) totalBrightness += (shadows / 100) * 0.15;
-             if (blacks) totalBrightness += (blacks / 100) * 0.08;
-             node.brightness(Math.max(-1, Math.min(1, totalBrightness)));
-          }
-          
-          if (lightContrast || clarity || dehaze || texture) {
-             filtersArray.push(Konva.Filters.Contrast);
-             let totalContrast = lightContrast * 0.6;
-             if (clarity) totalContrast += (clarity / 100) * 20;
-             if (dehaze) totalContrast += (dehaze / 100) * 15;
-             if (texture) totalContrast += (texture / 100) * 10;
-             node.contrast(Math.max(-100, Math.min(100, totalContrast))); 
-          }
-          
-          // Advanced Color: Vibrance and Saturation
-          if (saturation || vibrance) {
-             if (!filtersArray.includes(Konva.Filters.HSL)) filtersArray.push(Konva.Filters.HSL);
-             let totalSat = saturation;
-             if (vibrance) totalSat += (vibrance * 0.5); 
-             node.saturation(Math.max(-2, Math.min(2, totalSat / 100))); 
-             node.hue(0);
-          }
-          
-          // Advanced Color: Temperature and Tint (Thermal Curves via Custom Additive ColorShift)
-          if (temperature || tint) {
-             // CRITICAL FIX: Custom WebGL Filter used to securely add offsets to pixel color natively 
-             // avoiding RGBA solid overlaps and avoiding RGB luminance grayscale blackouts.
-             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-             if (!filtersArray.includes((Konva.Filters as any).ColorShift)) filtersArray.push((Konva.Filters as any).ColorShift);
-             
-             let r = 0, g = 0, b = 0;
-             const TEMP_STRENGTH = 15;
-             const TINT_STRENGTH = 10;
-             
-             if (temperature) {
-                 const tempNormalized = temperature / 100;
-                 r = r + tempNormalized * TEMP_STRENGTH;
-                 b = b - tempNormalized * TEMP_STRENGTH;
-             }
-             if (tint) {
-                 const tintNormalized = tint / 100;
-                 g = g + tintNormalized * TINT_STRENGTH;
-                 r = r + tintNormalized * (TINT_STRENGTH * 0.25);
-                 b = b + tintNormalized * (TINT_STRENGTH * 0.25);
-             }
-             
-             node.setAttr('redShift', r);
-             node.setAttr('greenShift', g);
-             node.setAttr('blueShift', b);
-          }
-          
-          if (grain) {
-             filtersArray.push(Konva.Filters.Noise);
-             node.noise(Math.max(0, (grain / 100) * 0.5)); 
-          }
-          
-          if (blur) {
-             filtersArray.push(Konva.Filters.Blur);
-             node.blurRadius(Math.max(0, blur / 5)); 
-          }
-        }
-        
-        node.filters(filtersArray);
-        
-        // HIGH PERFORMANCE INTERACTIVE CACHE RATIO
-        // During interactive editing, cap preview canvas size to crisp screen resolution (max 960px)
-        // so real-time slider drags run in ~5.8ms (>60fps) without blocking the UI thread.
-        // Full 300 DPI high-res caching is executed during actual file export in exportEngine.
-        const naturalWidth = image.naturalWidth || image.width;
-        const logicalWidth = element.w_mm;
-        
-        const maxInteractiveWidth = 960;
-        const targetWidth = Math.min(maxInteractiveWidth, Math.max(300, naturalWidth));
-        const computedPixelRatio = logicalWidth > 0 ? (targetWidth / logicalWidth) : 1;
-
-        node.cache({ pixelRatio: computedPixelRatio, imageSmoothingEnabled: true });
-        node.getLayer()?.batchDraw();
+          currentNode.cache({ pixelRatio: computedPixelRatio, imageSmoothingEnabled: true });
+          currentNode.getLayer()?.batchDraw();
+        });
       } else {
-        // RAW Passthrough - Clear entirely
+        if (filterRafRef.current) cancelAnimationFrame(filterRafRef.current);
         node.clearCache();
         node.filters([]);
         node.getLayer()?.batchDraw();
       }
     }
+
+    return () => {
+      if (filterRafRef.current) cancelAnimationFrame(filterRafRef.current);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [element.id, element.photoFilter, element.photoAdjustments, image, element.filterIntensity, previewOriginalPhotoId]);
 
@@ -888,24 +786,181 @@ const EditorImage = React.memo(function EditorImage({
           });
         }}
       >
-        <KonvaImage 
-          ref={filterLayerRef}
-          image={image} 
-          x={0} y={0}
-          width={element.w_mm} 
-          height={element.h_mm} 
-          crop={computedCrop}
-          cornerRadius={appliedBorderRadius}
-          stroke={appliedStrokeWidth > 0 ? appliedStrokeColor : undefined}
-          strokeWidth={appliedStrokeWidth}
-          shadowColor={finalShadowColor}
-          shadowBlur={appliedShadowBlur}
-          shadowOffsetX={appliedShadowOffsetX}
-          shadowOffsetY={appliedShadowOffsetY}
-          shadowOpacity={appliedShadowOpacity}
-          imageSmoothingEnabled={true}
-          imageSmoothingQuality="high"
-        />
+        {/* Base Unadjusted Original Photo (visible on the left or during toggle) */}
+        {beforeAfterMode === 'split' && isSelected && (
+          <KonvaImage 
+            image={image} 
+            x={0} y={0}
+            width={element.w_mm} 
+            height={element.h_mm} 
+            crop={computedCrop}
+            cornerRadius={appliedBorderRadius}
+            imageSmoothingEnabled={true}
+            imageSmoothingQuality="high"
+            listening={false}
+          />
+        )}
+
+        {/* Filtered / Adjusted Photo (clipped to right side in split mode, or full normally) */}
+        {beforeAfterMode === 'split' && isSelected ? (
+          <Group
+            clipX={element.w_mm * beforeAfterSplitPosition}
+            clipY={0}
+            clipWidth={element.w_mm * (1 - beforeAfterSplitPosition)}
+            clipHeight={element.h_mm}
+          >
+            <KonvaImage 
+              ref={filterLayerRef}
+              image={image} 
+              x={0} y={0}
+              width={element.w_mm} 
+              height={element.h_mm} 
+              crop={computedCrop}
+              cornerRadius={appliedBorderRadius}
+              stroke={appliedStrokeWidth > 0 ? appliedStrokeColor : undefined}
+              strokeWidth={appliedStrokeWidth}
+              shadowColor={finalShadowColor}
+              shadowBlur={appliedShadowBlur}
+              shadowOffsetX={appliedShadowOffsetX}
+              shadowOffsetY={appliedShadowOffsetY}
+              shadowOpacity={appliedShadowOpacity}
+              imageSmoothingEnabled={true}
+              imageSmoothingQuality="high"
+            />
+          </Group>
+        ) : (
+          <KonvaImage 
+            ref={filterLayerRef}
+            image={image} 
+            x={0} y={0}
+            width={element.w_mm} 
+            height={element.h_mm} 
+            crop={computedCrop}
+            cornerRadius={appliedBorderRadius}
+            stroke={appliedStrokeWidth > 0 ? appliedStrokeColor : undefined}
+            strokeWidth={appliedStrokeWidth}
+            shadowColor={finalShadowColor}
+            shadowBlur={appliedShadowBlur}
+            shadowOffsetX={appliedShadowOffsetX}
+            shadowOffsetY={appliedShadowOffsetY}
+            shadowOpacity={appliedShadowOpacity}
+            imageSmoothingEnabled={true}
+            imageSmoothingQuality="high"
+          />
+        )}
+
+        {/* Interactive Split Divider Line & Draggable Handle on Canvas */}
+        {beforeAfterMode === 'split' && isSelected && (
+          <Group listening={true}>
+            {/* Vertical Divider Line */}
+            <Line
+              points={[
+                element.w_mm * beforeAfterSplitPosition,
+                0,
+                element.w_mm * beforeAfterSplitPosition,
+                element.h_mm,
+              ]}
+              stroke="#ffffff"
+              strokeWidth={2}
+              shadowColor="#000000"
+              shadowBlur={4}
+              shadowOpacity={0.8}
+              listening={false}
+            />
+
+            {/* Draggable Center Knob */}
+            <Group
+              x={element.w_mm * beforeAfterSplitPosition}
+              y={element.h_mm / 2}
+              draggable
+              dragBoundFunc={(pos) => {
+                const groupNode = groupRef.current;
+                if (!groupNode) return pos;
+                const transform = groupNode.getAbsoluteTransform().copy().invert();
+                const local = transform.point(pos);
+                const clampedLocalX = Math.max(element.w_mm * 0.02, Math.min(element.w_mm * 0.98, local.x));
+                return groupNode.getAbsoluteTransform().point({ x: clampedLocalX, y: element.h_mm / 2 });
+              }}
+              onDragStart={(e) => {
+                e.cancelBubble = true;
+              }}
+              onDragMove={(e) => {
+                e.cancelBubble = true;
+                const groupNode = groupRef.current;
+                if (!groupNode) return;
+                const transform = groupNode.getAbsoluteTransform().copy().invert();
+                const local = transform.point(e.target.getAbsolutePosition());
+                const ratio = Math.max(0.02, Math.min(0.98, local.x / element.w_mm));
+                setBeforeAfterSplitPosition(ratio);
+              }}
+              onDragEnd={(e) => {
+                e.cancelBubble = true;
+              }}
+              onMouseEnter={(e) => {
+                const stage = e.target.getStage();
+                if (stage) stage.container().style.cursor = 'ew-resize';
+              }}
+              onMouseLeave={(e) => {
+                const stage = e.target.getStage();
+                if (stage) stage.container().style.cursor = 'default';
+              }}
+            >
+              <Circle
+                radius={11}
+                fill="#ffffff"
+                stroke="#111111"
+                strokeWidth={1.5}
+                shadowColor="#000000"
+                shadowBlur={6}
+                shadowOpacity={0.6}
+              />
+              <Line points={[-4, 0, -1, -3, -1, 3]} fill="#222222" closed />
+              <Line points={[4, 0, 1, -3, 1, 3]} fill="#222222" closed />
+            </Group>
+
+            {/* "ANTES" Badge (Left) */}
+            <Group x={6} y={6} listening={false}>
+              <Rect
+                width={38}
+                height={15}
+                fill="rgba(0,0,0,0.75)"
+                cornerRadius={3}
+                stroke="rgba(255,255,255,0.2)"
+                strokeWidth={0.8}
+              />
+              <Text
+                text="ANTES"
+                fontSize={8}
+                fontStyle="bold"
+                fill="#ffffff"
+                x={4}
+                y={3}
+                fontFamily="sans-serif"
+              />
+            </Group>
+
+            {/* "DESPUÉS" Badge (Right) */}
+            <Group x={Math.max(6, element.w_mm - 52)} y={6} listening={false}>
+              <Rect
+                width={46}
+                height={15}
+                fill="rgba(0,0,0,0.75)"
+                cornerRadius={3}
+                stroke="rgba(255,255,255,0.2)"
+                strokeWidth={0.8}
+              />
+              <Text
+                text="DESPUÉS"
+                fontSize={8}
+                fontStyle="bold"
+                fill="#ffcc00"
+                x={4}
+                y={3}
+                fontFamily="sans-serif"
+              />
+            </Group>
+          </Group>
+        )}
 
         {/* Real-Time Color Overlay (for decorations & tinted image layers) */}
         {element.color && element.color !== 'transparent' ? (
