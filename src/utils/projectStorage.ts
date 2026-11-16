@@ -96,6 +96,19 @@ export const projectStorage = {
         if (!p.fileExtension) {
           p.fileExtension = '.rvp';
         }
+        // Heal 7205 px rounding drift back to exact 7200 px
+        if (p.pixelResolution && p.pixelResolution.includes('7205')) {
+          p.pixelResolution = p.pixelResolution.replace('7205', '7200');
+        }
+        if (p.dimensionsMm) {
+          const inW = p.dimensionsMm.w_mm / 25.4;
+          const inH = p.dimensionsMm.h_mm / 25.4;
+          const snapInW = Math.abs(inW - Math.round(inW)) < 0.05 ? Math.round(inW) : Math.round(inW * 10) / 10;
+          const snapInH = Math.abs(inH - Math.round(inH)) < 0.05 ? Math.round(inH) : Math.round(inH * 10) / 10;
+          p.sizeStr = `${snapInW}×${snapInH} in`;
+          const dpi = p.targetDpi || 300;
+          p.pixelResolution = `${Math.round(snapInW * dpi)} × ${Math.round(snapInH * dpi)} px`;
+        }
         return p;
       });
     } catch (e) {
@@ -150,10 +163,15 @@ export const projectStorage = {
       const index = projectStorage.getAllProjects();
       const existingIdx = index.findIndex(p => p.id === project.id);
       const category = safeProject.projectCategory || (safeProject.type === 'type_studio_print' ? 'studio_print' : 'album');
-      const sizeStr = safeProject.size ? `${Math.round(safeProject.size.w_mm / 25.4)}×${Math.round(safeProject.size.h_mm / 25.4)} in` : undefined;
+      
+      const rawInW = safeProject.size ? safeProject.size.w_mm / 25.4 : 0;
+      const rawInH = safeProject.size ? safeProject.size.h_mm / 25.4 : 0;
+      const snapInW = Math.abs(rawInW - Math.round(rawInW)) < 0.05 ? Math.round(rawInW) : Math.round(rawInW * 10) / 10;
+      const snapInH = Math.abs(rawInH - Math.round(rawInH)) < 0.05 ? Math.round(rawInH) : Math.round(rawInH * 10) / 10;
+      const sizeStr = safeProject.size ? `${snapInW}×${snapInH} in` : undefined;
       const dpi = safeProject.targetDpi || 300;
-      const pxW = safeProject.size ? Math.round((safeProject.size.w_mm / 25.4) * dpi) : 0;
-      const pxH = safeProject.size ? Math.round((safeProject.size.h_mm / 25.4) * dpi) : 0;
+      const pxW = Math.round(snapInW * dpi);
+      const pxH = Math.round(snapInH * dpi);
       const pixelResolution = pxW && pxH ? `${pxW} × ${pxH} px` : undefined;
       const totalElements = safeProject.spreads.reduce((acc, s) => acc + (s.elements?.length || 0), 0);
       

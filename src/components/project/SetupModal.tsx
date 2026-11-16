@@ -3,6 +3,7 @@ import { useTranslations } from 'next-intl';
 import { projectStorage } from '@/utils/projectStorage';
 
 interface SetupModalProps {
+  initialFolder?: string;
   onCancel: () => void;
   onCreate: (
     name: string, 
@@ -48,7 +49,7 @@ interface CustomPresetStorage {
   hInches: number;
 }
 
-export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
+export default function SetupModal({ initialFolder, onCancel, onCreate }: SetupModalProps) {
   const t = useTranslations('Editor');
   const tStudio = useTranslations('Studio');
 
@@ -57,8 +58,8 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
 
   // --- FOLDERS STATE ---
   const [folders, setFolders] = useState<string[]>([]);
-  const [studioFolder, setStudioFolder] = useState<string>('');
-  const [albumFolder, setAlbumFolder] = useState<string>('');
+  const [studioFolder, setStudioFolder] = useState<string>(initialFolder || '');
+  const [albumFolder, setAlbumFolder] = useState<string>(initialFolder || '');
   const [isCreatingFolder, setIsCreatingFolder] = useState<boolean>(false);
   const [newFolderName, setNewFolderName] = useState<string>('');
 

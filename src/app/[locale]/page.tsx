@@ -26,6 +26,7 @@ export default function AppPage() {
   
   const [viewMode, setViewMode] = useState<'initializing' | 'picker' | 'editor'>('initializing');
   const [showSetup, setShowSetup] = useState(false);
+  const [defaultFolderForNew, setDefaultFolderForNew] = useState<string | undefined>(undefined);
   const [mounted, setMounted] = useState(false);
   const [init, setInit] = useState(false);
 
@@ -145,6 +146,20 @@ export default function AppPage() {
         if (typeof projectToLoad.safe_zone_mm === 'undefined') projectToLoad.safe_zone_mm = 5;
         if (!projectToLoad.title) projectToLoad.title = 'Untitled Album';
 
+        // GUARD: Heal legacy rounded integer millimeter bugs (e.g. 610mm -> 609.6mm for 24in)
+        if (projectToLoad.size) {
+          const inW = projectToLoad.size.w_mm / 25.4;
+          const inH = projectToLoad.size.h_mm / 25.4;
+          const nearestHalfInW = Math.round(inW * 2) / 2;
+          const nearestHalfInH = Math.round(inH * 2) / 2;
+          if (Math.abs(inW - nearestHalfInW) < 0.05) {
+            projectToLoad.size.w_mm = Number((nearestHalfInW * 25.4).toFixed(4));
+          }
+          if (Math.abs(inH - nearestHalfInH) < 0.05) {
+            projectToLoad.size.h_mm = Number((nearestHalfInH * 25.4).toFixed(4));
+          }
+        }
+
         // GUARD: Heal studio_print projects to strictly 1 spread and single canvas bounds
         if (projectToLoad.projectCategory === 'studio_print') {
           if (projectToLoad.spreads.length > 1) {
@@ -225,26 +240,26 @@ export default function AppPage() {
           const wInches = parseFloat(parts[0]);
           const hInches = parseFloat(parts[1]);
           if (projectCategory === 'studio_print') {
-            w_mm = Math.round(wInches * 25.4);
-            h_mm = Math.round(hInches * 25.4);
+            w_mm = Number((wInches * 25.4).toFixed(4));
+            h_mm = Number((hInches * 25.4).toFixed(4));
           } else {
             // A single page is wInches. The spread is wInches * 2.
-            w_mm = Math.round((wInches * 2) * 25.4);
-            h_mm = Math.round(hInches * 25.4);
+            w_mm = Number(((wInches * 2) * 25.4).toFixed(4));
+            h_mm = Number((hInches * 25.4).toFixed(4));
           }
         }
       } else if (sourceSize.includes('x')) {
-        // Handlers for "Flushmount 10x10", "8x10in", "16x20in", etc.
+        // Handlers for "Flushmount 10x10", "8x10in", "16x20in", "24x30in", etc.
         const match = sourceSize.match(/(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)/);
         if (match) {
           const wInches = parseFloat(match[1]);
           const hInches = parseFloat(match[2]);
           if (projectCategory === 'studio_print') {
-            w_mm = Math.round(wInches * 25.4);
-            h_mm = Math.round(hInches * 25.4);
+            w_mm = Number((wInches * 25.4).toFixed(4));
+            h_mm = Number((hInches * 25.4).toFixed(4));
           } else {
-            w_mm = Math.round((wInches * 2) * 25.4);
-            h_mm = Math.round(hInches * 25.4);
+            w_mm = Number(((wInches * 2) * 25.4).toFixed(4));
+            h_mm = Number((hInches * 25.4).toFixed(4));
           }
         }
       }
@@ -454,11 +469,18 @@ export default function AppPage() {
       <>
         <ProjectManager 
           onOpenProject={handleOpenProject} 
-          onNewProject={() => setShowSetup(true)} 
+          onNewProject={(folder) => {
+            setDefaultFolderForNew(folder);
+            setShowSetup(true);
+          }} 
         />
         {showSetup && (
           <SetupModal 
-            onCancel={() => setShowSetup(false)} 
+            initialFolder={defaultFolderForNew}
+            onCancel={() => {
+              setDefaultFolderForNew(undefined);
+              setShowSetup(false);
+            }} 
             onCreate={handleCreateProject} 
           />
         )}
