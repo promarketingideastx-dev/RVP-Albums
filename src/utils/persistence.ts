@@ -7,6 +7,7 @@ export interface ProjectMetadata {
   labPresetId: string;
   labPresetName: string;
   updatedAt: string;
+  folder?: string;
 }
 
 export async function listProjectsFromDB(): Promise<ProjectMetadata[]> {

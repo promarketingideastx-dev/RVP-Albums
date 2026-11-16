@@ -223,6 +223,7 @@ export interface EditorProject {
   projectCategory?: 'album' | 'studio_print';
   targetDpi?: number;
   orientation?: 'portrait' | 'landscape';
+  folder?: string;
   size: Size; // Total size (e.g. 500x250)
   bleed_mm: number;
   safe_zone_mm: number;

@@ -145,6 +145,17 @@ export default function AppPage() {
         if (typeof projectToLoad.safe_zone_mm === 'undefined') projectToLoad.safe_zone_mm = 5;
         if (!projectToLoad.title) projectToLoad.title = 'Untitled Album';
 
+        // GUARD: Heal studio_print projects to strictly 1 spread and single canvas bounds
+        if (projectToLoad.projectCategory === 'studio_print') {
+          if (projectToLoad.spreads.length > 1) {
+            projectToLoad.spreads = [projectToLoad.spreads[0]];
+            projectToLoad.totalSpreads = 1;
+          }
+          projectToLoad.bleed_mm = 0;
+          projectToLoad.safe_zone_mm = 2;
+          projectStorage.saveProject(projectToLoad);
+        }
+
         // GUARD: Healing missing elements arrays within active spreads
         projectToLoad.spreads = projectToLoad.spreads.map(s => ({
           ...s,
@@ -198,7 +209,8 @@ export default function AppPage() {
     sizeStr?: string,
     projectCategory: 'album' | 'studio_print' = 'album',
     dpi: number = 300,
-    orientation: 'portrait' | 'landscape' = 'portrait'
+    orientation: 'portrait' | 'landscape' = 'portrait',
+    folder?: string
   ) => {
     // Dynamic Geometry Extraction parsing the selected size string. e.g "Flushmount 10x10", "8x10in", or "Custom 12x12in"
     let w_mm = 508;
@@ -254,6 +266,7 @@ export default function AppPage() {
       projectCategory,
       targetDpi: dpi,
       orientation,
+      folder: folder || undefined,
       totalSpreads: projectCategory === 'studio_print' ? 1 : undefined,
       size: { w_mm, h_mm },
       bleed_mm: projectCategory === 'studio_print' ? 0 : 3,

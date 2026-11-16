@@ -109,9 +109,27 @@ export const useEditorStore = create<EditorState>()(
   setPreviewOriginalPhotoId: (id) => set({ previewOriginalPhotoId: id }),
   setWorkspaceZoom: (zoom) => set({ workspaceZoom: zoom }),
   setWorkspacePan: (pan) => set((state) => ({ workspacePan: typeof pan === 'function' ? pan(state.workspacePan) : pan })),
-  setEditorViewMode: (mode) => set({ editorViewMode: mode }),
+  setEditorViewMode: (mode) => set((state) => {
+    if (state.project?.projectCategory === 'studio_print') {
+      return { editorViewMode: 'SINGLE' };
+    }
+    return { editorViewMode: mode };
+  }),
 
-  loadProject: (project) => set({ project, activeSpreadId: project.spreads[0]?.id || null, editorViewMode: 'GRID' }),
+  loadProject: (project) => {
+    const isStudio = project.projectCategory === 'studio_print';
+    const healedSpreads = isStudio && project.spreads.length > 1 ? [project.spreads[0]] : project.spreads;
+    const activeSpreadId = healedSpreads[0]?.id || null;
+    set({
+      project: {
+        ...project,
+        spreads: healedSpreads,
+        totalSpreads: isStudio ? 1 : (project.totalSpreads || healedSpreads.length)
+      },
+      activeSpreadId,
+      editorViewMode: isStudio ? 'SINGLE' : 'GRID'
+    });
+  },
   unloadProject: () => set({ project: null, activeSpreadId: null, selectedElementId: null, previewOriginalPhotoId: null }),
   setActiveSpread: (id) => set({ activeSpreadId: id }),
   setSequenceMode: (mode) => set((state) => {
@@ -127,6 +145,7 @@ export const useEditorStore = create<EditorState>()(
 
   goToNextSpread: () => set((state) => {
      if (!state.project || !state.activeSpreadId) return state;
+     if (state.project.projectCategory === 'studio_print') return state; // Never create extra spreads in Studio Print mode
      const spreads = state.project.spreads;
      const idx = spreads.findIndex(s => s.id === state.activeSpreadId);
      if (idx === -1) return state;
@@ -164,6 +183,7 @@ export const useEditorStore = create<EditorState>()(
   
   goToPrevSpread: () => set((state) => {
      if (!state.project || !state.activeSpreadId) return state;
+     if (state.project.projectCategory === 'studio_print') return state; // Never navigate in Studio Print mode
      const spreads = state.project.spreads;
      const idx = spreads.findIndex(s => s.id === state.activeSpreadId);
      if (idx > 0) {

@@ -111,7 +111,7 @@ export default function EditorWorkspace() {
        <style dangerouslySetInnerHTML={{ __html: fontLinks }} />
        {!isReady ? (
          <div className="absolute inset-0 flex items-center justify-center text-xs text-neutral-400">Loading Canvas...</div>
-       ) : editorViewMode === 'GRID' ? (
+       ) : (editorViewMode === 'GRID' && project.projectCategory !== 'studio_print') ? (
          <div className="absolute inset-0 w-full h-full overflow-y-auto p-6 md:p-12 bg-neutral-100 dark:bg-neutral-900 story-scroll">
             <style dangerouslySetInnerHTML={{ __html: `
               .story-scroll::-webkit-scrollbar { width: 14px; }

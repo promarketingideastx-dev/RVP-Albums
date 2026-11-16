@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { projectStorage } from '@/utils/projectStorage';
 
 interface SetupModalProps {
   onCancel: () => void;
@@ -10,7 +11,8 @@ interface SetupModalProps {
     albumSize: string,
     projectCategory?: 'album' | 'studio_print',
     dpi?: number,
-    orientation?: 'portrait' | 'landscape'
+    orientation?: 'portrait' | 'landscape',
+    folder?: string
   ) => void;
 }
 
@@ -51,9 +53,17 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
   const tStudio = useTranslations('Studio');
 
   // Top-level creation mode: Album or Studio Print
-  const [creationMode, setCreationMode] = useState<'album' | 'studio'>('album');
+  const [creationMode, setCreationMode] = useState<'studio' | 'album'>('studio');
+
+  // --- FOLDERS STATE ---
+  const [folders, setFolders] = useState<string[]>([]);
+  const [studioFolder, setStudioFolder] = useState<string>('');
+  const [albumFolder, setAlbumFolder] = useState<string>('');
+  const [isCreatingFolder, setIsCreatingFolder] = useState<boolean>(false);
+  const [newFolderName, setNewFolderName] = useState<string>('');
 
   // --- STUDIO PRINT STATE ---
+  const [studioProjectName, setStudioProjectName] = useState<string>('');
   const [studioSelectedPresetId, setStudioSelectedPresetId] = useState<string>('8x10');
   const [studioOrientation, setStudioOrientation] = useState<'portrait' | 'landscape'>('portrait');
   const [studioDpi, setStudioDpi] = useState<72 | 150 | 300>(300);
@@ -62,9 +72,9 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
   const [studioCustomUnit, setStudioCustomUnit] = useState<'inches' | 'cm'>('inches');
   const [studioCustomName, setStudioCustomName] = useState<string>('');
   const [savedCustomPresets, setSavedCustomPresets] = useState<CustomPresetStorage[]>([]);
-  const [studioProjectName, setStudioProjectName] = useState<string>('');
 
   useEffect(() => {
+    setFolders(projectStorage.getFolders());
     try {
       const raw = localStorage.getItem('rvp_saved_studio_presets');
       if (raw) {
@@ -74,6 +84,20 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
       console.warn("Could not load custom presets", e);
     }
   }, []);
+
+  const handleCreateNewFolder = () => {
+    const trimmed = newFolderName.trim();
+    if (!trimmed) return;
+    const updated = projectStorage.addFolder(trimmed);
+    setFolders(updated);
+    if (creationMode === 'studio') {
+      setStudioFolder(trimmed);
+    } else {
+      setAlbumFolder(trimmed);
+    }
+    setNewFolderName('');
+    setIsCreatingFolder(false);
+  };
 
   const saveCustomPreset = () => {
     const wNum = parseFloat(studioCustomW);
@@ -131,8 +155,17 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
 
   const handleStudioSubmit = () => {
     const sizeStr = `${widthInches}x${heightInches}in`;
-    const finalName = studioProjectName.trim() || `${widthInches}x${heightInches} Print`;
-    onCreate(finalName, 'type_studio_print', 'studio-lab', sizeStr, 'studio_print', studioDpi, studioOrientation);
+    const finalName = studioProjectName.trim() || `Proyecto Estudio ${widthInches}x${heightInches}`;
+    onCreate(
+      finalName, 
+      'type_studio_print', 
+      'studio-lab', 
+      sizeStr, 
+      'studio_print', 
+      studioDpi, 
+      studioOrientation,
+      studioFolder || undefined
+    );
   };
 
   // --- ALBUM WIZARD STATE ---
@@ -144,7 +177,6 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
   const [searchSize, setSearchSize] = useState('');
   const [customWidth, setCustomWidth] = useState('');
   const [customHeight, setCustomHeight] = useState('');
-  const [coverType, setCoverType] = useState('none');
 
   const filteredSizes = ALBUM_SIZES.filter(s => s.toLowerCase().includes(searchSize.toLowerCase()));
 
@@ -167,7 +199,16 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
       }
       finalSize = `Custom ${w}x${h}in`;
     }
-    onCreate(name || 'Untitled Album', bookLine, printCompany, finalSize, 'album', 300, 'landscape');
+    onCreate(
+      name.trim() || 'Untitled Album', 
+      bookLine, 
+      printCompany, 
+      finalSize, 
+      'album', 
+      300, 
+      'landscape',
+      albumFolder || undefined
+    );
   };
 
   const StepItem = ({ num, label, isActive }: { num: number, label: string, isActive: boolean }) => (
@@ -183,28 +224,33 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="bg-neutral-100 dark:bg-neutral-900 w-full max-w-4xl h-[78vh] rounded-2xl border border-neutral-300 dark:border-neutral-800 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-neutral-100 dark:bg-neutral-900 w-full max-w-4xl h-[86vh] rounded-3xl border border-neutral-300 dark:border-neutral-800 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header with Mode Tabs */}
-        <div className="h-14 bg-neutral-900 border-b border-neutral-800 text-white flex items-center justify-between px-6 shrink-0">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-base tracking-tight text-white mr-4">RVP Albums</span>
+        <div className="h-16 bg-neutral-900 border-b border-neutral-800 text-white flex items-center justify-between px-6 shrink-0">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-orange-600 flex items-center justify-center font-black text-sm">R</span>
+              <span className="font-bold text-base tracking-tight text-white hidden sm:inline">RVP Suite</span>
+            </div>
             
             {/* Mode Switcher Tabs */}
-            <div className="flex bg-neutral-800 p-1 rounded-lg border border-neutral-700/60 text-xs">
-              <button
-                type="button"
-                onClick={() => setCreationMode('album')}
-                className={`px-4 py-1.5 rounded-md font-semibold transition-all ${creationMode === 'album' ? 'bg-blue-600 text-white shadow' : 'text-neutral-400 hover:text-white'}`}
-              >
-                📖 {tStudio('mode_album')}
-              </button>
+            <div className="flex bg-neutral-950 p-1 rounded-xl border border-neutral-800 text-xs">
               <button
                 type="button"
                 onClick={() => setCreationMode('studio')}
-                className={`px-4 py-1.5 rounded-md font-semibold transition-all ${creationMode === 'studio' ? 'bg-orange-600 text-white shadow' : 'text-neutral-400 hover:text-white'}`}
+                className={`px-4 py-2 rounded-lg font-bold transition-all flex items-center gap-2 ${creationMode === 'studio' ? 'bg-orange-600 text-white shadow-md' : 'text-neutral-400 hover:text-white'}`}
               >
-                🖼️ {tStudio('mode_studio')}
+                <span>🖼️</span>
+                <span>{tStudio('mode_studio')}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCreationMode('album')}
+                className={`px-4 py-2 rounded-lg font-bold transition-all flex items-center gap-2 ${creationMode === 'album' ? 'bg-blue-600 text-white shadow-md' : 'text-neutral-400 hover:text-white'}`}
+              >
+                <span>📖</span>
+                <span>{tStudio('mode_album')}</span>
               </button>
             </div>
           </div>
@@ -218,27 +264,111 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
         </div>
 
         {/* ============================================================== */}
-        {/* MODE A: STUDIO / SINGLE LAYERED CANVAS (PHOTOSHOP PRINT STUDIO) */}
+        {/* MODE A: STUDIO PRINT / SINGLE CANVAS (PRIMARY)                 */}
         {/* ============================================================== */}
         {creationMode === 'studio' ? (
-          <div className="flex-1 flex flex-col overflow-hidden bg-neutral-50 dark:bg-neutral-950">
-            <div className="flex-1 p-8 overflow-y-auto max-w-4xl w-full mx-auto">
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
               
-              {/* Header Info */}
-              <div className="mb-6">
-                <h2 className="text-2xl font-extrabold text-neutral-900 dark:text-white">
-                  {tStudio('studio_title')}
-                </h2>
-                <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-                  {tStudio('mode_studio_desc')}
-                </p>
+              {/* SECTION 1: PROJECT DETAILS (NAME & FOLDER) */}
+              <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 shadow-sm">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  
+                  {/* Project Name Field */}
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-2 flex items-center gap-2">
+                      <span>🏷️</span>
+                      <span>{t('form_name_label')}</span>
+                      <span className="text-red-500 font-bold">*</span>
+                    </label>
+                    <input 
+                      type="text"
+                      value={studioProjectName}
+                      onChange={(e) => setStudioProjectName(e.target.value)}
+                      placeholder="ej. Quinceañera Lauren - Ampliación Sala"
+                      className="w-full px-4 py-3 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 text-sm font-semibold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                      autoFocus
+                    />
+                    <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1.5">
+                      {t('project_name_desc')}
+                    </p>
+                  </div>
+
+                  {/* Folder / Collection Field */}
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-2 flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <span>📁</span>
+                        <span>{t('folder_collection')}</span>
+                      </span>
+                      {!isCreatingFolder && (
+                        <button 
+                          type="button" 
+                          onClick={() => setIsCreatingFolder(true)}
+                          className="text-[11px] text-orange-600 dark:text-orange-400 hover:underline font-bold"
+                        >
+                          {t('btn_new_folder')}
+                        </button>
+                      )}
+                    </label>
+
+                    {isCreatingFolder ? (
+                      <div className="flex gap-2">
+                        <input 
+                          type="text"
+                          value={newFolderName}
+                          onChange={(e) => setNewFolderName(e.target.value)}
+                          placeholder={t('folder_name_placeholder')}
+                          className="flex-1 px-3 py-2.5 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 text-xs font-semibold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleCreateNewFolder}
+                          className="px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-bold transition shadow"
+                        >
+                          {t('save_folder')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsCreatingFolder(false)}
+                          className="px-2.5 py-2.5 text-neutral-400 hover:text-neutral-200 text-xs"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <select
+                        value={studioFolder}
+                        onChange={(e) => setStudioFolder(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 text-sm font-semibold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
+                      >
+                        <option value="">{t('folder_general')}</option>
+                        {folders.map(f => (
+                          <option key={f} value={f}>📁 {f}</option>
+                        ))}
+                      </select>
+                    )}
+                    <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1.5">
+                      {t('folder_desc')}
+                    </p>
+                  </div>
+
+                </div>
               </div>
 
-              {/* Standard Sizes Grid */}
-              <div className="mb-6">
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3 block">
-                  {tStudio('step_print_size')}
+              {/* SECTION 2: PRINT SIZE SELECTION */}
+              <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 shadow-sm">
+                <label className="text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-4 block flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <span>📐</span>
+                    <span>{tStudio('step_print_size')}</span>
+                  </span>
+                  <span className="text-[11px] font-normal text-neutral-500">
+                    Selecciona una medida estándar o define un tamaño personalizado
+                  </span>
                 </label>
+
+                {/* Grid of sizes */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {STUDIO_STANDARD_SIZES.map(preset => {
                     const isSel = studioSelectedPresetId === preset.id;
@@ -246,14 +376,14 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
                       <div
                         key={preset.id}
                         onClick={() => setStudioSelectedPresetId(preset.id)}
-                        className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${isSel ? 'border-orange-500 bg-orange-50/40 dark:bg-orange-950/20 shadow-md scale-[1.02]' : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700'}`}
+                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between ${isSel ? 'border-orange-500 bg-orange-50/40 dark:bg-orange-950/20 shadow-md scale-[1.02]' : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700'}`}
                       >
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-bold text-base text-neutral-900 dark:text-white">{tStudio(preset.keyLabel)}</span>
                           {isSel && <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>}
                         </div>
                         <span className="text-[11px] text-neutral-400 dark:text-neutral-500">{preset.cmLabel}</span>
-                        <span className="text-[10px] text-neutral-500 dark:text-neutral-400 mt-2 font-medium">{tStudio(preset.keyDesc)}</span>
+                        <span className="text-[10px] text-neutral-500 dark:text-neutral-400 mt-3 font-medium">{tStudio(preset.keyDesc)}</span>
                       </div>
                     );
                   })}
@@ -265,14 +395,14 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
                       <div
                         key={cp.id}
                         onClick={() => setStudioSelectedPresetId(cp.id)}
-                        className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${isSel ? 'border-orange-500 bg-orange-50/40 dark:bg-orange-950/20 shadow-md scale-[1.02]' : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700'}`}
+                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between ${isSel ? 'border-orange-500 bg-orange-50/40 dark:bg-orange-950/20 shadow-md scale-[1.02]' : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700'}`}
                       >
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-bold text-base text-neutral-900 dark:text-white truncate">{cp.name}</span>
                           {isSel && <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>}
                         </div>
                         <span className="text-[11px] text-neutral-400 dark:text-neutral-500">{cp.wInches} x {cp.hInches} in</span>
-                        <span className="text-[10px] text-orange-600 dark:text-orange-400 mt-2 font-medium">{tStudio('preset_saved_tag')}</span>
+                        <span className="text-[10px] text-orange-600 dark:text-orange-400 mt-3 font-medium">{tStudio('preset_saved_tag')}</span>
                       </div>
                     );
                   })}
@@ -280,27 +410,27 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
                   {/* Custom Option Card */}
                   <div
                     onClick={() => setStudioSelectedPresetId('custom')}
-                    className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${studioSelectedPresetId === 'custom' ? 'border-orange-500 bg-orange-50/40 dark:bg-orange-950/20 shadow-md scale-[1.02]' : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700'}`}
+                    className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between ${studioSelectedPresetId === 'custom' ? 'border-orange-500 bg-orange-50/40 dark:bg-orange-950/20 shadow-md scale-[1.02]' : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700'}`}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-bold text-base text-neutral-900 dark:text-white">{tStudio('preset_custom')}</span>
                       {studioSelectedPresetId === 'custom' && <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>}
                     </div>
                     <span className="text-[11px] text-neutral-400 dark:text-neutral-500">W × H</span>
-                    <span className="text-[10px] text-neutral-500 dark:text-neutral-400 mt-2 font-medium">{tStudio('preset_custom_desc')}</span>
+                    <span className="text-[10px] text-neutral-500 dark:text-neutral-400 mt-3 font-medium">{tStudio('preset_custom_desc')}</span>
                   </div>
                 </div>
 
                 {/* Custom Dimensions Drawer */}
                 {studioSelectedPresetId === 'custom' && (
-                  <div className="mt-4 p-5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl flex flex-wrap items-center gap-4 animate-in fade-in duration-200">
+                  <div className="mt-5 p-5 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl flex flex-wrap items-center gap-4 animate-in fade-in duration-200">
                     <div>
                       <label className="text-[10px] font-bold uppercase text-neutral-500 mb-1 block">{tStudio('custom_width')}</label>
                       <input 
                         type="number" step="0.1" min="1" max="100"
                         value={studioCustomW}
                         onChange={(e) => setStudioCustomW(e.target.value)}
-                        className="w-24 px-3 py-1.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 text-sm font-bold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500"
+                        className="w-24 px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-sm font-bold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500"
                       />
                     </div>
                     <span className="text-neutral-400 font-bold mt-4">×</span>
@@ -310,7 +440,7 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
                         type="number" step="0.1" min="1" max="100"
                         value={studioCustomH}
                         onChange={(e) => setStudioCustomH(e.target.value)}
-                        className="w-24 px-3 py-1.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 text-sm font-bold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500"
+                        className="w-24 px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-sm font-bold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500"
                       />
                     </div>
                     <div>
@@ -318,7 +448,7 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
                       <select 
                         value={studioCustomUnit}
                         onChange={(e) => setStudioCustomUnit(e.target.value as 'inches' | 'cm')}
-                        className="px-3 py-1.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 text-sm font-bold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500"
+                        className="px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-sm font-bold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
                       >
                         <option value="inches">{tStudio('inches')}</option>
                         <option value="cm">{tStudio('cm')}</option>
@@ -333,12 +463,12 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
                           placeholder={tStudio('preset_placeholder')}
                           value={studioCustomName}
                           onChange={(e) => setStudioCustomName(e.target.value)}
-                          className="flex-1 px-3 py-1.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 text-sm text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500"
+                          className="flex-1 px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-sm text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500"
                         />
                         <button
                           type="button"
                           onClick={saveCustomPreset}
-                          className="px-3 py-1.5 rounded-lg bg-neutral-800 text-white hover:bg-neutral-700 text-xs font-semibold whitespace-nowrap transition"
+                          className="px-4 py-2 rounded-xl bg-neutral-900 dark:bg-neutral-800 text-white hover:bg-neutral-800 dark:hover:bg-neutral-700 text-xs font-semibold whitespace-nowrap transition"
                         >
                           + {tStudio('btn_save_preset')}
                         </button>
@@ -348,19 +478,19 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
                 )}
               </div>
 
-              {/* Orientation & Resolution Group */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              {/* SECTION 3: ORIENTATION & RESOLUTION GROUP */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
                 {/* Orientation Selector */}
-                <div className="bg-white dark:bg-neutral-900 p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800">
-                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3 block">
+                <div className="bg-white dark:bg-neutral-950 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-4 block">
                     {tStudio('orientation')}
                   </label>
                   <div className="flex gap-3">
                     <button
                       type="button"
                       onClick={() => setStudioOrientation('portrait')}
-                      className={`flex-1 p-3 rounded-xl border-2 flex items-center justify-center gap-3 transition-all ${studioOrientation === 'portrait' ? 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400 font-bold' : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400'}`}
+                      className={`flex-1 p-3.5 rounded-xl border-2 flex items-center justify-center gap-3 transition-all ${studioOrientation === 'portrait' ? 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400 font-bold shadow-sm' : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300'}`}
                     >
                       <div className="w-5 h-7 border-2 border-current rounded-sm"></div>
                       <span className="text-sm">{tStudio('orientation_portrait')}</span>
@@ -368,7 +498,7 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
                     <button
                       type="button"
                       onClick={() => setStudioOrientation('landscape')}
-                      className={`flex-1 p-3 rounded-xl border-2 flex items-center justify-center gap-3 transition-all ${studioOrientation === 'landscape' ? 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400 font-bold' : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400'}`}
+                      className={`flex-1 p-3.5 rounded-xl border-2 flex items-center justify-center gap-3 transition-all ${studioOrientation === 'landscape' ? 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400 font-bold shadow-sm' : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300'}`}
                     >
                       <div className="w-7 h-5 border-2 border-current rounded-sm"></div>
                       <span className="text-sm">{tStudio('orientation_landscape')}</span>
@@ -377,8 +507,8 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
                 </div>
 
                 {/* Resolution DPI Selector */}
-                <div className="bg-white dark:bg-neutral-900 p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800">
-                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3 block">
+                <div className="bg-white dark:bg-neutral-950 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-3 block">
                     {tStudio('resolution')}
                   </label>
                   <div className="flex flex-col gap-2">
@@ -389,7 +519,7 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
                     ].map(resItem => (
                       <label 
                         key={resItem.dpi}
-                        className={`flex items-center justify-between p-2.5 rounded-lg border cursor-pointer text-xs transition-colors ${studioDpi === resItem.dpi ? 'border-orange-500 bg-orange-50/40 dark:bg-orange-950/20 font-bold text-neutral-900 dark:text-white' : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400'}`}
+                        className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer text-xs transition-colors ${studioDpi === resItem.dpi ? 'border-orange-500 bg-orange-50/40 dark:bg-orange-950/20 font-bold text-neutral-900 dark:text-white' : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300'}`}
                       >
                         <span>{tStudio(resItem.labelKey)}</span>
                         <input 
@@ -405,31 +535,24 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
                 </div>
               </div>
 
-              {/* Output Resolution Summary & Project Name */}
-              <div className="bg-orange-50/60 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800/60 rounded-2xl p-5 mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
+              {/* SECTION 4: OUTPUT RESOLUTION & LIVE SUMMARY */}
+              <div className="bg-orange-50/70 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800/60 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
-                  <span className="text-xs uppercase font-bold text-orange-900 dark:text-orange-300 block mb-0.5">
+                  <span className="text-xs uppercase font-bold text-orange-900 dark:text-orange-300 block mb-1">
                     {tStudio('pixels_calculated')}
                   </span>
-                  <div className="text-2xl font-black font-mono text-orange-600 dark:text-orange-400">
-                    {calcPxW} × {calcPxH} px <span className="text-xs font-medium text-neutral-500">(@{studioDpi} DPI)</span>
+                  <div className="text-2xl md:text-3xl font-black font-mono text-orange-600 dark:text-orange-400">
+                    {calcPxW} × {calcPxH} px <span className="text-sm font-semibold text-neutral-500 dark:text-neutral-400">(@{studioDpi} DPI)</span>
                   </div>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
                     {tStudio('single_sheet_notice')}
                   </p>
                 </div>
 
-                <div className="w-full md:w-72">
-                  <label className="text-[11px] font-bold uppercase text-neutral-600 dark:text-neutral-300 mb-1 block">
-                    {t('form_name_label')}
-                  </label>
-                  <input 
-                    type="text"
-                    value={studioProjectName}
-                    onChange={(e) => setStudioProjectName(e.target.value)}
-                    placeholder={`${widthInches}x${heightInches} Estudio`}
-                    className="w-full px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-sm font-semibold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500"
-                  />
+                <div className="text-xs text-neutral-600 dark:text-neutral-300 bg-white/80 dark:bg-neutral-900/80 border border-orange-200 dark:border-orange-900/50 p-3.5 rounded-xl space-y-1 shrink-0">
+                  <div><strong>Proyecto:</strong> {studioProjectName.trim() || 'Proyecto Sin Título'}</div>
+                  <div><strong>Carpeta:</strong> {studioFolder ? `📁 ${studioFolder}` : '📁 General'}</div>
+                  <div><strong>Medida:</strong> {widthInches} × {heightInches} in ({studioOrientation === 'portrait' ? 'Vertical' : 'Horizontal'})</div>
                 </div>
               </div>
 
@@ -453,7 +576,7 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
           </div>
         ) : (
           /* ============================================================== */
-          /* MODE B: ALBUM WIZARD (EXISTING 5-STEP FLUSHMOUNT ALBUM ENGINE) */
+          /* MODE B: ALBUM WIZARD (5-STEP FLUSHMOUNT ALBUM ENGINE)          */
           /* ============================================================== */
           <div className="flex-1 flex overflow-hidden">
             {/* Left Sidebar Steps */}
@@ -461,8 +584,8 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
               <StepItem num={1} label="Print Company" isActive={step === 1} />
               <StepItem num={2} label="Book Line" isActive={step === 2} />
               <StepItem num={3} label="Album Size" isActive={step === 3} />
-              <StepItem num={4} label="Custom Cover" isActive={step === 4} />
-              <StepItem num={5} label="Review" isActive={step === 5} />
+              <StepItem num={4} label="Folder / Category" isActive={step === 4} />
+              <StepItem num={5} label="Review & Create" isActive={step === 5} />
             </div>
 
             {/* Right Main Content */}
@@ -515,59 +638,71 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
                           type="text" 
                           placeholder="Search" 
                           value={searchSize}
-                          onChange={(e) => {
-                              const val = e.target.value;
-                              setSearchSize(val);
-                              const updatedFiltered = ALBUM_SIZES.filter(s => s.toLowerCase().includes(val.toLowerCase()));
-                              if (updatedFiltered.length > 0 && !updatedFiltered.includes(albumSize)) {
-                                  setAlbumSize(updatedFiltered[0]);
-                              }
-                          }}
-                          className="w-full pl-3 pr-10 py-2 bg-white rounded-lg border border-neutral-300 focus:outline-none" 
+                          onChange={(e) => setSearchSize(e.target.value)}
+                          className="w-full pl-3 pr-8 py-2 border rounded-md text-sm bg-white dark:bg-neutral-800 text-black dark:text-white border-neutral-300"
                         />
-                        <span className="absolute right-3 top-2.5 text-neutral-400 font-bold text-xl">⚲</span>
                       </div>
                     </div>
-                    <div className="flex-1 bg-neutral-200 dark:bg-neutral-800 rounded-xl p-2 overflow-y-auto min-h-[280px]">
+
+                    <div className="flex-1 overflow-y-auto border rounded-md p-2 bg-white dark:bg-neutral-800 divide-y divide-neutral-100 dark:divide-neutral-700">
                       {filteredSizes.map(size => (
                         <div 
                           key={size}
                           onClick={() => setAlbumSize(size)}
-                          className={`p-3 text-neutral-800 dark:text-neutral-200 cursor-pointer rounded-lg text-base tracking-wide ${albumSize === size ? 'bg-blue-600 text-white font-medium' : 'hover:bg-neutral-300 dark:hover:bg-neutral-700'}`}
+                          className={`p-3 text-sm cursor-pointer rounded flex items-center justify-between ${albumSize === size ? 'bg-blue-50 dark:bg-neutral-700 font-bold text-blue-600 dark:text-blue-400' : 'hover:bg-neutral-50 dark:hover:bg-neutral-700/50 text-neutral-700 dark:text-neutral-300'}`}
                         >
-                          {size}
+                          <span>{size}</span>
+                          {albumSize === size && <span>✓</span>}
                         </div>
                       ))}
-                      {albumSize === 'Custom Size' && (
-                        <div className="p-4 bg-white dark:bg-neutral-900 mt-2 rounded-xl border border-neutral-300 dark:border-neutral-700">
-                          <div className="text-sm font-medium mb-3">Custom Dimensions (Inches)</div>
-                          <div className="flex items-center gap-3">
-                            <input 
-                              type="number" min="1" step="0.1"
-                              value={customWidth} onChange={e => setCustomWidth(e.target.value)}
-                              placeholder="Width" className="p-2 border rounded w-24 bg-white dark:bg-neutral-800" 
-                            />
-                            <span className="text-neutral-500">×</span>
-                            <input 
-                              type="number" min="1" step="0.1"
-                              value={customHeight} onChange={e => setCustomHeight(e.target.value)}
-                              placeholder="Height" className="p-2 border rounded w-24 bg-white dark:bg-neutral-800" 
-                            />
-                          </div>
-                        </div>
-                      )}
                     </div>
+
+                    {albumSize === 'Custom Size' && (
+                      <div className="mt-4 p-4 border rounded-md bg-neutral-50 dark:bg-neutral-800/40">
+                        <div className="text-xs font-semibold mb-2 text-neutral-500 uppercase tracking-wider">Custom Album Size (Inches)</div>
+                        <div className="flex items-center gap-3">
+                          <input 
+                            type="number" step="0.5" min="1" max="50"
+                            placeholder="Width"
+                            value={customWidth}
+                            onChange={(e) => setCustomWidth(e.target.value)}
+                            className="w-24 p-2 border rounded bg-white dark:bg-neutral-900 border-neutral-300 text-sm"
+                          />
+                          <span>×</span>
+                          <input 
+                            type="number" step="0.5" min="1" max="50"
+                            placeholder="Height"
+                            value={customHeight}
+                            onChange={(e) => setCustomHeight(e.target.value)}
+                            className="w-24 p-2 border rounded bg-white dark:bg-neutral-900 border-neutral-300 text-sm"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {step === 4 && (
-                  <div className="flex flex-col gap-4 max-w-2xl text-black dark:text-white">
-                    <div className="flex items-start gap-4" onClick={() => setCoverType('none')}>
-                       <input type="radio" checked={coverType === 'none'} readOnly className="mt-6 w-5 h-5 cursor-pointer accent-blue-600" />
-                       <div className={`flex-1 p-4 border bg-neutral-50 dark:bg-neutral-800 cursor-pointer rounded-xl ${coverType === 'none' ? 'border-blue-500 shadow-sm' : 'border-neutral-300'}`}>
-                          <div className="text-lg font-medium">No Cover</div>
-                          <div className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">Design without a custom cover page.</div>
-                       </div>
+                  <div className="flex flex-col gap-6 text-black dark:text-white max-w-xl">
+                    <h3 className="text-xl font-bold">Organización en Carpeta</h3>
+                    <p className="text-sm text-neutral-500">
+                      Selecciona una carpeta o crea una nueva para agrupar este álbum.
+                    </p>
+
+                    <div>
+                      <label className="text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2 block">
+                        {t('folder_collection')}
+                      </label>
+                      <select
+                        value={albumFolder}
+                        onChange={(e) => setAlbumFolder(e.target.value)}
+                        className="w-full p-3 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-sm font-semibold cursor-pointer"
+                      >
+                        <option value="">{t('folder_general')}</option>
+                        {folders.map(f => (
+                          <option key={f} value={f}>📁 {f}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 )}
@@ -601,6 +736,10 @@ export default function SetupModal({ onCancel, onCreate }: SetupModalProps) {
                       <div>
                         <div className="text-xs text-neutral-400 uppercase tracking-widest font-semibold">Size</div>
                         <div className="font-medium text-lg mt-1">{albumSize === 'Custom Size' ? `${customWidth || '?'}x${customHeight || '?'}in` : albumSize}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-neutral-400 uppercase tracking-widest font-semibold">Folder</div>
+                        <div className="font-medium text-lg mt-1">{albumFolder ? `📁 ${albumFolder}` : 'General'}</div>
                       </div>
                     </div>
                   </div>
