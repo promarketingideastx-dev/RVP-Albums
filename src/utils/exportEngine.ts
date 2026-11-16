@@ -2,6 +2,12 @@ import { EditorProject, Spread, EditorElement } from '@/types/editor';
 import { jsPDF } from 'jspdf';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import {
+  ExportColorSpace,
+  ActiveRGBColorSpace,
+  convertSRGBBufferToAdobeRGB1998,
+  injectPrintMetadataIntoDataURL,
+} from '@/utils/colorManagement';
 
 /**
  * Professional JPEG Quality Scale (1-12) inspired by Adobe Photoshop.
@@ -59,6 +65,7 @@ export interface ProfessionalExportOptions {
   selectedElementId?: string;
   dpi: number;
   jpegQualityLevel: number; // 1 - 12
+  colorSpace?: ExportColorSpace; // 'srgb' (default) | 'adobe_rgb_1998'
   fileNameBase: string;
   sequentialDigits?: 2 | 3;
   saveDestination: 'browser_download' | 'directory_picker';
@@ -73,7 +80,9 @@ export interface ProfessionalExportOptions {
 interface ExportMeta {
   size: { w_mm: number; h_mm: number };
   pixelMultiplier?: number;
+  dpi?: number;
   quality?: number;
+  colorSpace?: ActiveRGBColorSpace;
 }
 
 export async function exportSpreadToJPG(project: EditorProject, spread: Spread, meta: ExportMeta): Promise<string> {
@@ -101,22 +110,23 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
   
   const container = document.createElement('div');
   
-  // Mathematical resolution boundary for iOS safety
+  // Physical dimensions in mm
   const physicalW = meta.size.w_mm;
   const physicalH = meta.size.h_mm;
   
-  // Base arbitrary logical scaler (default 10x translates approx. 300 dpi on standard prints)
-  const multiplier = meta.pixelMultiplier || 12; // 12x means ~514 * 12 = 6168px
-  let pxW = physicalW * multiplier;
-  let pxH = physicalH * multiplier;
+  // Exact physical-to-pixel resolution scaler (300 DPI = 300 / 25.4 px/mm)
+  const targetDpi = meta.dpi || (meta.pixelMultiplier ? Math.round(meta.pixelMultiplier * 25.4) : 300);
+  const multiplier = meta.dpi ? (meta.dpi / 25.4) : (meta.pixelMultiplier || (300 / 25.4));
+  let pxW = Math.round(physicalW * multiplier);
+  let pxH = Math.round(physicalH * multiplier);
   
   // Desktop canvas limits are generally 16384x16384 (268 megapixels).
-  // Raising maxArea to 100,000,000 (100MP) to allow 10MB-15MB exports at 1.0 quality without capping for professional desktop use.
-  const maxArea = 100000000;
+  // Raising maxArea to 150,000,000 (150MP) so 24x30 in (7200x9000 = 64.8MP) and 30x40 in (9000x12000 = 108MP) export at 100% native pixels.
+  const maxArea = 150000000;
   if ((pxW * pxH) > maxArea) {
      const areaScale = Math.sqrt(maxArea / (pxW * pxH));
-     pxW *= areaScale;
-     pxH *= areaScale;
+     pxW = Math.round(pxW * areaScale);
+     pxH = Math.round(pxH * areaScale);
   }
 
   const mmToPx = pxW / physicalW; // unified dynamic scalar
@@ -511,8 +521,31 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
   try {
     stage.add(layer);
     layer.draw();
-    const dataURL = stage.toDataURL({ mimeType: 'image/jpeg', quality: meta.quality || 0.95 });
-    return dataURL;
+
+    const targetColorSpace: ActiveRGBColorSpace = meta.colorSpace === 'adobe_rgb_1998' ? 'adobe_rgb_1998' : 'srgb';
+    let rawDataURL: string;
+
+    if (targetColorSpace === 'adobe_rgb_1998') {
+      const exportCanvas = stage.toCanvas({ pixelRatio: 1 });
+      const ctx = exportCanvas.getContext('2d');
+      if (ctx) {
+        const imgData = ctx.getImageData(0, 0, exportCanvas.width, exportCanvas.height);
+        convertSRGBBufferToAdobeRGB1998(imgData.data);
+        ctx.putImageData(imgData, 0, 0);
+      }
+      rawDataURL = exportCanvas.toDataURL('image/jpeg', meta.quality || 0.95);
+    } else {
+      rawDataURL = stage.toDataURL({ mimeType: 'image/jpeg', quality: meta.quality || 0.95 });
+    }
+
+    const finalDataURL = injectPrintMetadataIntoDataURL(rawDataURL, {
+      widthPx: pxW,
+      heightPx: pxH,
+      dpi: targetDpi,
+      colorSpace: targetColorSpace,
+    });
+
+    return finalDataURL;
   } finally {
     // Native Garbage Collection Cleanup
     stage.destroy();
@@ -551,12 +584,16 @@ export async function exportStudioPrintToJPG(project: EditorProject, options: Pr
   if (onProgress) onProgress(0, 1, 'Iniciando renderizado de estudio...');
 
   const quality = JPEG_QUALITY_SCALE_MAP[options.jpegQualityLevel] ?? 1.0;
-  const pixelMultiplier = options.dpi / 25.4;
+  const targetDpi = options.dpi || 300;
+  const pixelMultiplier = targetDpi / 25.4;
+  const targetColorSpace: ActiveRGBColorSpace = options.colorSpace === 'adobe_rgb_1998' ? 'adobe_rgb_1998' : 'srgb';
 
   const base64Jpg = await exportSpreadToJPG(project, spread, {
     size: project.size,
     pixelMultiplier,
+    dpi: targetDpi,
     quality,
+    colorSpace: targetColorSpace,
   });
 
   const blob = base64ToBlob(base64Jpg, 'image/jpeg');
@@ -770,7 +807,28 @@ export async function exportRawPhotoToJPG(project: EditorProject, options: Profe
   layer.draw();
 
   const quality = JPEG_QUALITY_SCALE_MAP[options.jpegQualityLevel] ?? 1.0;
-  const dataURL = stage.toDataURL({ mimeType: 'image/jpeg', quality });
+  const targetColorSpace: ActiveRGBColorSpace = options.colorSpace === 'adobe_rgb_1998' ? 'adobe_rgb_1998' : 'srgb';
+  let rawDataURL: string;
+
+  if (targetColorSpace === 'adobe_rgb_1998') {
+    const exportCanvas = stage.toCanvas({ pixelRatio: 1 });
+    const ctx = exportCanvas.getContext('2d');
+    if (ctx) {
+      const imgData = ctx.getImageData(0, 0, exportCanvas.width, exportCanvas.height);
+      convertSRGBBufferToAdobeRGB1998(imgData.data);
+      ctx.putImageData(imgData, 0, 0);
+    }
+    rawDataURL = exportCanvas.toDataURL('image/jpeg', quality);
+  } else {
+    rawDataURL = stage.toDataURL({ mimeType: 'image/jpeg', quality });
+  }
+
+  const dataURL = injectPrintMetadataIntoDataURL(rawDataURL, {
+    widthPx: nativeW,
+    heightPx: nativeH,
+    dpi: options.dpi || 300,
+    colorSpace: targetColorSpace,
+  });
 
   stage.destroy();
   if (url.startsWith('blob:')) URL.revokeObjectURL(url);
@@ -830,6 +888,12 @@ export async function exportToPDF(project: EditorProject, options?: PDFExportOpt
   const total = project.spreads.length;
   const isProf = options && 'fileNameBase' in options;
   const safeTitle = sanitizeFileName(isProf ? options.fileNameBase : (project.title || 'Album'));
+
+  doc.setProperties({
+    title: safeTitle,
+    creator: 'RVP Photo Studio & Albums V3',
+    subject: `Print Layout ${Math.round(pdfW / 25.4)}x${Math.round(pdfH / 25.4)} in`,
+  });
   
   let startIdx = 0;
   let endIdx = total - 1;
@@ -850,7 +914,8 @@ export async function exportToPDF(project: EditorProject, options?: PDFExportOpt
   }
 
   const processCount = endIdx - startIdx + 1;
-  const targetDpi = isProf ? (options as ProfessionalExportOptions).dpi : 300;
+  const targetDpi = isProf ? ((options as ProfessionalExportOptions).dpi || 300) : 300;
+  const targetColorSpace: ActiveRGBColorSpace = (isProf && (options as ProfessionalExportOptions).colorSpace === 'adobe_rgb_1998') ? 'adobe_rgb_1998' : 'srgb';
   const pixelMultiplier = targetDpi / 25.4;
 
   let pagesAdded = 0;
@@ -871,7 +936,9 @@ export async function exportToPDF(project: EditorProject, options?: PDFExportOpt
     const base64Jpg = await exportSpreadToJPG(project, spread, {
       size: project.size,
       pixelMultiplier,
+      dpi: targetDpi,
       quality: 1.0,
+      colorSpace: targetColorSpace,
     });
     
     if (pagesAdded > 0) doc.addPage([pdfW, pdfH], orientation);
@@ -937,9 +1004,11 @@ export async function exportToJPG(project: EditorProject, options: AdvancedExpor
 
   let startIdx = 0;
   let endIdx = total - 1;
-  let pixelMultiplier = 12;
+  let targetDpi = 300;
+  let pixelMultiplier = 300 / 25.4;
   let jpQuality = 1.0;
   let sequentialDigits = 3;
+  let targetColorSpace: ActiveRGBColorSpace = 'srgb';
 
   if (isProf) {
     const profOpts = options as ProfessionalExportOptions;
@@ -950,21 +1019,25 @@ export async function exportToJPG(project: EditorProject, options: AdvancedExpor
       startIdx = Math.max(0, profOpts.rangeStart ?? 0);
       endIdx = Math.min(total - 1, profOpts.rangeEnd ?? (total - 1));
     }
-    pixelMultiplier = (profOpts.dpi || 300) / 25.4;
+    targetDpi = profOpts.dpi || 300;
+    pixelMultiplier = targetDpi / 25.4;
     jpQuality = JPEG_QUALITY_SCALE_MAP[profOpts.jpegQualityLevel] ?? 1.0;
     sequentialDigits = profOpts.sequentialDigits || 3;
+    targetColorSpace = profOpts.colorSpace === 'adobe_rgb_1998' ? 'adobe_rgb_1998' : 'srgb';
   } else {
     const advOpts = options as AdvancedExportOptions;
     startIdx = Math.max(0, advOpts.rangeStart ?? 0);
     endIdx = Math.min(total - 1, advOpts.rangeEnd ?? (total - 1));
     if (advOpts.type === 'web') {
-      pixelMultiplier = 4;
+      targetDpi = 72;
+      pixelMultiplier = 72 / 25.4;
       if (advOpts.webQuality === 'low') { jpQuality = 0.6; pixelMultiplier = 2; }
       else if (advOpts.webQuality === 'medium') { jpQuality = 0.75; pixelMultiplier = 3; }
-      else { jpQuality = 0.9; pixelMultiplier = 4; }
+      else { jpQuality = 0.9; pixelMultiplier = 72 / 25.4; }
     } else {
       const hasMassiveSpreads = (endIdx - startIdx + 1) > 30;
-      pixelMultiplier = hasMassiveSpreads ? 6 : 12;
+      targetDpi = hasMassiveSpreads ? 150 : 300;
+      pixelMultiplier = targetDpi / 25.4;
     }
   }
 
@@ -978,7 +1051,9 @@ export async function exportToJPG(project: EditorProject, options: AdvancedExpor
       const base64Jpg = await exportSpreadToJPG(project, spread, {
         size: project.size,
         pixelMultiplier,
+        dpi: targetDpi,
         quality: jpQuality,
+        colorSpace: targetColorSpace,
       });
       const blob = base64ToBlob(base64Jpg, 'image/jpeg');
       const idxStr = String(startIdx + 1).padStart(sequentialDigits, '0');
@@ -1059,7 +1134,9 @@ export async function exportToJPG(project: EditorProject, options: AdvancedExpor
     const base64Jpg = await exportSpreadToJPG(project, spread, {
       size: project.size,
       pixelMultiplier,
+      dpi: targetDpi,
       quality: jpQuality,
+      colorSpace: targetColorSpace,
     });
 
     const base64Data = base64Jpg.replace(/^data:image\/jpeg;base64,/, "");

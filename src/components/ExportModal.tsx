@@ -71,6 +71,7 @@ export default function ExportModal({
   const [customRangeString, setCustomRangeString] = useState('');
   const [dpi, setDpi] = useState<number>(300);
   const [jpegQuality, setJpegQuality] = useState<number>(12); // Default level 12 (Maximum)
+  const [colorSpace, setColorSpace] = useState<'srgb' | 'adobe_rgb_1998'>('srgb');
   const [fileNameBase, setFileNameBase] = useState('');
   const [sequentialDigits, setSequentialDigits] = useState<2 | 3>(3);
   const pathname = usePathname();
@@ -270,6 +271,7 @@ export default function ExportModal({
       selectedElementId: selectedElementId || undefined,
       dpi,
       jpegQualityLevel: jpegQuality,
+      colorSpace,
       fileNameBase: safeBase,
       sequentialDigits,
       saveDestination,
@@ -717,12 +719,133 @@ export default function ExportModal({
             </div>
           </div>
 
-          {/* SECTION 6: COLOR PROFILE NOTICE */}
-          <div className="p-3 bg-neutral-100/60 dark:bg-neutral-800/40 rounded-xl border border-neutral-200/60 dark:border-neutral-800/60 text-xs text-neutral-600 dark:text-neutral-400 flex items-start gap-2">
-            <span className="text-sm">🎨</span>
-            <div>
-              <div className="font-semibold text-neutral-800 dark:text-neutral-200">{t('color_profile_info')}</div>
-              <div className="text-[11px] opacity-80 mt-0.5">{t('color_profile_notice')}</div>
+          {/* SECTION 6: GESTIÓN DE COLOR / COLOR MANAGEMENT V3 */}
+          <div className="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-800/30 space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-neutral-700 dark:text-neutral-200 uppercase tracking-wider flex items-center gap-1.5">
+                <span>🎨</span>
+                <span>{t('color_management_title')}</span>
+              </label>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/60">
+                ICC v2.1 + EXIF 2.32 + JFIF 1.01
+              </span>
+            </div>
+
+            {/* Color Space Options */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+              {/* 1. sRGB IEC61966-2.1 */}
+              <button
+                type="button"
+                onClick={() => setColorSpace('srgb')}
+                className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
+                  colorSpace === 'srgb'
+                    ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200 ring-1 ring-blue-500 shadow-sm'
+                    : 'border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="text-xs font-bold">{t('color_option_srgb_title')}</span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                  </div>
+                  <div className="inline-block text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 mb-1.5">
+                    {t('color_option_srgb_badge')}
+                  </div>
+                  <p className="text-[10px] leading-relaxed opacity-85">
+                    {t('color_option_srgb_desc')}
+                  </p>
+                </div>
+              </button>
+
+              {/* 2. Adobe RGB (1998) */}
+              <button
+                type="button"
+                onClick={() => setColorSpace('adobe_rgb_1998')}
+                className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
+                  colorSpace === 'adobe_rgb_1998'
+                    ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200 ring-1 ring-blue-500 shadow-sm'
+                    : 'border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="text-xs font-bold">{t('color_option_adobe_title')}</span>
+                    <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
+                  </div>
+                  <div className="inline-block text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-indigo-100/80 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 mb-1.5">
+                    {t('color_option_adobe_badge')}
+                  </div>
+                  <p className="text-[10px] leading-relaxed opacity-85">
+                    {t('color_option_adobe_desc')}
+                  </p>
+                </div>
+              </button>
+
+              {/* 3. CMYK (Disabled pending external LittleCMS2 + Press ICC Profile) */}
+              <div
+                aria-disabled="true"
+                className="p-3 rounded-xl border border-dashed border-neutral-300 dark:border-neutral-800 bg-neutral-100/70 dark:bg-neutral-900/50 text-neutral-400 dark:text-neutral-500 flex flex-col justify-between cursor-not-allowed select-none opacity-75"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="text-xs font-bold">{t('color_option_cmyk_title')}</span>
+                    <span className="text-[10px]">🔒</span>
+                  </div>
+                  <div className="inline-block text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 mb-1.5">
+                    {t('color_option_cmyk_badge')}
+                  </div>
+                  <p className="text-[10px] leading-relaxed">
+                    {t('color_option_cmyk_desc')}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Print & Color Metadata Specification Summary */}
+            <div className="p-3 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
+              <div className="flex justify-between items-center border-b border-neutral-100 dark:border-neutral-800/70 pb-1">
+                <span className="text-neutral-500 dark:text-neutral-400">{t('cm_spec_output_profile')}:</span>
+                <span className="font-mono font-bold text-neutral-900 dark:text-neutral-100">
+                  {colorSpace === 'srgb' ? 'sRGB IEC61966-2.1' : 'Adobe RGB (1998)'}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center border-b border-neutral-100 dark:border-neutral-800/70 pb-1">
+                <span className="text-neutral-500 dark:text-neutral-400">{t('cm_spec_resolution')}:</span>
+                <span className="font-mono font-bold text-neutral-900 dark:text-neutral-100">
+                  {dpi} × {dpi} PPI
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center border-b border-neutral-100 dark:border-neutral-800/70 pb-1">
+                <span className="text-neutral-500 dark:text-neutral-400">{t('cm_spec_physical_dims')}:</span>
+                <span className="font-mono font-bold text-neutral-900 dark:text-neutral-100">
+                  {calculatedDimensions.w_in} × {calculatedDimensions.h_in} in ({Math.round(((project?.size?.w_mm || 508) / 10) * 10) / 10} × {Math.round(((project?.size?.h_mm || 254) / 10) * 10) / 10} cm)
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center border-b border-neutral-100 dark:border-neutral-800/70 pb-1">
+                <span className="text-neutral-500 dark:text-neutral-400">{t('cm_spec_pixel_dims')}:</span>
+                <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
+                  {calculatedDimensions.pxW} × {calculatedDimensions.pxH} px ({calculatedDimensions.megapixels} MP)
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center sm:col-span-2 border-b border-neutral-100 dark:border-neutral-800/70 pb-1">
+                <span className="text-neutral-500 dark:text-neutral-400">{t('cm_spec_format_headers')}:</span>
+                <span className="font-mono font-semibold text-neutral-800 dark:text-neutral-200">
+                  {format === 'pdf'
+                    ? `PDF Multipágina + JPEG (${colorSpace === 'srgb' ? 'sRGB' : 'Adobe RGB 1998'})`
+                    : `JPEG 8-bit RGB · JFIF (${dpi} DPI) · EXIF 2.32 · ICC_PROFILE`}
+                </span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center sm:col-span-2 pt-0.5 gap-1">
+                <span className="text-neutral-500 dark:text-neutral-400 shrink-0">{t('cm_spec_print_compat')}:</span>
+                <span className="font-medium text-emerald-700 dark:text-emerald-400 text-right">
+                  {colorSpace === 'srgb' ? t('cm_compat_srgb') : t('cm_compat_adobe')}
+                </span>
+              </div>
             </div>
           </div>
 

@@ -41,6 +41,7 @@ const STUDIO_STANDARD_SIZES: StudioStandardPreset[] = [
   { id: '11x14', wInches: 11, hInches: 14, keyLabel: 'preset_11x14', keyDesc: 'preset_11x14_desc', cmLabel: '28 x 35 cm' },
   { id: '16x20', wInches: 16, hInches: 20, keyLabel: 'preset_16x20', keyDesc: 'preset_16x20_desc', cmLabel: '40 x 50 cm' },
   { id: '20x24', wInches: 20, hInches: 24, keyLabel: 'preset_20x24', keyDesc: 'preset_20x24_desc', cmLabel: '50 x 60 cm' },
+  { id: '24x30', wInches: 24, hInches: 30, keyLabel: 'preset_24x30', keyDesc: 'preset_24x30_desc', cmLabel: '60 x 76 cm' },
 ];
 
 interface CustomPresetStorage {
