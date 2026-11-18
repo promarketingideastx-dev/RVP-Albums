@@ -633,10 +633,14 @@ const EditorImage = React.memo(function EditorImage({
   // The background photo remains firm and fixed on canvas - what rotates/adjusts is the crop guide!
   const currentRotation = element.rotation_deg || 0;
   const photoRotation = isRawSession ? (isCropActiveForThis ? rotationDraft : currentRotation) : 0;
-  // Fill the fixed RAW canvas after quarter-turns; never stretch the photo.
-  const rawQuarterTurn = Math.abs(Math.round(photoRotation / 90)) % 2 === 1;
-  const rawRotationCover = isRawSession && rawQuarterTurn
-    ? Math.max(element.w_mm / element.h_mm, element.h_mm / element.w_mm)
+  // Cover the fixed RAW viewport at every angle, including fractional
+  // straighten adjustments. Uniform scale avoids stretching and white corners.
+  const rawRadians = (photoRotation * Math.PI) / 180;
+  const rawCos = Math.abs(Math.cos(rawRadians));
+  const rawSin = Math.abs(Math.sin(rawRadians));
+  const rawAspect = element.w_mm / Math.max(0.001, element.h_mm);
+  const rawRotationCover = isRawSession
+    ? Math.max(rawCos + rawSin * rawAspect, rawCos + rawSin / rawAspect)
     : 1;
   const currentFlipH = isCropActiveForThis ? flipHDraft : !!element.flipHorizontal;
   const currentFlipV = isCropActiveForThis ? flipVDraft : !!element.flipVertical;
