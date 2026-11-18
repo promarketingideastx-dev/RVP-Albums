@@ -387,6 +387,7 @@ const EditorImage = React.memo(function EditorImage({
   const transformStartRotRef = useRef<number>(0);
   const lastSwapTimeRef = useRef<number>(0);
   const lastSwappedIdRef = useRef<string | null>(null);
+  const rotationDraft = useEditorStore((state) => state.rotationDraft);
   const updateElement = useEditorStore((state) => state.updateElement);
   const previewOriginalPhotoId = useEditorStore((state) => state.previewOriginalPhotoId);
   const beforeAfterMode = useEditorStore((state) => state.beforeAfterMode);
