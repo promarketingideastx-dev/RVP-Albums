@@ -75,49 +75,38 @@ export const AssetThumbnail: React.FC<AssetThumbnailProps> = ({
     );
   }
 
-  // Cropped photo rendering:
-  // Accurately map crop viewport onto thumbnail container
-  const wPct = Math.max(1, crop?.widthPercent || 100);
-  const hPct = Math.max(1, crop?.heightPercent || 100);
-  const xPct = Math.max(0, crop?.xPercent || 0);
-  const yPct = Math.max(0, crop?.yPercent || 0);
-
-  const naturalAspect = asset.aspectRatio || (asset.width && asset.height ? asset.width / asset.height : 1.5);
-  const cropRatio = naturalAspect * (wPct / hPct);
-  const absRot = Math.abs(Math.round(rot)) % 360;
-  const effectiveAspect = (absRot === 90 || absRot === 270) ? (1 / cropRatio) : cropRatio;
+  // Render cropped thumbnails in source-pixel coordinates. SVG's meet scaling
+  // preserves the image aspect ratio even inside a differently shaped tray cell.
+  const wPct = Math.max(1, Math.min(100, crop?.widthPercent ?? 100));
+  const hPct = Math.max(1, Math.min(100, crop?.heightPercent ?? 100));
+  const xPct = Math.max(0, Math.min(100 - wPct, crop?.xPercent ?? 0));
+  const yPct = Math.max(0, Math.min(100 - hPct, crop?.yPercent ?? 0));
+  const sourceW = asset.width && asset.width > 0 ? asset.width : 1500;
+  const sourceH = asset.height && asset.height > 0 ? asset.height : sourceW / (asset.aspectRatio || 1.5);
+  const cropX = sourceW * xPct / 100;
+  const cropY = sourceH * yPct / 100;
+  const cropW = sourceW * wPct / 100;
+  const cropH = sourceH * hPct / 100;
+  const cx = cropX + cropW / 2;
+  const cy = cropY + cropH / 2;
+  const normalizedRot = ((rot % 360) + 360) % 360;
+  const quarterTurn = normalizedRot === 90 || normalizedRot === 270;
+  const viewW = quarterTurn ? cropH : cropW;
+  const viewH = quarterTurn ? cropW : cropH;
 
   return (
     <div className={`relative w-full h-full flex items-center justify-center overflow-hidden ${className}`}>
-      <div
-        className="relative overflow-hidden flex items-center justify-center"
-        style={{
-          aspectRatio: `${effectiveAspect}`,
-          maxWidth: '100%',
-          maxHeight: '100%',
-          width: effectiveAspect >= 1 ? '100%' : 'auto',
-          height: effectiveAspect < 1 ? '100%' : 'auto',
-        }}
+      <svg
+        className={`w-full h-full pointer-events-none ${imgClassName}`}
+        viewBox={`${cx - viewW / 2} ${cy - viewH / 2} ${viewW} ${viewH}`}
+        preserveAspectRatio="xMidYMid meet"
+        role="img"
+        aria-label={alt || asset.name}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={src}
-          alt={alt || asset.name}
-          loading={priority ? undefined : 'lazy'}
-          className={`pointer-events-none transition-transform duration-200 ${imgClassName}`}
-          style={{
-            position: 'absolute',
-            width: `${(10000 / wPct).toFixed(3)}%`,
-            height: `${(10000 / hPct).toFixed(3)}%`,
-            left: `${(-(xPct / wPct) * 100).toFixed(3)}%`,
-            top: `${(-(yPct / hPct) * 100).toFixed(3)}%`,
-            maxWidth: 'none',
-            maxHeight: 'none',
-            filter: cssFilter,
-            transform,
-          }}
-        />
-      </div>
+        <g transform={`translate(${cx} ${cy}) rotate(${rot}) scale(${flipH ? -1 : 1} ${flipV ? -1 : 1}) translate(${-cx} ${-cy})`}>
+          <image href={src} x="0" y="0" width={sourceW} height={sourceH} preserveAspectRatio="none" style={{ filter: cssFilter }} />
+        </g>
+      </svg>
     </div>
   );
 };
