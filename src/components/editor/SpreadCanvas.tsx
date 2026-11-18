@@ -630,6 +630,15 @@ const EditorImage = React.memo(function EditorImage({
   const cornerRadiusEnabled = !element.isolateFromGlobalStyles && (globalStyles?.borderRadiusEnabled ?? false);
   const appliedBorderRadius = element.borderRadius ?? (cornerRadiusEnabled ? (globalStyles?.borderRadius ?? 0) : 0);
 
+  // RAW straighten must invalidate the Konva filter cache while dragging.
+  // Otherwise cached pixels can stay frozen until the crop is committed.
+  useEffect(() => {
+    if (!isRawSession || !isCropActiveForThis) return;
+    const node = filterLayerRef.current;
+    if (node?.isCached()) node.clearCache();
+    node?.getLayer()?.batchDraw();
+  }, [rotationDraft, isRawSession, isCropActiveForThis]);
+
   // The background photo remains firm and fixed on canvas - what rotates/adjusts is the crop guide!
   const currentRotation = element.rotation_deg || 0;
   const photoRotation = isRawSession ? (isCropActiveForThis ? rotationDraft : currentRotation) : 0;
