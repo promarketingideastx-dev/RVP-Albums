@@ -108,19 +108,19 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
       }
     };
   }
-  
+
   const container = document.createElement('div');
-  
+
   // Physical dimensions in mm
   const physicalW = meta.size.w_mm;
   const physicalH = meta.size.h_mm;
-  
+
   // Exact physical-to-pixel resolution scaler (300 DPI = 300 / 25.4 px/mm)
   const targetDpi = meta.dpi || (meta.pixelMultiplier ? Math.round(meta.pixelMultiplier * 25.4) : 300);
   const multiplier = meta.dpi ? (meta.dpi / 25.4) : (meta.pixelMultiplier || (300 / 25.4));
   let pxW = Math.round(physicalW * multiplier);
   let pxH = Math.round(physicalH * multiplier);
-  
+
   // Desktop canvas limits are generally 16384x16384 (268 megapixels).
   // Raising maxArea to 150,000,000 (150MP) so 24x30 in (7200x9000 = 64.8MP) and 30x40 in (9000x12000 = 108MP) export at 100% native pixels.
   const maxArea = 150000000;
@@ -139,11 +139,11 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
   });
 
   const layer = new Konva.Layer();
-  
+
   const bgConfig = spread.bg_config || { type: 'none' };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let bgProps: any = { fill: spread.bg_color || '#ffffff' };
-  
+
   if (bgConfig.type === 'solid' && bgConfig.color1) {
     bgProps = { fill: bgConfig.color1 };
   } else if (bgConfig.type === 'linear' && bgConfig.color1 && bgConfig.color2) {
@@ -227,7 +227,7 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
         }
     } else if (el.type === 'image' || el.type === 'decoration') {
         let url = '';
-        
+
         // Deep local IndexedDB payload resolving
         if (el.originalBlobId) {
           const blob = await idbGet<Blob>(el.originalBlobId);
@@ -236,17 +236,17 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
             objectUrlsToRevoke.push(url);
           }
         }
-        
+
         // Native DB & SVGs fallback
-        if (!url && el.previewUrl) url = el.previewUrl; 
-        if (!url && el.src) url = el.src; 
+        if (!url && el.previewUrl) url = el.previewUrl;
+        if (!url && el.src) url = el.src;
 
         if (!url) continue;
 
         try {
           const imgObj = await loadHtmlImage(url);
           const globalStyles = project.globalImageStyles;
-          
+
           const appliedShadowColor = el.shadowColor || (!el.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowColor || '#000000') : 'transparent');
           const appliedShadowBlur = el.shadowBlur ?? (!el.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowBlur ?? 0) : 0);
           const appliedShadowOffsetX = el.shadowOffsetX ?? (!el.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetX ?? 0) : 0);
@@ -259,19 +259,29 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
           const strokeEnabled = !el.isolateFromGlobalStyles && (globalStyles?.strokeEnabled ?? false);
           const appliedStrokeWidth = el.strokeWidth ?? (strokeEnabled ? (globalStyles?.strokeWidth ?? 0) : 0);
           const appliedStrokeColor = el.strokeColor ?? (strokeEnabled ? (globalStyles?.strokeColor ?? '#ffffff') : undefined);
-          
+
           const cornerRadiusEnabled = !el.isolateFromGlobalStyles && (globalStyles?.borderRadiusEnabled ?? false);
           const appliedBorderRadius = el.borderRadius ?? (cornerRadiusEnabled ? (globalStyles?.borderRadius ?? 0) : 0);
 
+          let exportCrop = undefined;
+          if (el.cropData) {
+            exportCrop = {
+              x: (el.cropData.xPercent / 100) * imgObj.width,
+              y: (el.cropData.yPercent / 100) * imgObj.height,
+              width: Math.max(1, (el.cropData.widthPercent / 100) * imgObj.width),
+              height: Math.max(1, (el.cropData.heightPercent / 100) * imgObj.height),
+            };
+          }
+
           const kGroup = new Konva.Group({
-            x: el.x_mm * mmToPx,
-            y: el.y_mm * mmToPx,
+            x: (el.x_mm + (el.flipHorizontal ? el.w_mm : 0)) * mmToPx,
+            y: (el.y_mm + (el.flipVertical ? el.h_mm : 0)) * mmToPx,
             width: el.w_mm * mmToPx,
             height: el.h_mm * mmToPx,
-            rotation: el.rotation_deg,
+            rotation: el.rotation_deg || 0,
             opacity: el.opacity !== undefined ? el.opacity : 1,
-            scaleX: el.scale || 1,
-            scaleY: el.scale || 1,
+            scaleX: (el.scale || 1) * (el.flipHorizontal ? -1 : 1),
+            scaleY: (el.scale || 1) * (el.flipVertical ? -1 : 1),
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             globalCompositeOperation: (el.blendMode as any) || 'source-over',
             shadowColor: finalShadowColor,
@@ -288,6 +298,7 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
             y: 0,
             width: el.w_mm * mmToPx,
             height: el.h_mm * mmToPx,
+            crop: exportCrop,
             cornerRadius: appliedBorderRadius * mmToPx,
             stroke: appliedStrokeWidth > 0 ? appliedStrokeColor : undefined,
             strokeWidth: appliedStrokeWidth * mmToPx,
@@ -319,14 +330,14 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
               intensity
             );
             kImg.filters(finalFilters);
-            
+
             // EXPORT PIPELINE GUARANTEE: Full Native Resolution Cache Locking with VRAM Limits
             const isMassiveAsset = imgObj.naturalWidth > 6000 || imgObj.naturalHeight > 6000;
             const exportRatio = Math.max(1, imgObj.naturalWidth / (el.w_mm * mmToPx));
-            
+
             // If asset is brutally scaled but massive memory, clamp the multiplier safely
             const safeExportRatio = isMassiveAsset ? Math.min(exportRatio, 2.5) : exportRatio;
-            
+
             if (process.env.NODE_ENV === 'development') {
               console.log(`[Export Processor] Filter Cache Applied to ${el.id} | Natural Width: ${imgObj.naturalWidth} | Target Ratio: ${exportRatio} -> Safe Applied: ${safeExportRatio}`);
             }
@@ -338,7 +349,7 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
               console.log(`[Export Processor] Raw Passthrough for ${el.id} | Zero slider values detected, cache bypassed.`);
             }
           }
-          
+
           // Real-Time Color Overlay preservation at 300 DPI export
           if (el.color && el.color !== 'transparent') {
               const colorOverlayRect = new Konva.Rect({
@@ -371,7 +382,7 @@ export async function exportSpreadToJPG(project: EditorProject, spread: Spread, 
                   fillRadialGradientEndRadius: Math.max(vigW, vigH) * 0.75,
                   fillRadialGradientColorStops: [
                      0, 'rgba(0,0,0,0)',
-                     1, el.photoAdjustments.vignette < 0 
+                     1, el.photoAdjustments.vignette < 0
                          ? `rgba(0,0,0,${Math.min(1, Math.abs(el.photoAdjustments.vignette) / 100)})`
                          : `rgba(255,255,255,${Math.min(1, el.photoAdjustments.vignette / 100)})`
                   ]
@@ -690,14 +701,14 @@ export async function exportToPDF(project: EditorProject, options?: PDFExportOpt
   const onProgress = options?.onProgress;
   const pdfW = project.size.w_mm;
   const pdfH = project.size.h_mm;
-  
+
   const orientation = pdfW > pdfH ? 'l' : 'p';
   const doc = new jsPDF({
     orientation: orientation,
     unit: 'mm',
-    format: [pdfW, pdfH] 
+    format: [pdfW, pdfH]
   });
-  
+
   const total = project.spreads.length;
   const isProf = options && 'fileNameBase' in options;
   const safeTitle = sanitizeFileName(isProf ? options.fileNameBase : (project.title || 'Album'));
@@ -707,7 +718,7 @@ export async function exportToPDF(project: EditorProject, options?: PDFExportOpt
     creator: 'RVP Photo Studio & Albums V3',
     subject: `Print Layout ${Math.round(pdfW / 25.4)}x${Math.round(pdfH / 25.4)} in`,
   });
-  
+
   let startIdx = 0;
   let endIdx = total - 1;
 
@@ -734,7 +745,7 @@ export async function exportToPDF(project: EditorProject, options?: PDFExportOpt
   let pagesAdded = 0;
   for (let i = startIdx; i <= endIdx; i++) {
     const spread = project.spreads[i];
-    
+
     // Skip completely empty pages
     const hasValidContent = spread.elements.some(el => {
        if (el.type === 'text' || el.type === 'shape') return true;
@@ -742,7 +753,7 @@ export async function exportToPDF(project: EditorProject, options?: PDFExportOpt
        return false;
     });
     if (!hasValidContent) continue;
-    
+
     // Memory relaxation gap between spreads
     await new Promise(r => setTimeout(r, 25));
 
@@ -753,14 +764,14 @@ export async function exportToPDF(project: EditorProject, options?: PDFExportOpt
       quality: 1.0,
       colorSpace: targetColorSpace,
     });
-    
+
     if (pagesAdded > 0) doc.addPage([pdfW, pdfH], orientation);
     doc.addImage(base64Jpg, 'JPEG', 0, 0, pdfW, pdfH, undefined, 'FAST');
-    
+
     pagesAdded++;
     if (onProgress) onProgress(pagesAdded, processCount);
   }
-  
+
   const filename = `${safeTitle}.pdf`;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let fileHandle = isProf ? (options as ProfessionalExportOptions).targetFileHandle : null;

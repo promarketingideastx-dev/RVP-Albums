@@ -12,6 +12,7 @@ import { auth } from '@/lib/firebase/config';
 import { signOut } from 'firebase/auth';
 import { storage } from '@/storage';
 import { v4 as uuidv4 } from 'uuid';
+import { ChevronDown } from 'lucide-react';
 import ExportModal from './ExportModal';
 
 export default function Toolbar() {
@@ -20,7 +21,7 @@ export default function Toolbar() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const pathname = usePathname();
-  
+
   const selectedElementId = useEditorStore((state) => state.selectedElementId);
   const activeSpreadId = useEditorStore((state) => state.activeSpreadId);
   const bringForward = useEditorStore((state) => state.bringForward);
@@ -34,23 +35,29 @@ export default function Toolbar() {
   const goToPrevSpread = useEditorStore((state) => state.goToPrevSpread);
   const editorViewMode = useEditorStore((state) => state.editorViewMode);
   const setEditorViewMode = useEditorStore((state) => state.setEditorViewMode);
-  
+  const workspaceView = useEditorStore((state) => state.workspaceView);
+  const setWorkspaceView = useEditorStore((state) => state.setWorkspaceView);
+  const showPivotGuides = useEditorStore((state) => state.showPivotGuides);
+  const toggleShowPivotGuides = useEditorStore((state) => state.toggleShowPivotGuides);
+  const clearCanvasSession = useEditorStore((state) => state.clearCanvasSession);
+  const setProjectSize = useEditorStore((state) => state.setProjectSize);
+
   // Zundo Undo/Redo Temporal State Engine
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { undo, redo, pastStates, futureStates } = useStore(useEditorStore.temporal as any) as any;
-  
+
   const [isExporting, setIsExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   // Dynamic HUD Logic
   const totalPages = project?.spreads.reduce((acc, spread) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pagesInSpread = (spread as any).pageCount || 2; 
+    const pagesInSpread = (spread as any).pageCount || 2;
     return acc + pagesInSpread;
   }, 0) || 0;
 
   const totalAssets = project?.assets?.length || 0;
-  
+
   // Calculate unique assets used across the entire project
   const usedAssetIds = new Set<string>();
   project?.spreads.forEach(spread => {
@@ -58,7 +65,7 @@ export default function Toolbar() {
       if (el.assetId) usedAssetIds.add(el.assetId);
     });
   });
-  
+
   const uniquePhotosUsed = usedAssetIds.size;
   const uniquePhotosUnused = Math.max(0, totalAssets - uniquePhotosUsed);
 
@@ -70,6 +77,7 @@ export default function Toolbar() {
   const isLastSpread = currentIdx >= 0 && currentIdx >= maxSpreads - 1;
 
   const isStudio = project?.projectCategory === 'studio_print';
+  const isRawSession = project?.type === 'type_raw_session' || (project as { workflowMode?: string })?.workflowMode === 'raw';
   const isEs = pathname.startsWith('/es');
 
   // Remove legacy complex Pro Export States
@@ -81,10 +89,14 @@ export default function Toolbar() {
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) setIsMenuOpen(false);
+      if (studioSizeRef.current && !studioSizeRef.current.contains(e.target as Node)) setShowStudioSizeMenu(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const [showStudioSizeMenu, setShowStudioSizeMenu] = useState(false);
+  const studioSizeRef = useRef<HTMLDivElement>(null);
 
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
@@ -202,7 +214,7 @@ export default function Toolbar() {
 
       <header className="h-14 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 px-4 flex items-center justify-between relative z-40">
         <div className="flex items-center gap-3">
-          <button 
+          <button
              onClick={async () => {
                await flushSave();
                unloadProject();
@@ -227,8 +239,67 @@ export default function Toolbar() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
               </svg>
            </button>
-           <div className="flex items-center gap-1 border-l border-neutral-200 dark:border-neutral-800 pl-3 ml-2">
-              <button 
+            {isRawSession ? (
+              workspaceView === 'canvas' ? (
+                <div className="flex items-center gap-2 ml-3">
+                  <button
+                    onClick={() => {
+                      clearCanvasSession();
+                    }}
+                    className="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-md flex items-center gap-1.5 transition active:scale-95"
+                    title={isEs ? 'Finalizar edición de este lote, limpiar lienzo y volver a la Biblioteca' : 'Finish editing batch, clear canvas and return to Library'}
+                  >
+                    <span className="text-sm leading-none">✓</span>
+                    <span>{isEs ? 'Finalizar y Volver' : 'Finish & Return'}</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsExportModalOpen(true);
+                    }}
+                    className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-sm flex items-center gap-1.5 transition"
+                    title={isEs ? 'Exportar las fotos editadas a JPG' : 'Export edited batch to JPG'}
+                  >
+                    <span>⚡</span>
+                    <span>{isEs ? 'Exportar a JPG' : 'Export to JPG'}</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-700 dark:text-amber-400 rounded-lg text-xs font-semibold ml-3 border border-amber-500/20">
+                  <span>📁</span>
+                  <span>{isEs ? 'Selecciona fotos y Clic Derecho → "Enviar a Lienzo"' : 'Select photos & Right Click → "Send to Canvas"'}</span>
+                </div>
+              )
+            ) : (
+              <div className="flex items-center bg-neutral-100 dark:bg-neutral-900 p-0.5 rounded-lg border border-neutral-200 dark:border-neutral-800 ml-3">
+                <button
+                  onClick={() => setWorkspaceView('browser')}
+                  className={`px-3 py-1 text-xs font-semibold rounded-md flex items-center gap-1.5 transition ${
+                    workspaceView === 'browser'
+                      ? 'bg-amber-500 text-white shadow-sm'
+                      : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
+                  }`}
+                  title={isEs ? 'Biblioteca de Fotografías (Adobe Bridge)' : 'Photo Library / Browser'}
+                >
+                  <span>📷</span>
+                  <span>{isEs ? 'Biblioteca' : 'Browser'}</span>
+                </button>
+                <button
+                  onClick={() => setWorkspaceView('canvas')}
+                  className={`px-3 py-1 text-xs font-semibold rounded-md flex items-center gap-1.5 transition ${
+                    workspaceView === 'canvas'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
+                  }`}
+                  title={isEs ? 'Lienzo de Diseño (Álbum / Estudio)' : 'Design Canvas (Album / Studio)'}
+                >
+                  <span>🎨</span>
+                  <span>{isEs ? 'Lienzo' : 'Canvas'}</span>
+                </button>
+              </div>
+            )}
+
+            <div className="flex items-center gap-1 border-l border-neutral-200 dark:border-neutral-800 pl-3 ml-2">
+              <button
                 onClick={() => undo()}
                 disabled={!pastStates || pastStates.length === 0}
                 className="w-8 h-8 flex items-center justify-center text-neutral-600 dark:text-neutral-400 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded transition"
@@ -238,7 +309,7 @@ export default function Toolbar() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                 </svg>
               </button>
-              <button 
+              <button
                 onClick={() => redo()}
                 disabled={!futureStates || futureStates.length === 0}
                 className="w-8 h-8 flex items-center justify-center text-neutral-600 dark:text-neutral-400 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded transition"
@@ -249,15 +320,80 @@ export default function Toolbar() {
                 </svg>
               </button>
             </div>
-            
-            {/* Studio Print Badge or Book Navigation HUD */}
+
+            {/* Studio Print Badge with Size Selector Dropdown */}
             {project && project.projectCategory === 'studio_print' ? (
-              <div className="flex items-center gap-2 border-l border-neutral-200 dark:border-neutral-800 pl-3 ml-2">
-                <span className="px-3 py-1 bg-orange-100 dark:bg-orange-950/50 border border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 shadow-sm">
+              <div className="relative flex items-center border-l border-neutral-200 dark:border-neutral-800 pl-3 ml-2" ref={studioSizeRef}>
+                <button
+                  type="button"
+                  onClick={() => setShowStudioSizeMenu(!showStudioSizeMenu)}
+                  className="px-3 py-1 bg-orange-100 hover:bg-orange-200/80 dark:bg-orange-950/50 dark:hover:bg-orange-900/60 border border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 shadow-sm transition"
+                  title={isEs ? "Tamaño del Lienzo de Estudio (Clic para cambiar o verificar)" : "Studio Canvas Size (Click to change or verify)"}
+                >
                   <span>🖼️</span>
                   <span>{Math.round(project.size.w_mm / 25.4)}×{Math.round(project.size.h_mm / 25.4)} in</span>
                   <span className="text-[10px] opacity-75 font-normal">({project.targetDpi || 300} DPI)</span>
-                </span>
+                  <ChevronDown className="w-3 h-3 opacity-60" />
+                </button>
+
+                {showStudioSizeMenu && (
+                  <div className="absolute left-3 top-full mt-1.5 w-56 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="text-[10px] uppercase font-bold text-neutral-400 dark:text-neutral-500 px-2 py-1 border-b border-neutral-100 dark:border-neutral-800 mb-1 flex items-center justify-between">
+                      <span>{isEs ? "Tamaño del Lienzo" : "Canvas Size"}</span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Swap orientation
+                          setProjectSize({ w_mm: project.size.h_mm, h_mm: project.size.w_mm });
+                        }}
+                        className="text-[10px] text-orange-600 dark:text-orange-400 hover:underline flex items-center gap-0.5"
+                      >
+                        ⇄ {isEs ? "Girar Orientación" : "Flip Orientation"}
+                      </button>
+                    </div>
+                    {[
+                      { label: '5×7 in (13×18 cm)', w: 5, h: 7 },
+                      { label: '8×10 in (20×25 cm)', w: 8, h: 10 },
+                      { label: '8×12 in (20×30 cm)', w: 8, h: 12 },
+                      { label: '11×14 in (28×35 cm)', w: 11, h: 14 },
+                      { label: '12×18 in (30×45 cm)', w: 12, h: 18 },
+                      { label: '16×20 in (40×50 cm)', w: 16, h: 20 },
+                      { label: '16×24 in (40×60 cm)', w: 16, h: 24 },
+                      { label: '20×30 in (50×76 cm)', w: 20, h: 30 },
+                      { label: '24×36 in (60×91 cm)', w: 24, h: 36 },
+                    ].map((sz) => {
+                      const isCurrentLandscape = project.size.w_mm > project.size.h_mm;
+                      const targetWInches = isCurrentLandscape ? Math.max(sz.w, sz.h) : Math.min(sz.w, sz.h);
+                      const targetHInches = isCurrentLandscape ? Math.min(sz.w, sz.h) : Math.max(sz.w, sz.h);
+                      const curWIn = Math.round(project.size.w_mm / 25.4);
+                      const curHIn = Math.round(project.size.h_mm / 25.4);
+                      const isSelected = curWIn === targetWInches && curHIn === targetHInches;
+
+                      return (
+                        <button
+                          key={`${sz.w}x${sz.h}`}
+                          type="button"
+                          onClick={() => {
+                            setProjectSize({
+                              w_mm: Number((targetWInches * 25.4).toFixed(4)),
+                              h_mm: Number((targetHInches * 25.4).toFixed(4)),
+                            });
+                            setShowStudioSizeMenu(false);
+                          }}
+                          className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition ${
+                            isSelected
+                              ? 'bg-orange-500 text-white font-bold'
+                              : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                          }`}
+                        >
+                          <span>{sz.label}</span>
+                          {isSelected && <span className="text-xs">✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             ) : project && !isStudio && currentIdx !== -1 && (
               <div className="flex items-center gap-1 border-l border-neutral-200 dark:border-neutral-800 pl-3 ml-2">
@@ -285,7 +421,7 @@ export default function Toolbar() {
                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                    </svg>
                  </button>
-                 
+
                  <div className="flex flex-col items-center justify-center px-3">
                     <div className="text-[11px] font-mono text-neutral-500 dark:text-neutral-400 font-medium tracking-wider whitespace-nowrap text-center leading-tight">
                        Pág <span className="font-bold text-neutral-800 dark:text-neutral-200">{currentIdx + 1}</span> / {maxSpreads < Infinity ? maxSpreads : project.spreads.length}
@@ -294,7 +430,7 @@ export default function Toolbar() {
                        ✓ {completedSpreadsCount} / {maxSpreads < Infinity ? maxSpreads : project.spreads.length}
                     </div>
                  </div>
-                 
+
                  <button
                    onClick={goToNextSpread}
                    disabled={isLastSpread}
@@ -307,7 +443,7 @@ export default function Toolbar() {
                  </button>
               </div>
             )}
-            
+
             {/* Global HUD Stats */}
             {project && (
               <div className="flex items-center gap-3 border-l border-neutral-200 dark:border-neutral-800 pl-3 ml-2 text-xs font-mono tracking-tight">
@@ -318,8 +454,8 @@ export default function Toolbar() {
                             {isEs ? 'Lienzo' : 'Canvas'}
                          </span>
                          <span className="font-bold text-neutral-800 dark:text-neutral-200">
-                            {measurementUnit === 'in' 
-                               ? `${(project.size.w_mm / 25.4).toFixed(0)}×${(project.size.h_mm / 25.4).toFixed(0)}"` 
+                            {measurementUnit === 'in'
+                               ? `${(project.size.w_mm / 25.4).toFixed(0)}×${(project.size.h_mm / 25.4).toFixed(0)}"`
                                : `${(project.size.w_mm / 10).toFixed(0)}×${(project.size.h_mm / 10).toFixed(0)} cm`}
                          </span>
                       </div>
@@ -373,17 +509,17 @@ export default function Toolbar() {
             )}
          </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {selectedElementId && activeSpreadId && (
             <>
-              <button 
+              <button
                 onClick={() => bringForward(activeSpreadId, selectedElementId)}
                 className="px-3 py-1 text-sm bg-neutral-100 dark:bg-neutral-800 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition"
               >
                  {t('order_up')}
               </button>
-              <button 
+              <button
                 onClick={() => sendBackward(activeSpreadId, selectedElementId)}
                 className="px-3 py-1 text-sm bg-neutral-100 dark:bg-neutral-800 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition"
               >
@@ -395,7 +531,7 @@ export default function Toolbar() {
         {/* Unit Toggle & Export Tools */}
         <div className="flex items-center gap-4">
             {/* Native Ruler Unit Toggle */}
-            <button 
+            <button
               onClick={toggleMeasurementUnit}
               className="px-3 py-1.5 flex items-center gap-1.5 rounded-full bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-sm font-bold tracking-wide transition-colors text-neutral-600 dark:text-neutral-300"
               title="Toggle Ruler Units (Inches / Centimeters)"
@@ -403,9 +539,24 @@ export default function Toolbar() {
               <span>📏 {measurementUnit === 'in' ? t('inches') : t('centimeters')}</span>
             </button>
 
+            {/* Pivot Anchor Guide Toggle (Available in Designer mode) */}
+            {!isRawSession && (
+              <button
+                onClick={toggleShowPivotGuides}
+                className={`px-3 py-1.5 flex items-center gap-1.5 rounded-full text-xs font-bold tracking-wide transition-colors ${
+                  showPivotGuides
+                    ? 'bg-amber-500 text-white shadow-sm'
+                    : 'bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300'
+                }`}
+                title={isEs ? (showPivotGuides ? 'Ocultar guía de ancla' : 'Mostrar guía de ancla') : (showPivotGuides ? 'Hide Anchor Guide' : 'Show Anchor Guide')}
+              >
+                <span>🎯 {isEs ? (showPivotGuides ? 'Ocultar Ancla' : 'Guía de Ancla') : (showPivotGuides ? 'Hide Anchor' : 'Anchor Guide')}</span>
+              </button>
+            )}
+
             {/* Print Export Button */}
             <div className="relative" ref={menuRef}>
-            <button 
+            <button
                onClick={() => setIsMenuOpen(!isMenuOpen)}
                className="px-4 py-1.5 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-medium rounded hover:bg-black dark:hover:bg-neutral-200 transition flex items-center gap-1.5"
             >
@@ -414,24 +565,24 @@ export default function Toolbar() {
                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
-            
+
              {isMenuOpen && (
               <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-md shadow-lg py-1 animate-in fade-in slide-in-from-top-2 z-50">
                  <button onClick={() => { setIsMenuOpen(false); setIsExportModalOpen(true); }} className="w-full text-left px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition font-bold">
                    ⚡ {isEs ? 'Exportación Profesional...' : 'Advanced Export...'}
                  </button>
                  <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1"></div>
-                 
+
                  <div className="px-3 pt-2 pb-1 text-xs font-semibold text-neutral-400 uppercase tracking-wider">Project Actions</div>
-                 
-                 <button 
-                   onClick={() => { if (project) exportProjectToFile(project); setIsMenuOpen(false); }} 
+
+                 <button
+                   onClick={() => { if (project) exportProjectToFile(project); setIsMenuOpen(false); }}
                    className="w-full text-left px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition font-medium"
                  >
                    Export Session (.rvp)
                  </button>
-                 <button 
-                   onClick={handleDuplicate} 
+                 <button
+                   onClick={handleDuplicate}
                    className="w-full text-left px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition rounded-b-md"
                  >
                    Duplicate Project
@@ -440,13 +591,13 @@ export default function Toolbar() {
             )}
           </div>
 
-          <button 
+          <button
              onClick={swapLocale}
              className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white transition"
           >
             {t('language')}
           </button>
-          <button 
+          <button
             onClick={() => {
               const current = resolvedTheme || theme;
               setTheme(current === 'dark' ? 'light' : 'dark');
@@ -460,8 +611,8 @@ export default function Toolbar() {
               t('theme_dark')
             )}
           </button>
-          
-          <button 
+
+          <button
              onClick={async () => { await signOut(auth); }}
              className="text-sm px-3 py-1 font-bold text-red-600 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/50 rounded transition"
           >
@@ -469,7 +620,7 @@ export default function Toolbar() {
           </button>
         </div>
       </header>
-      
+
       <ExportModal
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}

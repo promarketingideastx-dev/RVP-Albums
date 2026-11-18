@@ -9,6 +9,7 @@ const DEFAULT_FOLDERS = ['Bodas', 'XV Años', 'Estudio', 'Retratos', 'Eventos'];
 export interface ProjectIndexMeta {
   id: string;
   title: string;
+  type?: string;
   updatedAt: string;
   createdAt: string;
   projectCategory?: 'album' | 'studio_print';
@@ -104,6 +105,20 @@ export const projectStorage = {
         if (p.pixelResolution && p.pixelResolution.includes('7205')) {
           p.pixelResolution = p.pixelResolution.replace('7205', '7200');
         }
+        if (p.projectCategory === 'studio_print' && p.dimensionsMm) {
+          const isCorrupted = Math.abs(p.dimensionsMm.w_mm - 200) < 5 && Math.abs(p.dimensionsMm.h_mm - 300) < 5;
+          const match = p.title?.match(/(\d+(?:\.\d+)?)\s*[xX×]\s*(\d+(?:\.\d+)?)/);
+          if (match && isCorrupted) {
+            const wIn = parseFloat(match[1]);
+            const hIn = parseFloat(match[2]);
+            if (wIn > 0 && hIn > 0) {
+              p.dimensionsMm = {
+                w_mm: Number((wIn * 25.4).toFixed(4)),
+                h_mm: Number((hIn * 25.4).toFixed(4)),
+              };
+            }
+          }
+        }
         if (p.dimensionsMm) {
           const inW = p.dimensionsMm.w_mm / 25.4;
           const inH = p.dimensionsMm.h_mm / 25.4;
@@ -126,7 +141,25 @@ export const projectStorage = {
     try {
       const raw = localStorage.getItem(`vro_proj_${projectId}`);
       if (!raw) return null;
-      return JSON.parse(raw);
+      const proj = JSON.parse(raw) as EditorProject;
+      if (proj && proj.projectCategory === 'studio_print' && proj.size) {
+        const isCorrupted = Math.abs(proj.size.w_mm - 200) < 5 && Math.abs(proj.size.h_mm - 300) < 5;
+        const match = proj.title?.match(/(\d+(?:\.\d+)?)\s*[xX×]\s*(\d+(?:\.\d+)?)/);
+        if (match && isCorrupted) {
+          const wIn = parseFloat(match[1]);
+          const hIn = parseFloat(match[2]);
+          if (wIn > 0 && hIn > 0) {
+            const isLandscape = proj.orientation === 'landscape';
+            const w = isLandscape ? Math.max(wIn, hIn) : Math.min(wIn, hIn);
+            const h = isLandscape ? Math.min(wIn, hIn) : Math.max(wIn, hIn);
+            proj.size = {
+              w_mm: Number((w * 25.4).toFixed(4)),
+              h_mm: Number((h * 25.4).toFixed(4)),
+            };
+          }
+        }
+      }
+      return proj;
     } catch (e) {
       console.error(`Failed to load project ${projectId}`, e);
       return null;
@@ -172,7 +205,7 @@ export const projectStorage = {
       const index = projectStorage.getAllProjects();
       const existingIdx = index.findIndex(p => p.id === project.id);
       const category = safeProject.projectCategory || (safeProject.type === 'type_studio_print' ? 'studio_print' : 'album');
-      
+
       const rawInW = safeProject.size ? safeProject.size.w_mm / 25.4 : 0;
       const rawInH = safeProject.size ? safeProject.size.h_mm / 25.4 : 0;
       const snapInW = Math.abs(rawInW - Math.round(rawInW)) < 0.05 ? Math.round(rawInW) : Math.round(rawInW * 10) / 10;
@@ -183,7 +216,7 @@ export const projectStorage = {
       const pxH = Math.round(snapInH * dpi);
       const pixelResolution = pxW && pxH ? `${pxW} × ${pxH} px` : undefined;
       const totalElements = safeProject.spreads.reduce((acc, s) => acc + (s.elements?.length || 0), 0);
-      
+
       // Real composition thumbnail key in IndexedDB
       const thumbnailPreviewId = `thumb_${safeProject.id}`;
 
@@ -199,6 +232,7 @@ export const projectStorage = {
       const meta: ProjectIndexMeta = {
         id: safeProject.id,
         title: safeProject.title,
+        type: safeProject.type,
         createdAt: safeProject.createdAt || safeProject.updatedAt,
         updatedAt: safeProject.updatedAt,
         projectCategory: category,

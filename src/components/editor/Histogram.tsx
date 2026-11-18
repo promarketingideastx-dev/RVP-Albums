@@ -156,7 +156,7 @@ export const Histogram = React.memo(function Histogram({
       // Tone curve simple approximation
       if (adj.curve) {
         const cL = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-        const cFactor = 
+        const cFactor =
           (adj.curve.shadows || 0) * (1 - cL) * 0.2 +
           (adj.curve.highlights || 0) * cL * 0.2;
         r += cFactor;
@@ -231,7 +231,7 @@ export const Histogram = React.memo(function Histogram({
   const lPath = useMemo(() => makePath(lBins, 82), [makePath, lBins]);
 
   return (
-    <div className="px-3 pt-2 pb-1 border-b border-[#222]">
+    <div className="px-3 pt-2 pb-1 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/40">
       {/* Header with Channel Selectors & Clipping Indicators */}
       <div className="flex items-center justify-between mb-1 text-[10px]">
         {/* Left: Shadow Clipping Indicator */}
@@ -240,7 +240,7 @@ export const Histogram = React.memo(function Histogram({
             className={`w-3 h-3 flex items-center justify-center font-bold text-[8px] rounded transition-colors ${
               shadowClipping
                 ? 'bg-[#007aff] text-white shadow-[0_0_6px_#007aff]'
-                : 'text-[#444] hover:text-[#666]'
+                : 'text-neutral-400 hover:text-neutral-600 dark:text-neutral-600 dark:hover:text-neutral-400'
             }`}
             title={
               shadowClipping
@@ -250,13 +250,13 @@ export const Histogram = React.memo(function Histogram({
           >
             ◀
           </span>
-          <span className="text-[11px] font-semibold text-[#bbb]">
+          <span className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
             {isEs ? 'Histograma' : 'Histogram'}
           </span>
         </div>
 
         {/* Center: Channel Selector Pills */}
-        <div className="flex items-center bg-[#181818] rounded p-0.5 border border-[#2a2a2a]">
+        <div className="flex items-center bg-neutral-200 dark:bg-neutral-950 rounded p-0.5 border border-neutral-300 dark:border-neutral-800">
           {(['rgb', 'luma', 'red', 'green', 'blue'] as ChannelMode[]).map((mode) => (
             <button
               key={mode}
@@ -270,8 +270,8 @@ export const Histogram = React.memo(function Histogram({
                     ? 'bg-[#34c759] text-black font-bold'
                     : mode === 'blue'
                     ? 'bg-[#007aff] text-white font-bold'
-                    : 'bg-[#444] text-white font-bold'
-                  : 'text-[#777] hover:text-[#aaa]'
+                    : 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white font-bold shadow-sm'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white'
               }`}
             >
               {mode === 'rgb'
@@ -289,12 +289,12 @@ export const Histogram = React.memo(function Histogram({
 
         {/* Right: Highlight Clipping Indicator */}
         <div className="flex items-center gap-1.5">
-          <span className="text-[9px] text-[#666] font-mono">{meanLuma}%</span>
+          <span className="text-[9px] text-neutral-500 font-mono">{meanLuma}%</span>
           <span
             className={`w-3 h-3 flex items-center justify-center font-bold text-[8px] rounded transition-colors ${
               highlightClipping
                 ? 'bg-[#ff3b30] text-white shadow-[0_0_6px_#ff3b30]'
-                : 'text-[#444] hover:text-[#666]'
+                : 'text-neutral-400 hover:text-neutral-600 dark:text-neutral-600 dark:hover:text-neutral-400'
             }`}
             title={
               highlightClipping
@@ -309,7 +309,7 @@ export const Histogram = React.memo(function Histogram({
 
       {/* Interactive Histogram Graph */}
       <div
-        className="relative w-full rounded border border-[#2a2a2a] bg-[#141414] overflow-hidden select-none cursor-crosshair"
+        className="relative w-full rounded border border-neutral-200 dark:border-neutral-800 bg-neutral-950 overflow-hidden select-none cursor-crosshair"
         onMouseMove={(e) => {
           const rect = e.currentTarget.getBoundingClientRect();
           const ratio = (e.clientX - rect.left) / rect.width;

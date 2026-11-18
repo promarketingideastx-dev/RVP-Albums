@@ -1,10 +1,12 @@
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useRef, useState, useMemo, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { useEditorStore } from '@/store/useEditorStore';
 import { ProjectAsset } from '@/types/editor';
 import { processLocalImage } from '@/utils/imageIngestion';
 import { extractAssetMetadataFromFile } from '@/utils/metadataEngine';
+import { AssetThumbnail } from './common/AssetThumbnail';
+import { PhotoAttributesMenuSection } from './common/PhotoAttributesMenuSection';
 import { v4 as uuidv4 } from 'uuid';
 
 export default function AssetTray() {
@@ -22,12 +24,12 @@ export default function AssetTray() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedAssetIds, setSelectedAssetIds] = useState<Set<string>>(new Set());
-  
+
   // Phase 13/14: Auto-Book Native Engine Trigger
   const [showAutoBookMenu, setShowAutoBookMenu] = useState(false);
   const [autoBookTarget, setAutoBookTarget] = useState<number>(6);
   const [rebalanceMode, setRebalanceMode] = useState<'COMPACT' | 'BALANCED' | 'AIRY'>('BALANCED');
-  
+
   const executeAutoBookBuilder = useEditorStore((state) => state.executeAutoBookBuilder);
   const rebalanceAutoBookLayout = useEditorStore((state) => state.rebalanceAutoBookLayout);
   const hasManagedSpreads = useEditorStore((state) => state.project?.spreads.some(s => s.autoBookManaged) ?? false);
@@ -40,6 +42,39 @@ export default function AssetTray() {
       .join('|');
   });
 
+  const project = useEditorStore((state) => state.project);
+  const isRawSession = project?.type === 'type_raw_session' || (project as { workflowMode?: string })?.workflowMode === 'raw';
+  const activeBrowserAssetId = useEditorStore((state) => state.activeBrowserAssetId);
+  const selectedBrowserAssetIds = useEditorStore((state) => state.selectedBrowserAssetIds);
+  const canvasBatchAssetIds = useEditorStore((state) => state.canvasBatchAssetIds);
+  const loadAssetToCanvas = useEditorStore((state) => state.loadAssetToCanvas);
+  const activeSpreadId = useEditorStore((state) => state.activeSpreadId);
+
+  const [trayMenu, setTrayMenu] = useState<{ x: number; y: number; assetId: string } | null>(null);
+  const trayMenuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!trayMenu) return;
+    const close = (e: MouseEvent) => {
+      if (trayMenuRef.current && !trayMenuRef.current.contains(e.target as Node)) setTrayMenu(null);
+    };
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setTrayMenu(null); };
+    document.addEventListener('mousedown', close);
+    window.addEventListener('keydown', esc);
+    return () => {
+      document.removeEventListener('mousedown', close);
+      window.removeEventListener('keydown', esc);
+    };
+  }, [trayMenu]);
+
+  // Active asset currently mounted on canvas
+  const currentCanvasAssetId = useMemo(() => {
+    if (!project) return null;
+    const spread = project.spreads.find((s) => s.id === activeSpreadId) || project.spreads[0];
+    const img = spread?.elements.find((e) => e.type === 'image');
+    return img?.assetId || null;
+  }, [project, activeSpreadId]);
+
+
   // Advanced Fundy Logic States
   const [filterRating, setFilterRating] = useState<number>(0);
   const [filterFavorite, setFilterFavorite] = useState<boolean>(false);
@@ -49,24 +84,35 @@ export default function AssetTray() {
 
   const visibleAssets = useMemo(() => {
     let filtered = [...assets];
-    
-    if (filterFavorite) {
-      filtered = filtered.filter(a => a.isFavorite);
-    }
-    
-    if (filterRating > 0) {
-      filtered = filtered.filter(a => (a.rating || 0) >= filterRating);
-    }
-    
-    if (sortMode === 'rating') {
-      filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+
+    // In Raw session: strictly show ONLY the photos sent to the canvas batch!
+    if (isRawSession) {
+      const batch = canvasBatchAssetIds.length > 0
+        ? canvasBatchAssetIds
+        : selectedBrowserAssetIds.length > 0
+        ? selectedBrowserAssetIds
+        : null;
+      if (batch && batch.length > 0) {
+        filtered = filtered.filter((a) => batch.includes(a.id));
+      }
+    } else {
+      if (filterFavorite) {
+        filtered = filtered.filter((a) => a.isFavorite);
+      }
+
+      if (filterRating > 0) {
+        filtered = filtered.filter((a) => (a.rating || 0) >= filterRating);
+      }
+
+      if (sortMode === 'rating') {
+        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      }
     }
     return filtered;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectAssets, filterFavorite, filterRating, sortMode]);
+  }, [assets, filterFavorite, filterRating, sortMode, isRawSession, canvasBatchAssetIds, selectedBrowserAssetIds]);
 
 
-          
+
   // Extract all existing image elements across all spreads efficiently updating live drops
   const allImageElements = useMemo(() => {
     const proj = useEditorStore.getState().project;
@@ -80,18 +126,18 @@ export default function AssetTray() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-    
+
     // Safety boundaries
     const filesToProcess = Array.from(files).slice(0, 100);
-    
+
     for (let i = 0; i < filesToProcess.length; i++) {
       const file = filesToProcess[i];
       if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) continue;
       if (file.size > 30 * 1024 * 1024) continue; // 30MB limit
-      
+
       try {
-        const { originalUrl, previewUrl, originalBlobId, previewBlobId, widthPx, heightPx } = await processLocalImage(file);
-        
+        const { originalUrl, previewUrl, thumbnailUrl, originalBlobId, previewBlobId, thumbnailBlobId, widthPx, heightPx } = await processLocalImage(file);
+
         const metadata = extractAssetMetadataFromFile(file, (assets.length || 0) + i, { w: widthPx || 0, h: heightPx || 0 });
 
         addAsset({
@@ -99,8 +145,10 @@ export default function AssetTray() {
           name: file.name,
           previewUrl,
           originalUrl,
+          thumbnailUrl,
           previewBlobId,
           originalBlobId,
+          thumbnailBlobId,
           rating: 0,
           isFavorite: false,
           width: widthPx,
@@ -113,7 +161,7 @@ export default function AssetTray() {
         console.error('Failed to ingest asset:', err);
       }
     }
-    
+
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -210,55 +258,73 @@ export default function AssetTray() {
           background-color: #737373;
         }
       `}</style>
-      
+
       {/* Top Toolbar */}
       <div className="h-14 bg-white dark:bg-neutral-950 flex items-center px-4 justify-between border-b border-neutral-200 dark:border-neutral-800 py-2">
         <div className="flex items-center gap-4">
-          <button 
-            onClick={cycleSortMode}
-            className="px-6 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-full text-sm font-medium tracking-wide flex items-center gap-2 transition-colors"
-          >
-            <span className={sortMode === 'rating' ? 'rotate-90' : ''}>⇅</span> {t('sort')} {sortMode === 'rating' ? t('sort_stars') : ''}
-          </button>
-          
-          {/* Interactive Star Filter Group */}
-          <div className="flex items-center bg-orange-600 rounded-full px-5 py-1 gap-1 border border-orange-500 shadow-sm">
-            <span className="text-white text-sm font-bold tracking-wide mr-2 hidden sm:inline">{t('filter_label')}</span>
-            
-            {/* Heart Filter */}
-            <span 
-              onClick={() => setFilterFavorite(!filterFavorite)}
-              className={`cursor-pointer ${filterFavorite ? 'text-red-300 drop-shadow-md scale-110' : 'text-orange-900'} hover:text-red-200 transition-all text-xl leading-none mr-2 font-bold`}
-              title="Filter by Favorites"
-            >
-              {filterFavorite ? '♥' : '♡'}
-            </span>
-            <div className="w-px h-5 bg-orange-700 mx-1"></div>
-
-            {/* Stars Filter */}
-            <div className="flex gap-1.5 text-xl leading-none">
-              {[1, 2, 3, 4, 5].map(star => (
-                <span 
-                  key={star}
-                  onClick={() => setFilterRating(filterRating === star ? 0 : star)}
-                  className={`cursor-pointer ${star <= filterRating ? 'text-white' : 'text-orange-900'} hover:text-orange-200 transition-colors drop-shadow-sm`}
-                  title={`Filter ${star} stars and above`}
-                >
-                  ★
-                </span>
-              ))}
+          {/* In Raw Session: Star selection/filter is locked in Canvas to avoid confusion! */}
+          {isRawSession ? (
+            <div className="flex items-center bg-neutral-100 dark:bg-neutral-800 rounded-full px-4 py-1.5 gap-2 border border-neutral-300 dark:border-neutral-700 text-xs font-semibold text-neutral-700 dark:text-neutral-300 shadow-sm">
+              <span className="text-amber-500">🔒</span>
+              <span>
+                {isEs
+                  ? `Lote activo: ${visibleAssets.length} foto(s) en lienzo`
+                  : `Active Batch: ${visibleAssets.length} photo(s) on canvas`}
+              </span>
+              <span className="text-[10px] text-neutral-400 font-normal border-l border-neutral-300 dark:border-neutral-700 pl-2">
+                {isEs ? 'Filtros bloqueados en Lienzo' : 'Filters locked on Canvas'}
+              </span>
             </div>
-          </div>
+          ) : (
+            <>
+              <button
+                onClick={cycleSortMode}
+                className="px-6 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-full text-sm font-medium tracking-wide flex items-center gap-2 transition-colors"
+              >
+                <span className={sortMode === 'rating' ? 'rotate-90' : ''}>⇅</span> {t('sort')} {sortMode === 'rating' ? t('sort_stars') : ''}
+              </button>
+
+              {/* Interactive Star Filter Group */}
+              <div className="flex items-center bg-orange-600 rounded-full px-5 py-1 gap-1 border border-orange-500 shadow-sm">
+                <span className="text-white text-sm font-bold tracking-wide mr-2 hidden sm:inline">{t('filter_label')}</span>
+
+                {/* Heart Filter */}
+                <span
+                  onClick={() => setFilterFavorite(!filterFavorite)}
+                  className={`cursor-pointer ${filterFavorite ? 'text-red-300 drop-shadow-md scale-110' : 'text-orange-900'} hover:text-red-200 transition-all text-xl leading-none mr-2 font-bold`}
+                  title="Filter by Favorites"
+                >
+                  {filterFavorite ? '♥' : '♡'}
+                </span>
+                <div className="w-px h-5 bg-orange-700 mx-1"></div>
+
+                {/* Stars Filter */}
+                <div className="flex gap-1.5 text-xl leading-none">
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <span
+                      key={star}
+                      onClick={() => setFilterRating(filterRating === star ? 0 : star)}
+                      className={`cursor-pointer ${star <= filterRating ? 'text-white' : 'text-orange-900'} hover:text-orange-200 transition-colors drop-shadow-sm`}
+                      title={`Filter ${star} stars and above`}
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
           <span className="text-sm font-medium text-neutral-400 dark:text-neutral-500 ml-4 hidden md:inline">
             {isEs ? `Mostrando ${visibleAssets.length} de ${assets.length} fotos` : `Showing ${visibleAssets.length} of ${assets.length} images`}
           </span>
         </div>
 
         <div className="flex items-center gap-3 relative">
-          
+
           {/* Phase 16: Sequencing Overlays */}
           <div className="relative group">
-             <select 
+             <select
                className="appearance-none bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs font-semibold py-1.5 pl-3 pr-8 rounded-full focus:outline-none cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors"
                value={sequenceMode}
                onChange={(e) => useEditorStore.getState().setSequenceMode(e.target.value as 'ORIGINAL_ORDER' | 'CHRONOLOGICAL')}
@@ -275,11 +341,11 @@ export default function AssetTray() {
                 {sequenceMode === 'CHRONOLOGICAL' ? t('sortingChronological') : t('sortingOriginal')}
              </div>
           </div>
-          
+
           {/* Phase 13: Auto-Book Builder Popover (Only for Albums) */}
           {projectCategory !== 'studio_print' && (
             <div className="relative">
-               <button 
+               <button
                   onClick={() => setShowAutoBookMenu(!showAutoBookMenu)}
                   className={`px-4 py-1.5 border rounded-full text-xs font-bold tracking-wide transition-colors ${hasManagedSpreads ? 'border-purple-500 text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20' : showAutoBookMenu ? 'border-orange-500 bg-orange-50 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400' : 'border-blue-500 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20'}`}
                >
@@ -293,19 +359,19 @@ export default function AssetTray() {
                    </div>
                    <div className="flex items-center justify-between mb-4">
                       <label className="text-xs font-medium text-neutral-600 dark:text-neutral-300">{t('photos_per_spread')}</label>
-                      <input 
-                        type="number" 
-                        min="1" max="25" 
-                        value={autoBookTarget} 
+                      <input
+                        type="number"
+                        min="1" max="25"
+                        value={autoBookTarget}
                         onChange={(e) => setAutoBookTarget(Math.max(1, parseInt(e.target.value) || 6))}
-                        className="w-16 border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-2 py-1 rounded-md text-sm text-center font-mono font-bold text-black dark:text-white focus:outline-none focus:ring-1 focus:ring-orange-500" 
+                        className="w-16 border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-2 py-1 rounded-md text-sm text-center font-mono font-bold text-black dark:text-white focus:outline-none focus:ring-1 focus:ring-orange-500"
                       />
                    </div>
 
                    {hasManagedSpreads && (
                       <div className="flex bg-neutral-100 dark:bg-neutral-900 p-1 rounded-lg mb-4">
                         {['COMPACT', 'BALANCED', 'AIRY'].map((m) => (
-                          <button 
+                          <button
                             key={m}
                             onClick={() => setRebalanceMode(m as 'COMPACT' | 'BALANCED' | 'AIRY')}
                             className={`flex-1 text-[10px] py-1 font-bold rounded-md transition-colors ${rebalanceMode === m ? 'bg-orange-500 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200'}`}
@@ -316,7 +382,7 @@ export default function AssetTray() {
                       </div>
                    )}
 
-                   <button 
+                   <button
                      onClick={handleAutoBuildTrigger}
                      className={`w-full text-white font-bold tracking-wide text-xs py-2.5 rounded-lg transition-transform active:scale-95 ${hasManagedSpreads ? 'bg-purple-600 hover:bg-purple-700' : 'bg-orange-600 hover:bg-orange-700'}`}
                    >
@@ -326,36 +392,42 @@ export default function AssetTray() {
                )}
             </div>
           )}
-          <button 
-            onClick={clearSelection}
-            disabled={selectedAssetIds.size === 0}
-            className="px-4 py-1.5 bg-neutral-800 dark:bg-neutral-900 border border-neutral-700 text-white hover:bg-neutral-700 dark:hover:bg-neutral-800 rounded-full text-xs font-semibold tracking-wide transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {selectedAssetIds.size > 0 ? (isEs ? `Desmarcar (${selectedAssetIds.size})` : `Clear (${selectedAssetIds.size})`) : (isEs ? 'Desmarcar' : 'Clear')}
-          </button>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="px-6 py-1.5 bg-neutral-800 text-white hover:bg-neutral-700 rounded-full text-xs font-semibold tracking-wide transition-colors flex items-center gap-2"
-          >
-            <span>+</span> {isEs ? 'Añadir Fotos' : 'Add Photos'}
-          </button>
-          <input
-            type="file"
-            ref={fileInputRef}
-            multiple
-            accept="image/jpeg, image/png, image/webp"
-            className="hidden"
-            onChange={handleFileUpload}
-          />
+
+          {!isRawSession && (
+            <>
+              <button
+                onClick={clearSelection}
+                disabled={selectedAssetIds.size === 0}
+                className="px-4 py-1.5 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-200 border border-neutral-300 dark:border-neutral-700 rounded-full text-xs font-semibold tracking-wide transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              >
+                {selectedAssetIds.size > 0 ? (isEs ? `Desmarcar (${selectedAssetIds.size})` : `Clear (${selectedAssetIds.size})`) : (isEs ? 'Desmarcar' : 'Clear')}
+              </button>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="px-6 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-xs font-semibold tracking-wide transition-colors flex items-center gap-2 shadow-sm"
+              >
+                <span>+</span> {isEs ? 'Añadir Fotos' : 'Add Photos'}
+              </button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                multiple
+                accept="image/jpeg, image/png, image/webp"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+            </>
+          )}
         </div>
       </div>
-      
+
       {/* Scrollable Asset Strip */}
       <div className="flex-1 overflow-x-auto overflow-y-hidden pt-2 pb-0 px-3 flex gap-2 fundy-scroll relative">
         {visibleAssets.map(asset => {
           const isSelected = selectedAssetIds.has(asset.id);
           const currentRating = asset.rating || 0;
-          
+          const isActiveOnCanvas = (isRawSession || projectCategory === 'studio_print') && (currentCanvasAssetId === asset.id || activeBrowserAssetId === asset.id);
+
           // Match by precise deterministic properties natively ensuring overlapping attributes don't double count
           const usageCount = allImageElements.filter((el) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -372,23 +444,50 @@ export default function AssetTray() {
           return (
             <div
               key={asset.id}
-              className={`h-full bg-white dark:bg-neutral-800 border-2 ${isSelected ? 'border-orange-500' : 'border-neutral-200 dark:border-neutral-700'} overflow-hidden cursor-grab active:cursor-grabbing relative group shrink-0 flex flex-col shadow-sm hover:shadow-md transition-shadow`}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setTrayMenu({ x: e.clientX, y: e.clientY, assetId: asset.id });
+              }}
+              onClick={() => {
+                if (isRawSession || projectCategory === 'studio_print') {
+                  loadAssetToCanvas(asset);
+                }
+              }}
+              className={`h-full bg-white dark:bg-neutral-800 border-2 ${
+                isActiveOnCanvas
+                  ? 'border-emerald-500 ring-2 ring-emerald-400 shadow-md'
+                  : isSelected
+                  ? 'border-orange-500'
+                  : 'border-neutral-200 dark:border-neutral-700'
+              } overflow-hidden ${
+                isRawSession ? 'cursor-pointer hover:border-emerald-400' : 'cursor-grab active:cursor-grabbing'
+              } relative group shrink-0 flex flex-col shadow-sm hover:shadow-md transition-all`}
               style={{ aspectRatio: (asset.aspectRatio && asset.aspectRatio > 0.1) ? asset.aspectRatio : 1 }}
             >
-              {/* Checkbox / Sequential Selection Badge Layer */}
-              <div 
-                className={`absolute top-2 right-10 z-20 w-6 h-6 rounded-full border-2 border-white cursor-pointer flex items-center justify-center font-bold text-[12px] shadow-md transition-opacity scale-in ${isSelected ? 'bg-orange-500 text-white opacity-100' : 'bg-black/30 opacity-0 group-hover:opacity-100'}`}
-                onClick={(e) => toggleSelection(e, asset.id)}
-              >
-                {isSelected && (
-                   <span>{Array.from(selectedAssetIds).indexOf(asset.id) + 1}</span>
-                )}
-              </div>
+              {/* Checkbox / Sequential Selection Badge Layer (Only for Album Designer) */}
+              {!isRawSession && (
+                <div
+                  className={`absolute top-2 right-10 z-20 w-6 h-6 rounded-full border-2 border-white cursor-pointer flex items-center justify-center font-bold text-[12px] shadow-md transition-opacity scale-in ${isSelected ? 'bg-orange-500 text-white opacity-100' : 'bg-black/30 opacity-0 group-hover:opacity-100'}`}
+                  onClick={(e) => toggleSelection(e, asset.id)}
+                >
+                  {isSelected && (
+                     <span>{Array.from(selectedAssetIds).indexOf(asset.id) + 1}</span>
+                  )}
+                </div>
+              )}
 
-              {/* Usage Count Badge Layer */}
-              {usageCount > 0 && (
+              {/* Usage Count Badge Layer (Only for Album Designer - hidden in Camera Raw Pro) */}
+              {!isRawSession && usageCount > 0 && (
                 <div className="absolute top-2 left-2 z-20 bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-[11px] font-bold shadow-md shadow-black/20 ring-1 ring-white/30 backdrop-blur-sm pointer-events-none transition-transform scale-in">
                   {usageCount}
+                </div>
+              )}
+
+              {/* Active Develop Indicator Badge in Camera Raw Pro */}
+              {isRawSession && isActiveOnCanvas && (
+                <div className="absolute top-1.5 left-1.5 z-20 bg-emerald-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow pointer-events-none flex items-center gap-1">
+                  <span>●</span> <span>{isEs ? 'En Lienzo' : 'Active'}</span>
                 </div>
               )}
 
@@ -411,11 +510,11 @@ export default function AssetTray() {
                 {asset.metadata?.manualPriority === 2 ? '⭐⭐' : '⭐'}
               </button>
 
-               <div 
+               <div
                  className="flex-1 w-full relative overflow-hidden"
-                 draggable
+                 draggable={!isRawSession}
                  onDragStart={(e) => {
-                    // Automatically visually show ghost drags when dragging multiple
+                    if (isRawSession) return;
                     if (selectedAssetIds.size > 1 && selectedAssetIds.has(asset.id)) {
                         const ghost = document.createElement('div');
                         ghost.style.width = '100px';
@@ -435,20 +534,31 @@ export default function AssetTray() {
                     handleDragStart(e, asset);
                  }}
                  onDragEnd={() => setSelectedAssetIds(new Set())}
-                 onClick={(e) => toggleSelection(e, asset.id)}
+                 onClick={(e) => {
+                   if (!isRawSession && projectCategory !== 'studio_print') {
+                     toggleSelection(e, asset.id);
+                   }
+                 }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img 
-                  src={asset.previewUrl} 
-                  alt={asset.name}
-                  className="w-full h-full object-cover pointer-events-none"
+                <AssetThumbnail
+                  asset={asset}
+                  className="w-full h-full"
+                  fit="contain"
                 />
+                {asset.isEdited && (
+                  <span
+                    className="absolute top-1 right-1 bg-amber-500 text-black text-[9px] font-black px-1 py-0.5 rounded shadow pointer-events-none z-10"
+                    title={isEs ? 'Foto con ajustes de revelado' : 'Photo with develop adjustments'}
+                  >
+                    ±
+                  </span>
+                )}
               </div>
-              
+
               <div className="h-9 bg-[#1c1c1c] flex items-center justify-between px-1.5 shrink-0 border-t border-black w-full overflow-hidden">
                  <div className="flex gap-[1px] text-[14px] 2xl:text-[16px] tracking-tighter shrink">
                    {[1, 2, 3, 4, 5].map(star => (
-                     <span 
+                     <span
                        key={star}
                        onClick={(e) => setRating(e, asset.id, currentRating === star ? 0 : star)}
                        className={`cursor-pointer ${star <= currentRating ? 'text-[#ffb800] drop-shadow-md' : 'text-neutral-600'} hover:text-[#ffca3a] leading-none mb-0.5`}
@@ -457,7 +567,7 @@ export default function AssetTray() {
                      </span>
                    ))}
                  </div>
-                 <div 
+                 <div
                    onClick={(e) => toggleFavorite(e, asset)}
                    className={`${asset.isFavorite ? 'text-red-500 drop-shadow-md' : 'text-neutral-600'} hover:text-red-400 cursor-pointer text-[16px] 2xl:text-[18px] font-bold leading-none shrink-0 mb-0.5 ml-0.5`}
                  >
@@ -467,13 +577,42 @@ export default function AssetTray() {
             </div>
           );
         })}
-        
+
         {assets.length === 0 && (
           <div className="flex-1 flex items-center justify-center text-sm text-neutral-400 italic">
              No images yet. Click &apos;+ ADD PHOTOS&apos; to start designing.
           </div>
         )}
       </div>
+
+      {trayMenu && (() => {
+        const multiTargets = selectedAssetIds.size > 1 && selectedAssetIds.has(trayMenu.assetId)
+          ? Array.from(selectedAssetIds)
+          : [trayMenu.assetId];
+        const menuAsset = assets.find((a) => a.id === trayMenu.assetId);
+        return (
+          <div
+            ref={trayMenuRef}
+            className="fixed z-[100] w-60 rounded-lg shadow-2xl border border-neutral-200 dark:border-neutral-800 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md py-1.5 text-xs select-none"
+            style={{
+              left: Math.min(trayMenu.x, (typeof window !== 'undefined' ? window.innerWidth : 1200) - 250),
+              top: Math.max(10, Math.min(trayMenu.y, (typeof window !== 'undefined' ? window.innerHeight : 800) - 330)),
+            }}
+            onClick={(e) => e.stopPropagation()}
+            onContextMenu={(e) => e.preventDefault()}
+          >
+            <div className="px-3.5 py-1 border-b border-neutral-200 dark:border-neutral-800 mb-1 text-[10px] font-mono text-neutral-500 truncate">
+              {multiTargets.length > 1 ? `${multiTargets.length} ${isEs ? 'fotos' : 'photos'}` : menuAsset?.name}
+            </div>
+            <PhotoAttributesMenuSection
+              isEs={isEs}
+              source={{ assetId: trayMenu.assetId }}
+              target={{ assetIds: multiTargets }}
+              onDone={() => setTrayMenu(null)}
+            />
+          </div>
+        );
+      })()}
     </div>
   );
 }

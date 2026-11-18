@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { useEditorStore } from '@/store/useEditorStore';
 import { RulerGuides } from './RulerGuides';
 import { NavigatorWidget } from './NavigatorWidget';
+import { CropToolbar } from './CropToolbar';
 import { TYPOGRAPHY_PRESETS } from '@/lib/typography-presets';
 
 const SpreadCanvas = dynamic(() => import('./SpreadCanvas'), {
@@ -45,14 +46,14 @@ export default function EditorWorkspace() {
       });
     }
 
-    return Array.from(fontsSet).map(font => 
+    return Array.from(fontsSet).map(font =>
       `@import url('https://fonts.googleapis.com/css2?family=${font.replace(/ /g, '+')}&display=swap');`
     ).join('\n');
   }, [project]);
 
   useEffect(() => {
     if (!containerRef.current) return;
-    
+
     // Real ResizeObserver bound to the component container, not the window
     const observer = new ResizeObserver((entries) => {
       if (entries[0]) {
@@ -62,9 +63,9 @@ export default function EditorWorkspace() {
         });
       }
     });
-    
+
     observer.observe(containerRef.current);
-    
+
     // Set initial size
     setDimensions({
       width: containerRef.current.clientWidth,
@@ -80,11 +81,11 @@ export default function EditorWorkspace() {
   const padding = 80;
   const availableWidth = Math.max(10, dimensions.width - padding);
   const availableHeight = Math.max(10, dimensions.height - padding);
-  
+
   const scaleX = availableWidth / project.size.w_mm;
   const scaleY = availableHeight / project.size.h_mm;
   const autoScale = Math.min(scaleX, scaleY);
-  
+
   // Apply manual zoom override if interacting with the Navigator!
   const scale = workspaceZoom !== null ? autoScale * workspaceZoom : autoScale;
 
@@ -93,12 +94,12 @@ export default function EditorWorkspace() {
 
   const currentPanX = workspaceZoom === null ? defaultPanX : workspacePan.x;
   const currentPanY = workspaceZoom === null ? defaultPanY : workspacePan.y;
-  
+
   const isReady = scale > 0 && dimensions.width > 0;
 
   return (
-    <div 
-      ref={containerRef} 
+    <div
+      ref={containerRef}
       id="workspace-container"
       className="flex-1 overflow-hidden bg-neutral-200 dark:bg-neutral-900 relative w-full h-full"
       onWheel={(e) => {
@@ -125,11 +126,11 @@ export default function EditorWorkspace() {
                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 pb-32">
                   {project.spreads.map((spread, idx) => {
                      const ratio = project.size.h_mm / project.size.w_mm;
-                     
+
                      // Compute accurate background logic
                      const bgConfig = spread.bg_config || { type: 'none' };
                      let cssBackgroundStr = spread.bg_color || '#ffffff';
-                     
+
                      if (bgConfig.type === 'solid' && bgConfig.color1) {
                         cssBackgroundStr = bgConfig.color1;
                      } else if (bgConfig.type === 'linear' && bgConfig.color1 && bgConfig.color2) {
@@ -139,8 +140,8 @@ export default function EditorWorkspace() {
                      }
 
                      return (
-                        <div 
-                          key={spread.id} 
+                        <div
+                          key={spread.id}
                           className="flex flex-col gap-3 group cursor-pointer"
                           onClick={() => {
                              setActiveSpread(spread.id);
@@ -151,7 +152,7 @@ export default function EditorWorkspace() {
                                <span className="font-bold text-sm text-neutral-600 dark:text-neutral-400 group-hover:text-orange-500 transition-colors">Spread {idx + 1}</span>
                                {spread.status === 'completed' && <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold uppercase tracking-widest shadow-sm">✓ DONE</span>}
                            </div>
-                           <div 
+                           <div
                               className="w-full relative bg-white dark:bg-neutral-950 shadow-md group-hover:shadow-2xl group-hover:ring-4 ring-orange-500 transition-all overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-800"
                               style={{ aspectRatio: 1 / ratio, background: cssBackgroundStr }}
                            >
@@ -187,11 +188,11 @@ export default function EditorWorkspace() {
                                        }}
                                      >
                                          {el.type === 'text' && (
-                                            <div 
-                                               style={{ 
-                                                  width: '100%', height: '100%', 
-                                                  display: 'flex', 
-                                                  alignItems: 'center', 
+                                            <div
+                                               style={{
+                                                  width: '100%', height: '100%',
+                                                  display: 'flex',
+                                                  alignItems: 'center',
                                                   justifyContent: 'center',
                                                   color: el.textColor || '#000000',
                                                   fontFamily: el.fontFamily || 'Inter',
@@ -218,23 +219,26 @@ export default function EditorWorkspace() {
          </div>
        ) : (
          <div className="absolute inset-0 w-full h-full">
-             <SpreadCanvas 
-               stageWidth={dimensions.width} 
-               stageHeight={dimensions.height} 
-               scale={scale} 
+             <SpreadCanvas
+               stageWidth={dimensions.width}
+               stageHeight={dimensions.height}
+               scale={scale}
                panX={currentPanX}
                panY={currentPanY}
              />
-             <RulerGuides 
-               scale={scale} 
-               project={project} 
+             <RulerGuides
+               scale={scale}
+               project={project}
                unit={measurementUnit}
                panX={currentPanX}
                panY={currentPanY}
              />
          </div>
        )}
-       
+
+       {/* Left-side Non-destructive Crop & Rotate Tool */}
+       {isReady && editorViewMode === 'SINGLE' && <CropToolbar />}
+
        {/* The standalone Navigator overlay widget */}
        {isReady && editorViewMode === 'SINGLE' && <NavigatorWidget scale={scale} autoScale={autoScale} />}
     </div>

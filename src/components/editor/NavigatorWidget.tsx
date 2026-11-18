@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useEditorStore } from '@/store/useEditorStore';
+import { buildCssFilterForAdjustments } from '@/utils/rawImagePipeline';
 
 interface NavigatorProps {
   scale: number;
@@ -20,14 +21,14 @@ export function NavigatorWidget({ scale, autoScale }: NavigatorProps) {
 
   const minimapRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
-  
+
   // Track continuous viewport resizing for precise reverse math
   const [viewportDims, setViewportDims] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     const container = document.getElementById('workspace-container');
     if (!container) return;
-    
+
     // Setup observer to know our actual screen viewport limits
     const observer = new ResizeObserver((entries) => {
       if (entries[0]) {
@@ -39,14 +40,14 @@ export function NavigatorWidget({ scale, autoScale }: NavigatorProps) {
     });
     observer.observe(container);
     setViewportDims({ width: container.clientWidth, height: container.clientHeight });
-    
+
     return () => observer.disconnect();
   }, []);
 
   // Smooth Centered Zooming Engine: Keeps viewport center anchored
   const handleZoomChange = (val: number) => {
     if (!project) return;
-    
+
     if (Math.abs(val - 1.0) < 0.01) {
        const defaultPanX = (viewportDims.width - (project.size.w_mm * autoScale)) / 2;
        const defaultPanY = (viewportDims.height - (project.size.h_mm * autoScale)) / 2;
@@ -95,11 +96,11 @@ export function NavigatorWidget({ scale, autoScale }: NavigatorProps) {
   const currentPanX = workspaceZoom === null ? defaultPanX : workspacePan.x;
   const currentPanY = workspaceZoom === null ? defaultPanY : workspacePan.y;
 
-  // 1. Calculate the Red ViewBox Size 
+  // 1. Calculate the Red ViewBox Size
   // It represents how much of the REAL PHYSICAL MM PAPER fits inside the Viewport Window!
   const mappedVisibleMmX = viewportDims.width / scale;
   const mappedVisibleMmY = viewportDims.height / scale;
-  
+
   const boxWidth = mappedVisibleMmX * trackingRatio;
   const boxHeight = mappedVisibleMmY * trackingRatio;
 
@@ -108,7 +109,7 @@ export function NavigatorWidget({ scale, autoScale }: NavigatorProps) {
   // Therefore the box must be shifted POSITIVELY inside the minimap.
   const mappedOffsetMmX = -currentPanX / scale;
   const mappedOffsetMmY = -currentPanY / scale;
-  
+
   const boxLeft = mappedOffsetMmX * trackingRatio;
   const boxTop = mappedOffsetMmY * trackingRatio;
 
@@ -120,22 +121,22 @@ export function NavigatorWidget({ scale, autoScale }: NavigatorProps) {
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!isDragging) return;
-    
+
     // e.movementX is pixels inside the MAP widget. We must reverse-translate it into Konva absolute Translation matrix offsets.
     // X_map / trackingRatio = mm_movement
     // mm_movement * scale = px_movement_on_screen
     // However, since shifting the BOX means shifting the SCREEN, the screen moves oppositely (-)
     const panPxDeltaX = -(e.movementX / trackingRatio) * scale;
     const panPxDeltaY = -(e.movementY / trackingRatio) * scale;
-    
+
     // Override auto-zoom immediately if not already active
     if (workspaceZoom === null) {
        setWorkspaceZoom(1.0);
     }
-    
-    setWorkspacePan((prev) => ({ 
-       x: prev.x + panPxDeltaX, 
-       y: prev.y + panPxDeltaY 
+
+    setWorkspacePan((prev) => ({
+       x: prev.x + panPxDeltaX,
+       y: prev.y + panPxDeltaY
     }));
   };
 
@@ -153,7 +154,7 @@ export function NavigatorWidget({ scale, autoScale }: NavigatorProps) {
         <span className="font-mono">{currentPercentage}%</span>
       </div>
 
-      <div 
+      <div
         ref={minimapRef}
         className="relative bg-white dark:bg-neutral-950 w-[200px] overflow-hidden border border-neutral-300 dark:border-neutral-800"
         style={{ height: MAP_HEIGHT }}
@@ -161,28 +162,96 @@ export function NavigatorWidget({ scale, autoScale }: NavigatorProps) {
         {activeSpread?.bg_color && (
           <div className="absolute inset-0" style={{ backgroundColor: activeSpread.bg_color }} />
         )}
-        
-        {activeSpread?.elements.map((el) => (
-           <div
-             key={el.id}
-             className="absolute pointer-events-none opacity-80"
-             style={{
-               left: el.x_mm * trackingRatio,
-               top: el.y_mm * trackingRatio,
-               width: Math.max(1, el.w_mm * trackingRatio),
-               height: Math.max(1, el.h_mm * trackingRatio),
-               backgroundColor: el.type === 'image' ? '#444' : el.fillColor || '#e5e5e5',
-               backgroundImage: (el.type === 'image' && el.previewUrl) ? `url(${el.previewUrl})` : 'none',
-               backgroundSize: 'cover',
-               backgroundPosition: 'center',
-               transform: `rotate(${el.rotation_deg || 0}deg)`,
-               zIndex: el.zIndex,
-               borderRadius: `${(el.borderRadius || 0) * trackingRatio}px`
-             }}
-           />
-        ))}
 
-        <div 
+        {activeSpread?.elements.map((el) => {
+          if (el.type === 'image') {
+            const cssFilter = buildCssFilterForAdjustments(
+              el.photoAdjustments,
+              el.photoFilter,
+              el.filterIntensity
+            );
+            const crop = el.cropData;
+            const isCropped = Boolean(
+              crop &&
+              (
+                (crop.widthPercent !== undefined && crop.widthPercent < 99.5) ||
+                (crop.heightPercent !== undefined && crop.heightPercent < 99.5) ||
+                (crop.xPercent !== undefined && crop.xPercent > 0.5) ||
+                (crop.yPercent !== undefined && crop.yPercent > 0.5)
+              )
+            );
+            const rot = el.rotation_deg || 0;
+            const flipH = !!el.flipHorizontal;
+            const flipV = !!el.flipVertical;
+            const transforms: string[] = [];
+            if (rot) transforms.push(`rotate(${rot}deg)`);
+            if (flipH) transforms.push('scaleX(-1)');
+            if (flipV) transforms.push('scaleY(-1)');
+            const transform = transforms.length > 0 ? transforms.join(' ') : undefined;
+
+            return (
+              <div
+                key={el.id}
+                className="absolute pointer-events-none opacity-80 overflow-hidden"
+                style={{
+                  left: el.x_mm * trackingRatio,
+                  top: el.y_mm * trackingRatio,
+                  width: Math.max(1, el.w_mm * trackingRatio),
+                  height: Math.max(1, el.h_mm * trackingRatio),
+                  backgroundColor: '#333',
+                  zIndex: el.zIndex,
+                  borderRadius: `${(el.borderRadius || 0) * trackingRatio}px`,
+                  transform,
+                }}
+              >
+                {el.previewUrl && (
+                  isCropped ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={el.previewUrl}
+                      alt=""
+                      className="absolute max-w-none max-h-none pointer-events-none"
+                      style={{
+                        width: `${(10000 / Math.max(1, crop?.widthPercent || 100)).toFixed(3)}%`,
+                        height: `${(10000 / Math.max(1, crop?.heightPercent || 100)).toFixed(3)}%`,
+                        left: `${(-(Math.max(0, crop?.xPercent || 0) / Math.max(1, crop?.widthPercent || 100)) * 100).toFixed(3)}%`,
+                        top: `${(-(Math.max(0, crop?.yPercent || 0) / Math.max(1, crop?.heightPercent || 100)) * 100).toFixed(3)}%`,
+                        filter: cssFilter,
+                      }}
+                    />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={el.previewUrl}
+                      alt=""
+                      className="w-full h-full object-cover pointer-events-none"
+                      style={{ filter: cssFilter }}
+                    />
+                  )
+                )}
+              </div>
+            );
+          }
+
+          return (
+            <div
+              key={el.id}
+              className="absolute pointer-events-none opacity-80"
+              style={{
+                left: el.x_mm * trackingRatio,
+                top: el.y_mm * trackingRatio,
+                width: Math.max(1, el.w_mm * trackingRatio),
+                height: Math.max(1, el.h_mm * trackingRatio),
+                backgroundColor: el.fillColor || '#e5e5e5',
+                transform: `rotate(${el.rotation_deg || 0}deg)`,
+                zIndex: el.zIndex,
+                borderRadius: `${(el.borderRadius || 0) * trackingRatio}px`
+              }}
+            />
+          );
+        })}
+
+        <div
           className="absolute border-2 border-red-500 cursor-grab hover:bg-red-500 hover:bg-opacity-10 transition-colors z-50 shadow-sm"
           style={{
             left: boxLeft,
@@ -201,19 +270,19 @@ export function NavigatorWidget({ scale, autoScale }: NavigatorProps) {
 
       <div className="p-3 bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <button 
+          <button
             title="Fit to Screen"
             className="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded text-neutral-400 hover:text-blue-500 transition-colors"
             onClick={() => handleZoomChange(1.0)}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
           </button>
-          
+
           <svg className="w-3 h-3 text-neutral-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-3.5-8a.5.5 0 01.5-.5h6a.5.5 0 010 1h-6a.5.5 0 01-.5-.5z" clipRule="evenodd" /></svg>
-          <input 
+          <input
             type="range"
             min={0.1}
-            max={5.0} 
+            max={5.0}
             step={0.05}
             className="w-full accent-blue-500"
             value={workspaceZoom === null ? 1.0 : workspaceZoom}
@@ -221,7 +290,7 @@ export function NavigatorWidget({ scale, autoScale }: NavigatorProps) {
           />
           <svg className="w-4 h-4 text-neutral-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm4.5-8a.5.5 0 01-.5.5h-3v3a.5.5 0 01-1 0v-3h-3a.5.5 0 010-1h3v-3a.5.5 0 011 0v3h3a.5.5 0 01.5.5z" clipRule="evenodd" /></svg>
         </div>
-        
+
         {/* Preset Utility Row */}
         <div className="flex items-center justify-between mt-1">
            <div className="flex gap-1">
@@ -235,8 +304,8 @@ export function NavigatorWidget({ scale, autoScale }: NavigatorProps) {
                </button>
              ))}
            </div>
-           
-           <button 
+
+           <button
              className="text-[9px] font-bold px-2 py-0.5 rounded border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 transition-colors"
              onClick={() => {
                 // Instantly re-center exactly back to mathematical origins

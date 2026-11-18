@@ -4,17 +4,18 @@ import { projectStorage } from '@/utils/projectStorage';
 
 interface SetupModalProps {
   initialFolder?: string;
-  initialCategory?: 'album' | 'studio_print';
+  initialCategory?: 'album' | 'studio_print' | 'raw';
   onCancel: () => void;
   onCreate: (
-    name: string, 
-    type: string, 
-    labPresetId: string, 
+    name: string,
+    type: string,
+    labPresetId: string,
     albumSize: string,
     projectCategory?: 'album' | 'studio_print',
     dpi?: number,
     orientation?: 'portrait' | 'landscape',
-    folder?: string
+    folder?: string,
+    workflowMode?: 'studio' | 'raw'
   ) => void;
 }
 
@@ -55,9 +56,9 @@ export default function SetupModal({ initialFolder, initialCategory, onCancel, o
   const t = useTranslations('Editor');
   const tStudio = useTranslations('Studio');
 
-  // Top-level creation mode: Album or Studio Print
-  const [creationMode, setCreationMode] = useState<'studio' | 'album'>(
-    initialCategory === 'album' ? 'album' : 'studio'
+  // Top-level creation mode: Raw Session, Studio Print, or Album
+  const [creationMode, setCreationMode] = useState<'raw' | 'studio' | 'album'>(
+    initialCategory === 'raw' ? 'raw' : initialCategory === 'album' ? 'album' : 'studio'
   );
 
   // --- FOLDERS STATE ---
@@ -162,14 +163,30 @@ export default function SetupModal({ initialFolder, initialCategory, onCancel, o
     const sizeStr = `${widthInches}x${heightInches}in`;
     const finalName = studioProjectName.trim() || `Proyecto Estudio ${widthInches}x${heightInches}`;
     onCreate(
-      finalName, 
-      'type_studio_print', 
-      'studio-lab', 
-      sizeStr, 
-      'studio_print', 
-      studioDpi, 
+      finalName,
+      'type_studio_print',
+      'studio-lab',
+      sizeStr,
+      'studio_print',
+      studioDpi,
       studioOrientation,
-      studioFolder || undefined
+      studioFolder || undefined,
+      'studio'
+    );
+  };
+
+  const handleRawSubmit = () => {
+    const finalName = studioProjectName.trim() || `Sesión Camera Raw ${new Date().toLocaleDateString()}`;
+    onCreate(
+      finalName,
+      'type_raw_session',
+      'studio-lab',
+      '12x8in',
+      'studio_print',
+      studioDpi,
+      'landscape',
+      studioFolder || undefined,
+      'raw'
     );
   };
 
@@ -191,7 +208,7 @@ export default function SetupModal({ initialFolder, initialCategory, onCancel, o
   const handleBack = () => {
     if (step > 1) setStep((s) => (s - 1) as 1 | 2 | 3 | 4 | 5);
   };
-  
+
   const handleAlbumSubmit = () => {
     let finalSize = albumSize;
     if (albumSize === 'Custom Size') {
@@ -205,12 +222,12 @@ export default function SetupModal({ initialFolder, initialCategory, onCancel, o
       finalSize = `Custom ${w}x${h}in`;
     }
     onCreate(
-      name.trim() || 'Untitled Album', 
-      bookLine, 
-      printCompany, 
-      finalSize, 
-      'album', 
-      300, 
+      name.trim() || 'Untitled Album',
+      bookLine,
+      printCompany,
+      finalSize,
+      'album',
+      300,
       'landscape',
       albumFolder || undefined
     );
@@ -230,7 +247,7 @@ export default function SetupModal({ initialFolder, initialCategory, onCancel, o
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="bg-neutral-100 dark:bg-neutral-900 w-full max-w-4xl h-[86vh] rounded-3xl border border-neutral-300 dark:border-neutral-800 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        
+
         {/* Header with Mode Tabs */}
         <div className="h-16 bg-neutral-900 border-b border-neutral-800 text-white flex items-center justify-between px-6 shrink-0">
           <div className="flex items-center gap-4">
@@ -238,13 +255,21 @@ export default function SetupModal({ initialFolder, initialCategory, onCancel, o
               <span className="w-8 h-8 rounded-lg bg-orange-600 flex items-center justify-center font-black text-sm">R</span>
               <span className="font-bold text-base tracking-tight text-white hidden sm:inline">RVP Suite</span>
             </div>
-            
+
             {/* Mode Switcher Tabs */}
-            <div className="flex bg-neutral-950 p-1 rounded-xl border border-neutral-800 text-xs">
+            <div className="flex bg-neutral-950 p-1 rounded-xl border border-neutral-800 text-xs gap-1">
+              <button
+                type="button"
+                onClick={() => setCreationMode('raw')}
+                className={`px-3.5 py-2 rounded-lg font-bold transition-all flex items-center gap-2 ${creationMode === 'raw' ? 'bg-emerald-600 text-white shadow-md' : 'text-neutral-400 hover:text-white'}`}
+              >
+                <span>🎞️</span>
+                <span>Camera Raw Pro</span>
+              </button>
               <button
                 type="button"
                 onClick={() => setCreationMode('studio')}
-                className={`px-4 py-2 rounded-lg font-bold transition-all flex items-center gap-2 ${creationMode === 'studio' ? 'bg-orange-600 text-white shadow-md' : 'text-neutral-400 hover:text-white'}`}
+                className={`px-3.5 py-2 rounded-lg font-bold transition-all flex items-center gap-2 ${creationMode === 'studio' ? 'bg-orange-600 text-white shadow-md' : 'text-neutral-400 hover:text-white'}`}
               >
                 <span>🖼️</span>
                 <span>{tStudio('mode_studio')}</span>
@@ -252,16 +277,16 @@ export default function SetupModal({ initialFolder, initialCategory, onCancel, o
               <button
                 type="button"
                 onClick={() => setCreationMode('album')}
-                className={`px-4 py-2 rounded-lg font-bold transition-all flex items-center gap-2 ${creationMode === 'album' ? 'bg-blue-600 text-white shadow-md' : 'text-neutral-400 hover:text-white'}`}
+                className={`px-3.5 py-2 rounded-lg font-bold transition-all flex items-center gap-2 ${creationMode === 'album' ? 'bg-blue-600 text-white shadow-md' : 'text-neutral-400 hover:text-white'}`}
               >
                 <span>📖</span>
                 <span>{tStudio('mode_album')}</span>
               </button>
             </div>
           </div>
-          
-          <button 
-            onClick={onCancel} 
+
+          <button
+            onClick={onCancel}
             className="w-8 h-8 flex items-center justify-center hover:bg-neutral-800 rounded-full text-neutral-400 hover:text-white text-xl transition"
           >
             &times;
@@ -269,33 +294,37 @@ export default function SetupModal({ initialFolder, initialCategory, onCancel, o
         </div>
 
         {/* ============================================================== */}
-        {/* MODE A: STUDIO PRINT / SINGLE CANVAS (PRIMARY)                 */}
+        {/* MODE A: CAMERA RAW PRO / STUDIO PRINT (SINGLE CANVAS / DAM)    */}
         {/* ============================================================== */}
-        {creationMode === 'studio' ? (
+        {creationMode !== 'album' ? (
           <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
-              
+
               {/* SECTION 1: PROJECT DETAILS (NAME & FOLDER) */}
               <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 shadow-sm">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  
+
                   {/* Project Name Field */}
                   <div>
                     <label className="text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-2 flex items-center gap-2">
                       <span>🏷️</span>
-                      <span>{t('form_name_label')}</span>
+                      <span>{creationMode === 'raw' ? tStudio('raw_name_label') : t('form_name_label')}</span>
                       <span className="text-red-500 font-bold">*</span>
                     </label>
-                    <input 
+                    <input
                       type="text"
                       value={studioProjectName}
                       onChange={(e) => setStudioProjectName(e.target.value)}
-                      placeholder="ej. Quinceañera Lauren - Ampliación Sala"
-                      className="w-full px-4 py-3 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 text-sm font-semibold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                      placeholder={creationMode === 'raw' ? tStudio('raw_name_placeholder') : "ej. Quinceañera Lauren - Ampliación Sala"}
+                      className={`w-full px-4 py-3 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 text-sm font-semibold text-neutral-900 dark:text-white outline-none transition ${
+                        creationMode === 'raw'
+                          ? 'focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500'
+                          : 'focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
+                      }`}
                       autoFocus
                     />
                     <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1.5">
-                      {t('project_name_desc')}
+                      {creationMode === 'raw' ? tStudio('raw_name_desc') : t('project_name_desc')}
                     </p>
                   </div>
 
@@ -307,8 +336,8 @@ export default function SetupModal({ initialFolder, initialCategory, onCancel, o
                         <span>{t('folder_collection')}</span>
                       </span>
                       {!isCreatingFolder && (
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           onClick={() => setIsCreatingFolder(true)}
                           className="text-[11px] text-orange-600 dark:text-orange-400 hover:underline font-bold"
                         >
@@ -319,7 +348,7 @@ export default function SetupModal({ initialFolder, initialCategory, onCancel, o
 
                     {isCreatingFolder ? (
                       <div className="flex gap-2">
-                        <input 
+                        <input
                           type="text"
                           value={newFolderName}
                           onChange={(e) => setNewFolderName(e.target.value)}
@@ -361,155 +390,240 @@ export default function SetupModal({ initialFolder, initialCategory, onCancel, o
                 </div>
               </div>
 
-              {/* SECTION 2: PRINT SIZE SELECTION */}
-              <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 shadow-sm">
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-4 block flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <span>📐</span>
-                    <span>{tStudio('step_print_size')}</span>
-                  </span>
-                  <span className="text-[11px] font-normal text-neutral-500">
-                    Selecciona una medida estándar o define un tamaño personalizado
-                  </span>
-                </label>
+              {/* SECTION 2: PRINT SIZE SELECTION / DYNAMIC FORMAT */}
+              {creationMode === 'raw' ? (
+                <div className="bg-white dark:bg-neutral-950 border border-emerald-500/40 dark:border-emerald-600/40 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                    <label className="text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
+                      <span>📐</span>
+                      <span>{tStudio('raw_dynamic_size_title')}</span>
+                    </label>
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 flex items-center gap-1.5 shadow-sm self-start sm:self-auto">
+                      <span>🔒</span>
+                      <span>{tStudio('raw_dynamic_size_badge')}</span>
+                    </span>
+                  </div>
 
-                {/* Grid of sizes */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {STUDIO_STANDARD_SIZES.map(preset => {
-                    const isSel = studioSelectedPresetId === preset.id;
-                    return (
-                      <div
-                        key={preset.id}
-                        onClick={() => setStudioSelectedPresetId(preset.id)}
-                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between ${isSel ? 'border-orange-500 bg-orange-50/40 dark:bg-orange-950/20 shadow-md scale-[1.02]' : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700'}`}
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-bold text-base text-neutral-900 dark:text-white">{tStudio(preset.keyLabel)}</span>
-                          {isSel && <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>}
-                        </div>
-                        <span className="text-[11px] text-neutral-400 dark:text-neutral-500">{preset.cmLabel}</span>
-                        <span className="text-[10px] text-neutral-500 dark:text-neutral-400 mt-3 font-medium">{tStudio(preset.keyDesc)}</span>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed mb-4">
+                    {tStudio('raw_dynamic_size_desc')}
+                  </p>
+
+                  {/* Feature Pills */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="p-3.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40 flex items-start gap-2.5">
+                      <span className="text-emerald-600 text-sm mt-0.5">🔄</span>
+                      <div className="text-xs">
+                        <span className="font-bold text-neutral-900 dark:text-white block mb-0.5">
+                          {tStudio('raw_benefit_orientation')}
+                        </span>
+                        <span className="text-neutral-500 dark:text-neutral-400 text-[11px]">
+                          Horizontal o vertical automática por metadatos EXIF.
+                        </span>
                       </div>
-                    );
-                  })}
-
-                  {/* Saved Custom Presets */}
-                  {savedCustomPresets.map(cp => {
-                    const isSel = studioSelectedPresetId === cp.id;
-                    return (
-                      <div
-                        key={cp.id}
-                        onClick={() => setStudioSelectedPresetId(cp.id)}
-                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between ${isSel ? 'border-orange-500 bg-orange-50/40 dark:bg-orange-950/20 shadow-md scale-[1.02]' : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700'}`}
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-bold text-base text-neutral-900 dark:text-white truncate">{cp.name}</span>
-                          {isSel && <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>}
-                        </div>
-                        <span className="text-[11px] text-neutral-400 dark:text-neutral-500">{cp.wInches} x {cp.hInches} in</span>
-                        <span className="text-[10px] text-orange-600 dark:text-orange-400 mt-3 font-medium">{tStudio('preset_saved_tag')}</span>
-                      </div>
-                    );
-                  })}
-
-                  {/* Custom Option Card */}
-                  <div
-                    onClick={() => setStudioSelectedPresetId('custom')}
-                    className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between ${studioSelectedPresetId === 'custom' ? 'border-orange-500 bg-orange-50/40 dark:bg-orange-950/20 shadow-md scale-[1.02]' : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700'}`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-base text-neutral-900 dark:text-white">{tStudio('preset_custom')}</span>
-                      {studioSelectedPresetId === 'custom' && <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>}
                     </div>
-                    <span className="text-[11px] text-neutral-400 dark:text-neutral-500">W × H</span>
-                    <span className="text-[10px] text-neutral-500 dark:text-neutral-400 mt-3 font-medium">{tStudio('preset_custom_desc')}</span>
+
+                    <div className="p-3.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40 flex items-start gap-2.5">
+                      <span className="text-emerald-600 text-sm mt-0.5">📏</span>
+                      <div className="text-xs">
+                        <span className="font-bold text-neutral-900 dark:text-white block mb-0.5">
+                          {tStudio('raw_benefit_aspect')}
+                        </span>
+                        <span className="text-neutral-500 dark:text-neutral-400 text-[11px]">
+                          Conserva el 100% de la escena sin bandas ni recortes.
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40 flex items-start gap-2.5">
+                      <span className="text-emerald-600 text-sm mt-0.5">⚡</span>
+                      <div className="text-xs">
+                        <span className="font-bold text-neutral-900 dark:text-white block mb-0.5">
+                          {tStudio('raw_benefit_develop')}
+                        </span>
+                        <span className="text-neutral-500 dark:text-neutral-400 text-[11px]">
+                          Flujo profesional equivalente a Adobe Bridge & Camera Raw.
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-emerald-100 dark:border-emerald-950/60 text-[11px] text-neutral-500 dark:text-neutral-400 flex items-center gap-2">
+                    <span>💡</span>
+                    <span>{tStudio('raw_studio_hint')}</span>
                   </div>
                 </div>
+              ) : (
+                <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 shadow-sm">
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-4 block flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                      <span>📐</span>
+                      <span>{tStudio('step_print_size')}</span>
+                    </span>
+                    <span className="text-[11px] font-normal text-neutral-500">
+                      Selecciona una medida estándar o define un tamaño personalizado
+                    </span>
+                  </label>
 
-                {/* Custom Dimensions Drawer */}
-                {studioSelectedPresetId === 'custom' && (
-                  <div className="mt-5 p-5 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl flex flex-wrap items-center gap-4 animate-in fade-in duration-200">
-                    <div>
-                      <label className="text-[10px] font-bold uppercase text-neutral-500 mb-1 block">{tStudio('custom_width')}</label>
-                      <input 
-                        type="number" step="0.1" min="1" max="100"
-                        value={studioCustomW}
-                        onChange={(e) => setStudioCustomW(e.target.value)}
-                        className="w-24 px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-sm font-bold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500"
-                      />
-                    </div>
-                    <span className="text-neutral-400 font-bold mt-4">×</span>
-                    <div>
-                      <label className="text-[10px] font-bold uppercase text-neutral-500 mb-1 block">{tStudio('custom_height')}</label>
-                      <input 
-                        type="number" step="0.1" min="1" max="100"
-                        value={studioCustomH}
-                        onChange={(e) => setStudioCustomH(e.target.value)}
-                        className="w-24 px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-sm font-bold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold uppercase text-neutral-500 mb-1 block">{tStudio('units')}</label>
-                      <select 
-                        value={studioCustomUnit}
-                        onChange={(e) => setStudioCustomUnit(e.target.value as 'inches' | 'cm')}
-                        className="px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-sm font-bold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
-                      >
-                        <option value="inches">{tStudio('inches')}</option>
-                        <option value="cm">{tStudio('cm')}</option>
-                      </select>
-                    </div>
-
-                    <div className="flex-1 min-w-[200px]">
-                      <label className="text-[10px] font-bold uppercase text-neutral-500 mb-1 block">{tStudio('preset_name_optional')}</label>
-                      <div className="flex gap-2">
-                        <input 
-                          type="text"
-                          placeholder={tStudio('preset_placeholder')}
-                          value={studioCustomName}
-                          onChange={(e) => setStudioCustomName(e.target.value)}
-                          className="flex-1 px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-sm text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500"
-                        />
-                        <button
-                          type="button"
-                          onClick={saveCustomPreset}
-                          className="px-4 py-2 rounded-xl bg-neutral-900 dark:bg-neutral-800 text-white hover:bg-neutral-800 dark:hover:bg-neutral-700 text-xs font-semibold whitespace-nowrap transition"
+                  {/* Grid of sizes */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {STUDIO_STANDARD_SIZES.map(preset => {
+                      const isSel = studioSelectedPresetId === preset.id;
+                      return (
+                        <div
+                          key={preset.id}
+                          onClick={() => setStudioSelectedPresetId(preset.id)}
+                          className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between ${isSel ? 'border-orange-500 bg-orange-50/40 dark:bg-orange-950/20 shadow-md scale-[1.02]' : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700'}`}
                         >
-                          + {tStudio('btn_save_preset')}
-                        </button>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-base text-neutral-900 dark:text-white">{tStudio(preset.keyLabel)}</span>
+                            {isSel && <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>}
+                          </div>
+                          <span className="text-[11px] text-neutral-400 dark:text-neutral-500">{preset.cmLabel}</span>
+                          <span className="text-[10px] text-neutral-500 dark:text-neutral-400 mt-3 font-medium">{tStudio(preset.keyDesc)}</span>
+                        </div>
+                      );
+                    })}
+
+                    {/* Saved Custom Presets */}
+                    {savedCustomPresets.map(cp => {
+                      const isSel = studioSelectedPresetId === cp.id;
+                      return (
+                        <div
+                          key={cp.id}
+                          onClick={() => setStudioSelectedPresetId(cp.id)}
+                          className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between ${isSel ? 'border-orange-500 bg-orange-50/40 dark:bg-orange-950/20 shadow-md scale-[1.02]' : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700'}`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-base text-neutral-900 dark:text-white truncate">{cp.name}</span>
+                            {isSel && <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>}
+                          </div>
+                          <span className="text-[11px] text-neutral-400 dark:text-neutral-500">{cp.wInches} x {cp.hInches} in</span>
+                          <span className="text-[10px] text-orange-600 dark:text-orange-400 mt-3 font-medium">{tStudio('preset_saved_tag')}</span>
+                        </div>
+                      );
+                    })}
+
+                    {/* Custom Option Card */}
+                    <div
+                      onClick={() => setStudioSelectedPresetId('custom')}
+                      className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between ${studioSelectedPresetId === 'custom' ? 'border-orange-500 bg-orange-50/40 dark:bg-orange-950/20 shadow-md scale-[1.02]' : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700'}`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold text-base text-neutral-900 dark:text-white">{tStudio('preset_custom')}</span>
+                        {studioSelectedPresetId === 'custom' && <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>}
                       </div>
+                      <span className="text-[11px] text-neutral-400 dark:text-neutral-500">W × H</span>
+                      <span className="text-[10px] text-neutral-500 dark:text-neutral-400 mt-3 font-medium">{tStudio('preset_custom_desc')}</span>
                     </div>
                   </div>
-                )}
-              </div>
+
+                  {/* Custom Dimensions Drawer */}
+                  {studioSelectedPresetId === 'custom' && (
+                    <div className="mt-5 p-5 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl flex flex-wrap items-center gap-4 animate-in fade-in duration-200">
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-neutral-500 mb-1 block">{tStudio('custom_width')}</label>
+                        <input
+                          type="number" step="0.1" min="1" max="100"
+                          value={studioCustomW}
+                          onChange={(e) => setStudioCustomW(e.target.value)}
+                          className="w-24 px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-sm font-bold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                      </div>
+                      <span className="text-neutral-400 font-bold mt-4">×</span>
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-neutral-500 mb-1 block">{tStudio('custom_height')}</label>
+                        <input
+                          type="number" step="0.1" min="1" max="100"
+                          value={studioCustomH}
+                          onChange={(e) => setStudioCustomH(e.target.value)}
+                          className="w-24 px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-sm font-bold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-neutral-500 mb-1 block">{tStudio('units')}</label>
+                        <select
+                          value={studioCustomUnit}
+                          onChange={(e) => setStudioCustomUnit(e.target.value as 'inches' | 'cm')}
+                          className="px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-sm font-bold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
+                        >
+                          <option value="inches">{tStudio('inches')}</option>
+                          <option value="cm">{tStudio('cm')}</option>
+                        </select>
+                      </div>
+
+                      <div className="flex-1 min-w-[200px]">
+                        <label className="text-[10px] font-bold uppercase text-neutral-500 mb-1 block">{tStudio('preset_name_optional')}</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder={tStudio('preset_placeholder')}
+                            value={studioCustomName}
+                            onChange={(e) => setStudioCustomName(e.target.value)}
+                            className="flex-1 px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-sm text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={saveCustomPreset}
+                            className="px-4 py-2 rounded-xl bg-neutral-900 dark:bg-neutral-800 text-white hover:bg-neutral-800 dark:hover:bg-neutral-700 text-xs font-semibold whitespace-nowrap transition"
+                          >
+                            + {tStudio('btn_save_preset')}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* SECTION 3: ORIENTATION & RESOLUTION GROUP */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                {/* Orientation Selector */}
-                <div className="bg-white dark:bg-neutral-950 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
-                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-4 block">
-                    {tStudio('orientation')}
-                  </label>
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setStudioOrientation('portrait')}
-                      className={`flex-1 p-3.5 rounded-xl border-2 flex items-center justify-center gap-3 transition-all ${studioOrientation === 'portrait' ? 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400 font-bold shadow-sm' : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300'}`}
-                    >
-                      <div className="w-5 h-7 border-2 border-current rounded-sm"></div>
-                      <span className="text-sm">{tStudio('orientation_portrait')}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setStudioOrientation('landscape')}
-                      className={`flex-1 p-3.5 rounded-xl border-2 flex items-center justify-center gap-3 transition-all ${studioOrientation === 'landscape' ? 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400 font-bold shadow-sm' : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300'}`}
-                    >
-                      <div className="w-7 h-5 border-2 border-current rounded-sm"></div>
-                      <span className="text-sm">{tStudio('orientation_landscape')}</span>
-                    </button>
+
+                {/* Orientation Selector or Dynamic Info */}
+                {creationMode === 'raw' ? (
+                  <div className="bg-white dark:bg-neutral-950 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm flex flex-col justify-between">
+                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-2 block flex items-center gap-2">
+                      <span>🔄</span>
+                      <span>{tStudio('orientation')}</span>
+                    </label>
+                    <div className="p-3.5 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 flex items-center justify-center text-emerald-600 text-sm shrink-0">
+                        🔒
+                      </div>
+                      <div className="text-xs">
+                        <span className="font-bold text-neutral-900 dark:text-white block">
+                          Automática según cada foto
+                        </span>
+                        <span className="text-neutral-500 text-[11px]">
+                          El lienzo se adaptará automáticamente a fotos horizontales o verticales sin forzar orientación.
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="bg-white dark:bg-neutral-950 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
+                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-4 block">
+                      {tStudio('orientation')}
+                    </label>
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setStudioOrientation('portrait')}
+                        className={`flex-1 p-3.5 rounded-xl border-2 flex items-center justify-center gap-3 transition-all ${studioOrientation === 'portrait' ? 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400 font-bold shadow-sm' : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300'}`}
+                      >
+                        <div className="w-5 h-7 border-2 border-current rounded-sm"></div>
+                        <span className="text-sm">{tStudio('orientation_portrait')}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStudioOrientation('landscape')}
+                        className={`flex-1 p-3.5 rounded-xl border-2 flex items-center justify-center gap-3 transition-all ${studioOrientation === 'landscape' ? 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400 font-bold shadow-sm' : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300'}`}
+                      >
+                        <div className="w-7 h-5 border-2 border-current rounded-sm"></div>
+                        <span className="text-sm">{tStudio('orientation_landscape')}</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Resolution DPI Selector */}
                 <div className="bg-white dark:bg-neutral-950 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
@@ -522,17 +636,17 @@ export default function SetupModal({ initialFolder, initialCategory, onCancel, o
                       { dpi: 150, labelKey: 'dpi_150' },
                       { dpi: 72, labelKey: 'dpi_72' }
                     ].map(resItem => (
-                      <label 
+                      <label
                         key={resItem.dpi}
-                        className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer text-xs transition-colors ${studioDpi === resItem.dpi ? 'border-orange-500 bg-orange-50/40 dark:bg-orange-950/20 font-bold text-neutral-900 dark:text-white' : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300'}`}
+                        className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer text-xs transition-colors ${studioDpi === resItem.dpi ? (creationMode === 'raw' ? 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20 font-bold text-neutral-900 dark:text-white' : 'border-orange-500 bg-orange-50/40 dark:bg-orange-950/20 font-bold text-neutral-900 dark:text-white') : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300'}`}
                       >
                         <span>{tStudio(resItem.labelKey)}</span>
-                        <input 
-                          type="radio" 
+                        <input
+                          type="radio"
                           name="dpi"
                           checked={studioDpi === resItem.dpi}
                           onChange={() => setStudioDpi(resItem.dpi as 72 | 150 | 300)}
-                          className="accent-orange-500"
+                          className={creationMode === 'raw' ? 'accent-emerald-500' : 'accent-orange-500'}
                         />
                       </label>
                     ))}
@@ -541,42 +655,75 @@ export default function SetupModal({ initialFolder, initialCategory, onCancel, o
               </div>
 
               {/* SECTION 4: OUTPUT RESOLUTION & LIVE SUMMARY */}
-              <div className="bg-orange-50/70 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800/60 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                <div>
-                  <span className="text-xs uppercase font-bold text-orange-900 dark:text-orange-300 block mb-1">
-                    {tStudio('pixels_calculated')}
-                  </span>
-                  <div className="text-2xl md:text-3xl font-black font-mono text-orange-600 dark:text-orange-400">
-                    {calcPxW} × {calcPxH} px <span className="text-sm font-semibold text-neutral-500 dark:text-neutral-400">(@{studioDpi} DPI)</span>
+              {creationMode === 'raw' ? (
+                <div className="bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div>
+                    <span className="text-xs uppercase font-bold text-emerald-900 dark:text-emerald-300 block mb-1">
+                      Sesión de Revelado Camera Raw Pro
+                    </span>
+                    <div className="text-2xl md:text-3xl font-black font-mono text-emerald-600 dark:text-emerald-400">
+                      Resolución Nativa <span className="text-sm font-semibold text-neutral-500 dark:text-neutral-400">(@{studioDpi} DPI)</span>
+                    </div>
+                    <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
+                      El proyecto se abrirá directamente en la Biblioteca para importar tu lote de fotos y clasificarlas.
+                    </p>
                   </div>
-                  <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
-                    {tStudio('single_sheet_notice')}
-                  </p>
-                </div>
 
-                <div className="text-xs text-neutral-600 dark:text-neutral-300 bg-white/80 dark:bg-neutral-900/80 border border-orange-200 dark:border-orange-900/50 p-3.5 rounded-xl space-y-1 shrink-0">
-                  <div><strong>Proyecto:</strong> {studioProjectName.trim() || 'Proyecto Sin Título'}</div>
-                  <div><strong>Carpeta:</strong> {studioFolder ? `📁 ${studioFolder}` : '📁 General'}</div>
-                  <div><strong>Medida:</strong> {widthInches} × {heightInches} in ({studioOrientation === 'portrait' ? 'Vertical' : 'Horizontal'})</div>
+                  <div className="text-xs text-neutral-600 dark:text-neutral-300 bg-white/80 dark:bg-neutral-900/80 border border-emerald-200 dark:border-emerald-900/50 p-3.5 rounded-xl space-y-1 shrink-0">
+                    <div><strong>Sesión:</strong> {studioProjectName.trim() || 'Sesión Camera Raw'}</div>
+                    <div><strong>Carpeta:</strong> {studioFolder ? `📁 ${studioFolder}` : '📁 General'}</div>
+                    <div><strong>Lienzo:</strong> Dinámico por fotografía</div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-orange-50/70 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800/60 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div>
+                    <span className="text-xs uppercase font-bold text-orange-900 dark:text-orange-300 block mb-1">
+                      {tStudio('pixels_calculated')}
+                    </span>
+                    <div className="text-2xl md:text-3xl font-black font-mono text-orange-600 dark:text-orange-400">
+                      {calcPxW} × {calcPxH} px <span className="text-sm font-semibold text-neutral-500 dark:text-neutral-400">(@{studioDpi} DPI)</span>
+                    </div>
+                    <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
+                      {tStudio('single_sheet_notice')}
+                    </p>
+                  </div>
+
+                  <div className="text-xs text-neutral-600 dark:text-neutral-300 bg-white/80 dark:bg-neutral-900/80 border border-orange-200 dark:border-orange-900/50 p-3.5 rounded-xl space-y-1 shrink-0">
+                    <div><strong>Proyecto:</strong> {studioProjectName.trim() || 'Proyecto Sin Título'}</div>
+                    <div><strong>Carpeta:</strong> {studioFolder ? `📁 ${studioFolder}` : '📁 General'}</div>
+                    <div><strong>Medida:</strong> {widthInches} × {heightInches} in ({studioOrientation === 'portrait' ? 'Vertical' : 'Horizontal'})</div>
+                  </div>
+                </div>
+              )}
 
             </div>
 
-            {/* Studio Footer */}
+            {/* Studio / Raw Footer */}
             <div className="h-20 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800 px-8 flex items-center justify-between shrink-0">
-              <button 
-                onClick={onCancel} 
+              <button
+                onClick={onCancel}
                 className="px-6 py-2.5 rounded-full border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 text-sm font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
               >
                 {t('btn_cancel')}
               </button>
-              <button 
-                onClick={handleStudioSubmit}
-                className="px-8 py-2.5 rounded-full bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm tracking-wide shadow-lg shadow-orange-600/20 transition-all hover:scale-[1.02] active:scale-95"
-              >
-                ➔ {tStudio('btn_create_studio')}
-              </button>
+              {creationMode === 'raw' ? (
+                <button
+                  onClick={handleRawSubmit}
+                  className="px-8 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm tracking-wide shadow-lg shadow-emerald-600/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center gap-2"
+                >
+                  <span>➔</span>
+                  <span>{tStudio('btn_create_raw')}</span>
+                </button>
+              ) : (
+                <button
+                  onClick={handleStudioSubmit}
+                  className="px-8 py-2.5 rounded-full bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm tracking-wide shadow-lg shadow-orange-600/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center gap-2"
+                >
+                  <span>➔</span>
+                  <span>{tStudio('btn_create_studio')}</span>
+                </button>
+              )}
             </div>
           </div>
         ) : (
@@ -596,17 +743,17 @@ export default function SetupModal({ initialFolder, initialCategory, onCancel, o
             {/* Right Main Content */}
             <div className="flex-1 flex flex-col bg-neutral-100 dark:bg-neutral-900 relative">
               <div className="flex-1 p-8 overflow-y-auto">
-                
+
                 {step === 1 && (
                   <div className="flex flex-col gap-4">
-                    <div 
+                    <div
                       onClick={() => setPrintCompany('pic-pro-lab')}
                       className={`p-4 border-2 rounded-xl cursor-pointer transition-colors ${printCompany === 'pic-pro-lab' ? 'border-blue-500 bg-blue-50/30' : 'border-neutral-300 hover:border-neutral-400'} bg-white dark:bg-neutral-800`}
                     >
                       <div className="font-semibold text-lg text-black dark:text-white">Pic Pro Lab</div>
                       <div className="text-sm text-neutral-500 mt-1">Default lab integrations</div>
                     </div>
-                    <div 
+                    <div
                       onClick={() => setPrintCompany('custom')}
                       className={`p-4 border-2 rounded-xl cursor-pointer transition-colors ${printCompany === 'custom' ? 'border-blue-500 bg-blue-50/30' : 'border-neutral-300 hover:border-neutral-400'} bg-white dark:bg-neutral-800`}
                     >
@@ -618,14 +765,14 @@ export default function SetupModal({ initialFolder, initialCategory, onCancel, o
 
                 {step === 2 && (
                   <div className="flex flex-col gap-4">
-                    <div 
+                    <div
                       onClick={() => setBookLine('type_album')}
                       className={`p-4 border-2 rounded-xl cursor-pointer transition-colors ${bookLine === 'type_album' ? 'border-blue-500 bg-blue-50/30' : 'border-neutral-300 hover:border-neutral-400'} bg-white dark:bg-neutral-800`}
                     >
                       <div className="font-semibold text-lg text-black dark:text-white">Flushmount Album</div>
                       <div className="text-sm text-neutral-500 mt-1">Thick rigid pages, layflat design</div>
                     </div>
-                    <div 
+                    <div
                       onClick={() => setBookLine('type_book')}
                       className={`p-4 border-2 rounded-xl cursor-pointer transition-colors ${bookLine === 'type_book' ? 'border-blue-500 bg-blue-50/30' : 'border-neutral-300 hover:border-neutral-400'} bg-white dark:bg-neutral-800`}
                     >
@@ -639,9 +786,9 @@ export default function SetupModal({ initialFolder, initialCategory, onCancel, o
                   <div className="flex flex-col h-full">
                     <div className="flex justify-end mb-4">
                       <div className="relative w-64">
-                        <input 
-                          type="text" 
-                          placeholder="Search" 
+                        <input
+                          type="text"
+                          placeholder="Search"
                           value={searchSize}
                           onChange={(e) => setSearchSize(e.target.value)}
                           className="w-full pl-3 pr-8 py-2 border rounded-md text-sm bg-white dark:bg-neutral-800 text-black dark:text-white border-neutral-300"
@@ -651,7 +798,7 @@ export default function SetupModal({ initialFolder, initialCategory, onCancel, o
 
                     <div className="flex-1 overflow-y-auto border rounded-md p-2 bg-white dark:bg-neutral-800 divide-y divide-neutral-100 dark:divide-neutral-700">
                       {filteredSizes.map(size => (
-                        <div 
+                        <div
                           key={size}
                           onClick={() => setAlbumSize(size)}
                           className={`p-3 text-sm cursor-pointer rounded flex items-center justify-between ${albumSize === size ? 'bg-blue-50 dark:bg-neutral-700 font-bold text-blue-600 dark:text-blue-400' : 'hover:bg-neutral-50 dark:hover:bg-neutral-700/50 text-neutral-700 dark:text-neutral-300'}`}
@@ -666,7 +813,7 @@ export default function SetupModal({ initialFolder, initialCategory, onCancel, o
                       <div className="mt-4 p-4 border rounded-md bg-neutral-50 dark:bg-neutral-800/40">
                         <div className="text-xs font-semibold mb-2 text-neutral-500 uppercase tracking-wider">Custom Album Size (Inches)</div>
                         <div className="flex items-center gap-3">
-                          <input 
+                          <input
                             type="number" step="0.5" min="1" max="50"
                             placeholder="Width"
                             value={customWidth}
@@ -674,7 +821,7 @@ export default function SetupModal({ initialFolder, initialCategory, onCancel, o
                             className="w-24 p-2 border rounded bg-white dark:bg-neutral-900 border-neutral-300 text-sm"
                           />
                           <span>×</span>
-                          <input 
+                          <input
                             type="number" step="0.5" min="1" max="50"
                             placeholder="Height"
                             value={customHeight}
@@ -715,16 +862,16 @@ export default function SetupModal({ initialFolder, initialCategory, onCancel, o
                 {step === 5 && (
                   <div className="flex flex-col gap-6 text-black dark:text-white">
                     <h3 className="text-2xl font-semibold">Review & Create Album</h3>
-                    
+
                     <div className="space-y-4">
                       <div className="flex flex-col">
                         <label className="text-sm text-neutral-500 mb-2">Album Name</label>
-                        <input 
-                          type="text" 
-                          value={name} 
-                          onChange={(e) => setName(e.target.value)} 
+                        <input
+                          type="text"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
                           placeholder={t('form_name_placeholder') || "My Album Project"}
-                          className="p-3 border rounded-xl max-w-md bg-white dark:bg-neutral-800 text-black dark:text-white border-neutral-300 shadow-sm" 
+                          className="p-3 border rounded-xl max-w-md bg-white dark:bg-neutral-800 text-black dark:text-white border-neutral-300 shadow-sm"
                         />
                       </div>
                     </div>
@@ -760,16 +907,16 @@ export default function SetupModal({ initialFolder, initialCategory, onCancel, o
                     </svg>
                   </button>
                 ) : <div></div>}
-                
+
                 {step < 5 ? (
-                  <button 
+                  <button
                     onClick={handleNext}
                     className="px-10 py-2.5 rounded-full border border-blue-600 text-blue-600 font-bold hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors text-sm tracking-wide"
                   >
                     Next →
                   </button>
                 ) : (
-                  <button 
+                  <button
                     onClick={handleAlbumSubmit}
                     className="px-10 py-2.5 rounded-full bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20 text-sm tracking-wide"
                   >

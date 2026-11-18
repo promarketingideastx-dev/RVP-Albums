@@ -192,7 +192,7 @@ const ContinuousRawSlider = React.memo(function ContinuousRawSlider({
     <div className="mb-2.5 px-3 select-none">
       <div className="flex justify-between items-center mb-1">
         <span
-          className="text-[11px] font-medium text-[#d1d1d1] cursor-pointer hover:text-white transition-colors"
+          className="text-[11px] font-medium text-neutral-700 dark:text-neutral-300 cursor-pointer hover:text-black dark:hover:text-white transition-colors"
           onDoubleClick={handleDoubleClick}
           title="Doble clic para restablecer"
         >
@@ -208,7 +208,7 @@ const ContinuousRawSlider = React.memo(function ContinuousRawSlider({
           }}
           onBlur={handleTextBlur}
           onKeyDown={handleKeyDown}
-          className="w-12 bg-[#333333] border border-[#222] text-[#d1d1d1] text-right px-1 py-0.5 text-[10px] rounded focus:outline-none focus:border-blue-500 font-mono"
+          className="w-12 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 text-right px-1 py-0.5 text-[10px] rounded focus:outline-none focus:border-blue-500 font-mono shadow-sm"
         />
       </div>
 
@@ -220,19 +220,19 @@ const ContinuousRawSlider = React.memo(function ContinuousRawSlider({
         <div
           className="absolute w-full h-[3px] rounded opacity-80 group-hover:opacity-100 transition-opacity"
           style={{
-            background: trackGradient || 'linear-gradient(to right, #444444, #888888)',
+            background: trackGradient || 'linear-gradient(to right, #9ca3af, #4b5563)',
           }}
         />
 
         {min < 0 && max > 0 && (
           <div
-            className="absolute w-[2px] h-2 bg-[#555] transform -translate-x-1/2 pointer-events-none"
+            className="absolute w-[2px] h-2 bg-neutral-400 dark:bg-neutral-500 transform -translate-x-1/2 pointer-events-none"
             style={{ left: `${((0 - min) / (max - min)) * 100}%` }}
           />
         )}
 
         <div
-          className="absolute w-2 h-3.5 bg-[#dcdcdc] group-hover:bg-white border border-[#222] shadow-sm transform -translate-x-1/2 pointer-events-none transition-transform group-active:scale-110"
+          className="absolute w-2 h-3.5 bg-neutral-200 dark:bg-neutral-300 group-hover:bg-white border border-neutral-400 dark:border-neutral-600 shadow-sm transform -translate-x-1/2 pointer-events-none transition-transform group-active:scale-110"
           style={{
             left: `${pct}%`,
             clipPath: 'polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%)',
@@ -290,26 +290,26 @@ const ToneCurveVisualizer = React.memo(function ToneCurveVisualizer({
 
   return (
     <div className="px-3 mb-3">
-      <div className="relative w-full rounded border border-[#222] bg-[#1a1a1a] overflow-hidden flex flex-col items-center p-2 select-none">
+      <div className="relative w-full rounded border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 overflow-hidden flex flex-col items-center p-2 select-none">
         <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-28 overflow-visible">
           {/* 4-Zone Background Grid */}
-          <line x1={width * 0.25} y1={0} x2={width * 0.25} y2={height} stroke="#282828" strokeWidth="1" strokeDasharray="2,2" />
-          <line x1={width * 0.5} y1={0} x2={width * 0.5} y2={height} stroke="#333333" strokeWidth="1" />
-          <line x1={width * 0.75} y1={0} x2={width * 0.75} y2={height} stroke="#282828" strokeWidth="1" strokeDasharray="2,2" />
-          <line x1={0} y1={height * 0.5} x2={width} y2={height * 0.5} stroke="#333333" strokeWidth="1" />
+          <line x1={width * 0.25} y1={0} x2={width * 0.25} y2={height} stroke="currentColor" className="text-neutral-300 dark:text-neutral-800" strokeWidth="1" strokeDasharray="2,2" />
+          <line x1={width * 0.5} y1={0} x2={width * 0.5} y2={height} stroke="currentColor" className="text-neutral-300 dark:text-neutral-700" strokeWidth="1" />
+          <line x1={width * 0.75} y1={0} x2={width * 0.75} y2={height} stroke="currentColor" className="text-neutral-300 dark:text-neutral-800" strokeWidth="1" strokeDasharray="2,2" />
+          <line x1={0} y1={height * 0.5} x2={width} y2={height * 0.5} stroke="currentColor" className="text-neutral-300 dark:text-neutral-700" strokeWidth="1" />
 
           {/* Linear Neutral Reference Baseline */}
-          <line x1={0} y1={height} x2={width} y2={0} stroke="#444444" strokeWidth="1" strokeDasharray="3,3" />
+          <line x1={0} y1={height} x2={width} y2={0} stroke="currentColor" className="text-neutral-400 dark:text-neutral-600" strokeWidth="1" strokeDasharray="3,3" />
 
           {/* Area Fill */}
-          <path d={areaD} fill="rgba(255,255,255,0.06)" />
+          <path d={areaD} fill="rgba(100,100,100,0.08)" />
 
           {/* Dynamic Spline Curve */}
-          <path d={pathD} fill="none" stroke="#e0e0e0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d={pathD} fill="none" stroke="currentColor" className="text-neutral-800 dark:text-neutral-200" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
 
         {/* Zone Labels */}
-        <div className="w-full flex justify-between text-[8px] text-[#666] font-mono pointer-events-none mt-1">
+        <div className="w-full flex justify-between text-[8px] text-neutral-500 font-mono pointer-events-none mt-1">
           <span>0%</span>
           <span>{isEs ? 'Sombras' : 'Shadows'}</span>
           <span>{isEs ? 'Medios' : 'Mids'}</span>
@@ -741,22 +741,21 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
 
   return (
     <div
-      className="bg-[#2d2d2d] border border-[#1e1e1e] rounded-md overflow-hidden select-none font-sans text-left mt-4"
-      style={{ color: '#d1d1d1' }}
+      className="bg-white dark:bg-[#1a1a1a] border border-neutral-200 dark:border-neutral-800 rounded-md overflow-hidden select-none font-sans text-left mt-2 text-neutral-800 dark:text-neutral-200 shadow-sm"
     >
       {/* Top Profile Strip */}
-      <div className="px-3 py-2 border-b border-[#222] flex items-center justify-between">
+      <div className="px-3 py-2 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/60 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <span className="text-[11px] font-semibold text-[#e1e1e1]">{isEs ? 'Perfil' : 'Profile'}</span>
+          <span className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-200">{isEs ? 'Perfil' : 'Profile'}</span>
           <select
             disabled={disabled}
-            className="bg-[#383838] border border-[#222] text-[#d1d1d1] text-[10px] px-2 py-0.5 rounded w-32 focus:outline-none disabled:opacity-50"
+            className="bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 text-[10px] px-2 py-0.5 rounded w-32 focus:outline-none disabled:opacity-50 shadow-sm"
           >
             <option>{isEs ? 'Color Natural' : 'Natural Color'}</option>
             <option>{isEs ? 'Monocromático' : 'Monochrome'}</option>
           </select>
         </div>
-        <div className="text-[#a1a1a1] cursor-pointer hover:text-white" title="Presets de Revelado">
+        <div className="text-neutral-400 hover:text-neutral-700 dark:hover:text-white cursor-pointer" title="Presets de Revelado">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
             <path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z" />
           </svg>
@@ -771,12 +770,12 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
       />
 
       {/* 0.B BEFORE & AFTER COMPARISON TOOLBAR */}
-      <div className="px-3 py-2 border-b border-[#222] bg-[#222] flex items-center justify-between">
+      <div className="px-3 py-2 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-950 flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-semibold text-[#aaa]">
+          <span className="text-[10px] font-semibold text-neutral-600 dark:text-neutral-400">
             {isEs ? 'Antes / Después:' : 'Before / After:'}
           </span>
-          <div className="flex items-center bg-[#181818] rounded p-0.5 border border-[#333]">
+          <div className="flex items-center bg-neutral-200 dark:bg-neutral-900 rounded p-0.5 border border-neutral-300 dark:border-neutral-800">
             {/* Mode: Normal / Off */}
             <button
               type="button"
@@ -784,8 +783,8 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
               onClick={() => setBeforeAfterMode('off')}
               className={`px-2 py-0.5 rounded text-[9px] font-medium transition-colors ${
                 beforeAfterMode === 'off'
-                  ? 'bg-[#444] text-white font-bold shadow-sm'
-                  : 'text-[#777] hover:text-[#bbb]'
+                  ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white font-bold shadow-sm'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white'
               }`}
               title={isEs ? 'Vista normal' : 'Normal view'}
             >
@@ -800,7 +799,7 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
               className={`px-2 py-0.5 rounded text-[9px] font-medium transition-colors flex items-center gap-1 ${
                 beforeAfterMode === 'split'
                   ? 'bg-amber-500 text-black font-bold shadow-sm'
-                  : 'text-[#777] hover:text-[#bbb]'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white'
               }`}
               title={isEs ? 'Pantalla dividida con slider interactivo' : 'Split screen with draggable slider'}
             >
@@ -818,7 +817,7 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
             onPointerDown={() => setPreviewOriginalPhotoId(element.id)}
             onPointerUp={() => setPreviewOriginalPhotoId(null)}
             onPointerLeave={() => setPreviewOriginalPhotoId(null)}
-            className="px-2 py-0.5 rounded bg-[#2c2c2c] hover:bg-[#383838] text-[9px] text-[#ccc] hover:text-white border border-[#333] transition-colors flex items-center gap-1 active:bg-amber-500 active:text-black font-medium"
+            className="px-2 py-0.5 rounded bg-white hover:bg-neutral-50 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-[9px] text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white border border-neutral-300 dark:border-neutral-700 transition-colors flex items-center gap-1 active:bg-amber-500 active:text-black font-medium shadow-sm"
             title={isEs ? 'Mantén presionado para ver la foto original' : 'Hold to view original photo'}
           >
             <span>👁</span>
@@ -830,7 +829,7 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
             type="button"
             disabled={disabled}
             onClick={() => setIsBeforeAfterModalOpen(true)}
-            className="w-6 h-6 rounded bg-[#2c2c2c] hover:bg-[#383838] text-[#ccc] hover:text-white border border-[#333] transition-colors flex items-center justify-center text-[10px]"
+            className="w-6 h-6 rounded bg-white hover:bg-neutral-50 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white border border-neutral-300 dark:border-neutral-700 transition-colors flex items-center justify-center text-[10px] shadow-sm"
             title={isEs ? 'Abrir visor de pantalla completa A/B' : 'Open full screen A/B comparison'}
           >
             ⛶
@@ -839,16 +838,16 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
       </div>
 
       {/* 1. LIGHT SECTION */}
-      <div className="border-b border-[#222]">
+      <div className="border-b border-neutral-200 dark:border-neutral-800">
         <div
-          className="px-3 py-2 flex items-center cursor-pointer hover:bg-[#333] transition-colors"
+          className="px-3 py-2 flex items-center cursor-pointer bg-neutral-50 dark:bg-neutral-900/50 hover:bg-neutral-100 dark:hover:bg-neutral-800/80 transition-colors"
           onClick={() => toggleSection('light')}
         >
-          <span className="text-[10px] mr-2 text-[#a1a1a1]">{openSections.light ? '▼' : '▶'}</span>
-          <span className="text-[12px] font-semibold">{isEs ? 'Luz' : 'Light'}</span>
-          <div className="ml-auto flex items-center gap-2 text-[#777]">
+          <span className="text-[10px] mr-2 text-neutral-400 dark:text-neutral-500">{openSections.light ? '▼' : '▶'}</span>
+          <span className="text-[12px] font-semibold text-neutral-800 dark:text-neutral-200">{isEs ? 'Luz' : 'Light'}</span>
+          <div className="ml-auto flex items-center gap-2 text-neutral-400 dark:text-neutral-500">
             <div
-              className={`p-1 ${localAdj.bypassLight ? 'text-[#444]' : 'hover:text-white'}`}
+              className={`p-1 ${localAdj.bypassLight ? 'text-neutral-300 dark:text-neutral-600' : 'hover:text-black dark:hover:text-white'}`}
               title={localAdj.bypassLight ? (isEs ? 'Activar Luz' : 'Enable Light') : (isEs ? 'Desactivar Luz' : 'Bypass Light')}
               onClick={(e) => {
                 e.stopPropagation();
@@ -866,7 +865,7 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
               )}
             </div>
             <div
-              className="p-1 hover:text-white"
+              className="p-1 hover:text-black dark:hover:text-white"
               title={isEs ? 'Restablecer Luz' : 'Reset Light'}
               onClick={(e) => {
                 e.stopPropagation();
@@ -892,16 +891,16 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
       </div>
 
       {/* 2. COLOR SECTION */}
-      <div className="border-b border-[#222]">
+      <div className="border-b border-neutral-200 dark:border-neutral-800">
         <div
-          className="px-3 py-2 flex items-center cursor-pointer hover:bg-[#333] transition-colors"
+          className="px-3 py-2 flex items-center cursor-pointer bg-neutral-50 dark:bg-neutral-900/50 hover:bg-neutral-100 dark:hover:bg-neutral-800/80 transition-colors"
           onClick={() => toggleSection('color')}
         >
-          <span className="text-[10px] mr-2 text-[#a1a1a1]">{openSections.color ? '▼' : '▶'}</span>
-          <span className="text-[12px] font-semibold">{isEs ? 'Color' : 'Color'}</span>
-          <div className="ml-auto flex items-center gap-2 text-[#777]">
+          <span className="text-[10px] mr-2 text-neutral-400 dark:text-neutral-500">{openSections.color ? '▼' : '▶'}</span>
+          <span className="text-[12px] font-semibold text-neutral-800 dark:text-neutral-200">{isEs ? 'Color' : 'Color'}</span>
+          <div className="ml-auto flex items-center gap-2 text-neutral-400 dark:text-neutral-500">
             <div
-              className={`p-1 ${localAdj.bypassColor ? 'text-[#444]' : 'hover:text-white'}`}
+              className={`p-1 ${localAdj.bypassColor ? 'text-neutral-300 dark:text-neutral-600' : 'hover:text-black dark:hover:text-white'}`}
               title={localAdj.bypassColor ? (isEs ? 'Activar Color' : 'Enable Color') : (isEs ? 'Desactivar Color' : 'Bypass Color')}
               onClick={(e) => {
                 e.stopPropagation();
@@ -919,7 +918,7 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
               )}
             </div>
             <div
-              className="p-1 hover:text-white"
+              className="p-1 hover:text-black dark:hover:text-white"
               title={isEs ? 'Restablecer Color' : 'Reset Color'}
               onClick={(e) => {
                 e.stopPropagation();
@@ -936,14 +935,14 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
           <div className="pb-2 pt-1">
             {/* White balance row with Eyedropper */}
             <div className="flex items-center gap-2 px-3 mb-4 mt-1">
-              <span className="text-[11px] font-medium text-[#d1d1d1] flex-1">
+              <span className="text-[11px] font-medium text-neutral-700 dark:text-neutral-300 flex-1">
                 {isEs ? 'Balance de Blancos' : 'White balance'}
               </span>
               <button
                 type="button"
                 disabled={disabled}
                 onClick={handlePickWhiteBalance}
-                className="w-6 h-6 flex items-center justify-center rounded bg-[#383838] hover:bg-[#484848] text-[#d1d1d1] hover:text-white transition-colors border border-[#222] disabled:opacity-50"
+                className="w-6 h-6 flex items-center justify-center rounded bg-white hover:bg-neutral-50 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors border border-neutral-300 dark:border-neutral-700 disabled:opacity-50 shadow-sm"
                 title={isEs ? 'Gotero Balance de Blancos (Clic en punto gris/blanco)' : 'White Balance Eyedropper (Click neutral pixel)'}
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
@@ -982,16 +981,16 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
       </div>
 
       {/* 3. TONE CURVE SECTION */}
-      <div className="border-b border-[#222]">
+      <div className="border-b border-neutral-200 dark:border-neutral-800">
         <div
-          className="px-3 py-2 flex items-center cursor-pointer hover:bg-[#333] transition-colors"
+          className="px-3 py-2 flex items-center cursor-pointer bg-neutral-50 dark:bg-neutral-900/50 hover:bg-neutral-100 dark:hover:bg-neutral-800/80 transition-colors"
           onClick={() => toggleSection('curve')}
         >
-          <span className="text-[10px] mr-2 text-[#a1a1a1]">{openSections.curve ? '▼' : '▶'}</span>
-          <span className="text-[12px] font-semibold">{isEs ? 'Curva de Tonos' : 'Tone Curve'}</span>
-          <div className="ml-auto flex items-center gap-2 text-[#777]">
+          <span className="text-[10px] mr-2 text-neutral-400 dark:text-neutral-500">{openSections.curve ? '▼' : '▶'}</span>
+          <span className="text-[12px] font-semibold text-neutral-800 dark:text-neutral-200">{isEs ? 'Curva de Tonos' : 'Tone Curve'}</span>
+          <div className="ml-auto flex items-center gap-2 text-neutral-400 dark:text-neutral-500">
             <div
-              className={`p-1 ${localAdj.bypassCurve ? 'text-[#444]' : 'hover:text-white'}`}
+              className={`p-1 ${localAdj.bypassCurve ? 'text-neutral-300 dark:text-neutral-600' : 'hover:text-black dark:hover:text-white'}`}
               title={localAdj.bypassCurve ? (isEs ? 'Activar Curva' : 'Enable Curve') : (isEs ? 'Desactivar Curva' : 'Bypass Curve')}
               onClick={(e) => {
                 e.stopPropagation();
@@ -1009,7 +1008,7 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
               )}
             </div>
             <div
-              className="p-1 hover:text-white"
+              className="p-1 hover:text-black dark:hover:text-white"
               title={isEs ? 'Restablecer Curva' : 'Reset Curve'}
               onClick={(e) => {
                 e.stopPropagation();
@@ -1041,16 +1040,16 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
       </div>
 
       {/* 4. COLOR MIXER & POINT COLOR (Dual Mode) */}
-      <div className="border-b border-[#222]">
+      <div className="border-b border-neutral-200 dark:border-neutral-800">
         <div
-          className="px-3 py-2 flex items-center cursor-pointer hover:bg-[#333] transition-colors"
+          className="px-3 py-2 flex items-center cursor-pointer bg-neutral-50 dark:bg-neutral-900/50 hover:bg-neutral-100 dark:hover:bg-neutral-800/80 transition-colors"
           onClick={() => toggleSection('colorMixer')}
         >
-          <span className="text-[10px] mr-2 text-[#a1a1a1]">{openSections.colorMixer ? '▼' : '▶'}</span>
-          <span className="text-[12px] font-semibold">{isEs ? 'Mezclador & Color Puntual' : 'Color Mixer & Point Color'}</span>
-          <div className="ml-auto flex items-center gap-2 text-[#777]">
+          <span className="text-[10px] mr-2 text-neutral-400 dark:text-neutral-500">{openSections.colorMixer ? '▼' : '▶'}</span>
+          <span className="text-[12px] font-semibold text-neutral-800 dark:text-neutral-200">{isEs ? 'Mezclador & Color Puntual' : 'Color Mixer & Point Color'}</span>
+          <div className="ml-auto flex items-center gap-2 text-neutral-400 dark:text-neutral-500">
             <div
-              className={`p-1 ${(colorSubMode === 'mixer' ? localAdj.bypassColorMixer : localAdj.bypassPointColor) ? 'text-[#444]' : 'hover:text-white'}`}
+              className={`p-1 ${(colorSubMode === 'mixer' ? localAdj.bypassColorMixer : localAdj.bypassPointColor) ? 'text-neutral-300 dark:text-neutral-600' : 'hover:text-black dark:hover:text-white'}`}
               title={isEs ? 'Activar/Desactivar' : 'Toggle Bypass'}
               onClick={(e) => {
                 e.stopPropagation();
@@ -1074,7 +1073,7 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
               )}
             </div>
             <div
-              className="p-1 hover:text-white"
+              className="p-1 hover:text-black dark:hover:text-white"
               title={isEs ? 'Restablecer' : 'Reset'}
               onClick={(e) => {
                 e.stopPropagation();
@@ -1095,11 +1094,11 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
         {openSections.colorMixer && (
           <div className="pb-2 pt-1">
             {/* Top Sub-Mode Switcher: Mixer vs Point Color */}
-            <div className="flex border-b border-[#333] mb-3 px-3">
+            <div className="flex border-b border-neutral-200 dark:border-neutral-800 mb-3 px-3">
               <button
                 type="button"
                 className={`text-[11px] font-semibold mr-4 py-1.5 transition-colors ${
-                  colorSubMode === 'mixer' ? 'text-white border-b-2 border-white' : 'text-[#888] hover:text-[#bbb]'
+                  colorSubMode === 'mixer' ? 'text-blue-600 dark:text-white border-b-2 border-blue-600 dark:border-white' : 'text-neutral-500 hover:text-black dark:hover:text-white'
                 }`}
                 onClick={() => setColorSubMode('mixer')}
               >
@@ -1108,7 +1107,7 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
               <button
                 type="button"
                 className={`text-[11px] font-semibold py-1.5 transition-colors ${
-                  colorSubMode === 'pointColor' ? 'text-white border-b-2 border-white' : 'text-[#888] hover:text-[#bbb]'
+                  colorSubMode === 'pointColor' ? 'text-blue-600 dark:text-white border-b-2 border-blue-600 dark:border-white' : 'text-neutral-500 hover:text-black dark:hover:text-white'
                 }`}
                 onClick={() => setColorSubMode('pointColor')}
               >
@@ -1120,7 +1119,7 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
             {colorSubMode === 'mixer' && (
               <>
                 {/* HSL Tabs: Saturation / Hue / Luminance / All */}
-                <div className="flex gap-4 px-3 mb-3 border-b border-[#333]">
+                <div className="flex gap-4 px-3 mb-3 border-b border-neutral-200 dark:border-neutral-800">
                   {(
                     [
                       { id: 'Saturation', labelEs: 'Saturación', labelEn: 'Saturation' },
@@ -1133,7 +1132,7 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
                       key={tab.id}
                       type="button"
                       className={`text-[10px] pb-1 font-semibold transition-colors ${
-                        mixerTab === tab.id ? 'text-white border-b-2 border-white' : 'text-[#888] hover:text-[#bbb]'
+                        mixerTab === tab.id ? 'text-blue-600 dark:text-white border-b-2 border-blue-600 dark:border-white' : 'text-neutral-500 hover:text-black dark:hover:text-white'
                       }`}
                       onClick={() => setMixerTab(tab.id)}
                     >
@@ -1194,10 +1193,10 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
                 {mixerTab === 'All' && (
                   <div className="space-y-3 px-3">
                     {HSL_COLOR_OPTIONS.map((c) => (
-                      <div key={c.key} className="p-2 rounded bg-[#222222] border border-[#333]">
+                      <div key={c.key} className="p-2 rounded bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800">
                           <div className="flex items-center gap-2 mb-2">
                             <div className="w-3 h-3 rounded-full border border-black/40" style={{ backgroundColor: c.baseHex }} />
-                            <span className="text-[11px] font-semibold text-white">{isEs ? c.labelEs : c.labelEn}</span>
+                            <span className="text-[11px] font-semibold text-neutral-800 dark:text-neutral-100">{isEs ? c.labelEs : c.labelEn}</span>
                           </div>
                           <div className="space-y-1">
                             {renderSlider(isEs ? 'Tono' : 'Hue', `hsl.${c.key}.h`, -100, 100, 0, HSL_HUE_GRADIENTS[c.key])}
@@ -1229,7 +1228,7 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
             {colorSubMode === 'pointColor' && (
               <div className="px-3 pb-2 pt-1 space-y-3">
                 {/* 8 Quick-Select Photographic Color Chips (Red, Orange, Yellow, Green, Aqua, Blue, Purple, Magenta) */}
-                <div className="flex items-center justify-between gap-1 p-2 rounded bg-[#1e1e1e] border border-[#333]">
+                <div className="flex items-center justify-between gap-1 p-2 rounded bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800">
                   {[
                     { key: 'red', hex: '#ff3b30', h: 0, s: 95, l: 55, label: isEs ? 'Rojos (0°)' : 'Reds (0°)' },
                     { key: 'orange', hex: '#ff9500', h: 30, s: 95, l: 50, label: isEs ? 'Naranjas (30°)' : 'Oranges (30°)' },
@@ -1261,7 +1260,7 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
                         }}
                         className={`w-5 h-5 rounded-full border transition-all hover:scale-125 focus:outline-none ${
                           isSelected
-                            ? 'ring-2 ring-white scale-110 border-white shadow-md'
+                            ? 'ring-2 ring-blue-500 scale-110 border-white shadow-md'
                             : 'border-black/50 opacity-80 hover:opacity-100'
                         }`}
                         style={{ backgroundColor: swatch.hex }}
@@ -1272,13 +1271,13 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
                 </div>
 
                 {/* Eyedropper & Sampled Swatch Box */}
-                <div className="p-2.5 rounded bg-[#222222] border border-[#333] flex items-center justify-between">
+                <div className="p-2.5 rounded bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <button
                       type="button"
                       disabled={disabled}
                       onClick={handlePickPointColor}
-                      className="w-8 h-8 rounded bg-[#383838] hover:bg-[#484848] text-[#d1d1d1] hover:text-white transition-colors border border-[#222] flex items-center justify-center shadow"
+                      className="w-8 h-8 rounded bg-white hover:bg-neutral-50 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors border border-neutral-300 dark:border-neutral-700 flex items-center justify-center shadow-sm"
                       title={isEs ? 'Muestrear color con el gotero' : 'Sample color with eyedropper'}
                     >
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
@@ -1286,17 +1285,17 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
                       </svg>
                     </button>
                     <div>
-                      <div className="text-[11px] font-semibold text-white">
+                      <div className="text-[11px] font-semibold text-neutral-800 dark:text-white">
                         {isEs ? 'Color Muestreado' : 'Sampled Color'}
                       </div>
-                      <div className="text-[9px] text-[#888] font-mono">
+                      <div className="text-[9px] text-neutral-500 font-mono">
                         {pointColorData.sampleHex.toUpperCase()} | H: {pointColorData.sampleH}° S: {pointColorData.sampleS}%
                       </div>
                     </div>
                   </div>
 
                   <div
-                    className="w-7 h-7 rounded border border-white/20 shadow-inner"
+                    className="w-7 h-7 rounded border border-neutral-300 dark:border-neutral-700 shadow-inner"
                     style={{ backgroundColor: pointColorData.sampleHex }}
                   />
                 </div>
@@ -1333,7 +1332,7 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
                     10,
                     100,
                     35,
-                    'linear-gradient(to right, #383838, #888888)'
+                    'linear-gradient(to right, #9ca3af, #4b5563)'
                   )}
                 </div>
               </div>
@@ -1343,16 +1342,16 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
       </div>
 
       {/* 5. EFFECTS SECTION */}
-      <div className="border-b border-[#222]">
+      <div className="border-b border-neutral-200 dark:border-neutral-800">
         <div
-          className="px-3 py-2 flex items-center cursor-pointer hover:bg-[#333] transition-colors"
+          className="px-3 py-2 flex items-center cursor-pointer bg-neutral-50 dark:bg-neutral-900/50 hover:bg-neutral-100 dark:hover:bg-neutral-800/80 transition-colors"
           onClick={() => toggleSection('effects')}
         >
-          <span className="text-[10px] mr-2 text-[#a1a1a1]">{openSections.effects ? '▼' : '▶'}</span>
-          <span className="text-[12px] font-semibold">{isEs ? 'Efectos' : 'Effects'}</span>
-          <div className="ml-auto flex items-center gap-2 text-[#777]">
+          <span className="text-[10px] mr-2 text-neutral-400 dark:text-neutral-500">{openSections.effects ? '▼' : '▶'}</span>
+          <span className="text-[12px] font-semibold text-neutral-800 dark:text-neutral-200">{isEs ? 'Efectos' : 'Effects'}</span>
+          <div className="ml-auto flex items-center gap-2 text-neutral-400 dark:text-neutral-500">
             <div
-              className={`p-1 ${localAdj.bypassEffects ? 'text-[#444]' : 'hover:text-white'}`}
+              className={`p-1 ${localAdj.bypassEffects ? 'text-neutral-300 dark:text-neutral-600' : 'hover:text-black dark:hover:text-white'}`}
               title={localAdj.bypassEffects ? (isEs ? 'Activar Efectos' : 'Enable Effects') : (isEs ? 'Desactivar Efectos' : 'Bypass Effects')}
               onClick={(e) => {
                 e.stopPropagation();
@@ -1370,7 +1369,7 @@ export const CameraRawPanel = React.memo(function CameraRawPanel({
               )}
             </div>
             <div
-              className="p-1 hover:text-white"
+              className="p-1 hover:text-black dark:hover:text-white"
               title={isEs ? 'Restablecer Efectos' : 'Reset Effects'}
               onClick={(e) => {
                 e.stopPropagation();

@@ -4,21 +4,21 @@ import { projectStorage, ProjectIndexMeta } from '@/utils/projectStorage';
 import { get as idbGet } from 'idb-keyval';
 import { useTheme } from 'next-themes';
 import { usePathname } from 'next/navigation';
-import { 
-  Folder, 
-  FolderPlus, 
-  Trash2, 
-  ArrowRight, 
-  ArrowLeft, 
-  Image as ImageIcon, 
-  Camera, 
-  BookOpen, 
-  Sparkles, 
-  Download, 
-  Plus, 
-  Globe, 
-  Sun, 
-  Moon, 
+import {
+  Folder,
+  FolderPlus,
+  Trash2,
+  ArrowRight,
+  ArrowLeft,
+  Image as ImageIcon,
+  Camera,
+  BookOpen,
+  Sparkles,
+  Download,
+  Plus,
+  Globe,
+  Sun,
+  Moon,
   X,
   ChevronDown,
   HardDriveDownload
@@ -26,7 +26,7 @@ import {
 
 interface ProjectManagerProps {
   onOpenProject: (id: string) => void;
-  onNewProject: (defaultFolder?: string, defaultCategory?: 'album' | 'studio_print') => void;
+  onNewProject: (defaultFolder?: string, defaultCategory?: 'album' | 'studio_print' | 'raw') => void;
 }
 
 // Subcomponent for Premium Delete Confirmation Modal
@@ -66,11 +66,11 @@ function DeleteConfirmationModal({
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
       onClick={onCancel}
     >
-      <div 
+      <div
         className="relative w-full max-w-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-6 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
@@ -140,13 +140,13 @@ function DeleteConfirmationModal({
 }
 
 // Subcomponent for each Project Card
-function ProjectCardItem({ 
-  proj, 
+function ProjectCardItem({
+  proj,
   folders,
-  onOpen, 
+  onOpen,
   onDelete,
   onMoveFolder
-}: { 
+}: {
   proj: ProjectIndexMeta;
   folders: string[];
   onOpen: () => void;
@@ -211,7 +211,7 @@ function ProjectCardItem({
   };
 
   return (
-    <div 
+    <div
       onClick={onOpen}
       className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl overflow-hidden cursor-pointer hover:border-orange-500/80 hover:shadow-2xl hover:scale-[1.01] transition-all group flex flex-col justify-between shadow-sm"
     >
@@ -219,30 +219,37 @@ function ProjectCardItem({
       <div className="relative w-full h-64 p-4 bg-neutral-100/90 dark:bg-neutral-950/80 flex items-center justify-center overflow-hidden border-b border-neutral-200 dark:border-neutral-800">
         {thumbUrl ? (
           /* eslint-disable-next-line @next/next/no-img-element */
-          <img 
-            src={thumbUrl} 
+          <img
+            src={thumbUrl}
             alt={proj.title}
             className="max-w-full max-h-full object-contain rounded-lg shadow-lg border border-neutral-200/60 dark:border-neutral-800/80 transition-transform duration-300 group-hover:scale-[1.03]"
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-900 dark:to-neutral-950 text-neutral-500 dark:text-neutral-400 rounded-xl">
-            {isStudio ? (
+            {proj.type === 'type_raw_session' ? (
+              <Camera className="w-10 h-10 mb-2 opacity-40 text-emerald-500" />
+            ) : isStudio ? (
               <ImageIcon className="w-10 h-10 mb-2 opacity-40 text-orange-500" />
             ) : (
               <BookOpen className="w-10 h-10 mb-2 opacity-40 text-blue-500" />
             )}
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-              {proj.sizeStr || (isStudio ? 'Lienzo de Estudio' : 'Álbum Fotográfico')}
+              {proj.type === 'type_raw_session' ? 'Sesión Camera Raw' : proj.sizeStr || (isStudio ? 'Lienzo de Estudio' : 'Álbum Fotográfico')}
             </span>
             <span className="text-[10px] text-neutral-500 dark:text-neutral-500 mt-1 font-mono">
-              {proj.pixelResolution || (isStudio ? '300 DPI' : 'Multi-pliego')}
+              {proj.type === 'type_raw_session' ? 'Formato Dinámico RAW' : proj.pixelResolution || (isStudio ? '300 DPI' : 'Multi-pliego')}
             </span>
           </div>
         )}
 
         {/* Floating Top Badges */}
         <div className="absolute top-3 left-3 flex items-center gap-2">
-          {isStudio ? (
+          {proj.type === 'type_raw_session' ? (
+            <span className="px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold bg-emerald-100/90 dark:bg-emerald-950/90 backdrop-blur-md border border-emerald-300 dark:border-emerald-700/80 text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5 shadow-md">
+              <Camera className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+              <span>Camera Raw Pro</span>
+            </span>
+          ) : isStudio ? (
             <span className="px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold bg-orange-100/90 dark:bg-orange-950/90 backdrop-blur-md border border-orange-300 dark:border-orange-700/80 text-orange-800 dark:text-orange-300 flex items-center gap-1.5 shadow-md">
               <ImageIcon className="w-3 h-3" />
               <span>{proj.sizeStr || 'Estudio'}</span>
@@ -403,7 +410,7 @@ function FolderCardItem({
   // Find latest update in this folder
   const latestDate = useMemo(() => {
     if (projects.length === 0) return null;
-    const sorted = [...projects].sort((a, b) => 
+    const sorted = [...projects].sort((a, b) =>
       new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime()
     );
     return sorted[0]?.updatedAt ? new Date(sorted[0].updatedAt).toLocaleDateString() : null;
@@ -491,7 +498,7 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
 
   const [projects, setProjects] = useState<ProjectIndexMeta[]>([]);
   const [folders, setFolders] = useState<string[]>([]);
-  
+
   // Navigation State:
   // selectedApp: null = Suite Hub (shows only the 3 apps), 'studio' | 'raw' | 'album' = Inside that specific app
   const [selectedApp, setSelectedApp] = useState<'studio' | 'raw' | 'album' | null>(null);
@@ -654,8 +661,8 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
         icon: <Camera className="w-5 h-5 text-emerald-500" />,
         badge: t('module_raw_badge'),
         color: 'emerald',
-        newProjectBtn: '+ Revelar Foto',
-        defaultCategory: 'studio_print' as const,
+        newProjectBtn: '+ Nueva Sesión RAW',
+        defaultCategory: 'raw' as const,
       };
     }
     if (selectedApp === 'album') {
@@ -740,16 +747,16 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
   return (
     <div className="min-h-screen w-screen bg-neutral-100 dark:bg-neutral-950 text-neutral-900 dark:text-white flex flex-col items-center py-8 px-6 overflow-y-auto transition-colors duration-200">
       {/* Hidden File Input for .rvp Import */}
-      <input 
-        type="file" 
-        ref={fileInputRef} 
+      <input
+        type="file"
+        ref={fileInputRef}
         onChange={handleFileImport}
-        accept=".rvp,.json" 
-        className="hidden" 
+        accept=".rvp,.json"
+        className="hidden"
       />
 
       <div className="max-w-6xl w-full">
-        
+
         {/* ============================================================== */}
         {/* LEVEL 0: SUITE HUB (ONLY THE 3 APPS ACCESSIBLE)                */}
         {/* ============================================================== */}
@@ -814,7 +821,7 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
             {/* THE 3 SUITE APPLICATION CARDS (Premium Refined) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
               {/* 1. PHOTO STUDIO */}
-              <div 
+              <div
                 onClick={() => { setSelectedApp('studio'); setCurrentFolder(null); setSearchQuery(''); }}
                 className="bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-3xl p-7 transition-all duration-300 shadow-sm hover:shadow-2xl hover:border-orange-500/60 dark:hover:border-orange-500/60 hover:-translate-y-1.5 flex flex-col justify-between group relative overflow-hidden cursor-pointer"
               >
@@ -871,7 +878,7 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
               </div>
 
               {/* 2. CAMERA RAW PRO */}
-              <div 
+              <div
                 onClick={() => { setSelectedApp('raw'); setCurrentFolder(null); setSearchQuery(''); }}
                 className="bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-3xl p-7 transition-all duration-300 shadow-sm hover:shadow-2xl hover:border-emerald-500/60 dark:hover:border-emerald-500/60 hover:-translate-y-1.5 flex flex-col justify-between group relative overflow-hidden cursor-pointer"
               >
@@ -928,7 +935,7 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
               </div>
 
               {/* 3. ALBUM DESIGNER */}
-              <div 
+              <div
                 onClick={() => { setSelectedApp('album'); setCurrentFolder(null); setSearchQuery(''); }}
                 className="bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-3xl p-7 transition-all duration-300 shadow-sm hover:shadow-2xl hover:border-blue-500/60 dark:hover:border-blue-500/60 hover:-translate-y-1.5 flex flex-col justify-between group relative overflow-hidden cursor-pointer"
               >
@@ -1069,7 +1076,7 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
                   <span>{t('btn_import_rvp')}</span>
                 </button>
 
-                <button 
+                <button
                   onClick={() => onNewProject(currentFolder === '__general__' ? undefined : currentFolder || undefined, appInfo?.defaultCategory)}
                   className={`px-5 py-2 text-white font-bold text-xs rounded-xl transition-all shadow-lg flex items-center gap-2 hover:scale-[1.02] active:scale-95 ${
                     selectedApp === 'studio' ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-600/25' :
@@ -1188,7 +1195,7 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
                   <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 shadow-sm">
                     {/* Search Bar */}
                     <div className="relative flex-1 max-w-md">
-                      <input 
+                      <input
                         type="text"
                         placeholder={t('search_projects')}
                         value={searchQuery}
@@ -1197,7 +1204,7 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
                       />
                       <span className="absolute left-3 top-2.5 text-neutral-400 text-xs">🔍</span>
                       {searchQuery && (
-                        <button 
+                        <button
                           onClick={() => setSearchQuery('')}
                           className="absolute right-3 top-2 text-neutral-400 hover:text-black dark:hover:text-white text-xs"
                         >
@@ -1224,7 +1231,7 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
                   {/* PROJECTS GRID WITH TRUE ASPECT RATIO */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {appRecentProjects.map(proj => (
-                      <ProjectCardItem 
+                      <ProjectCardItem
                         key={proj.id}
                         proj={proj}
                         folders={folders}
@@ -1243,7 +1250,7 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
                         <p className="text-xs text-neutral-500 mb-4">
                           {searchQuery ? 'Prueba con otro término de búsqueda o limpia el filtro.' : 'Comienza creando tu primer proyecto en esta aplicación.'}
                         </p>
-                        <button 
+                        <button
                           onClick={() => onNewProject(undefined, appInfo?.defaultCategory)}
                           className={`px-5 py-2.5 rounded-xl text-white text-xs font-bold transition shadow-md flex items-center gap-1.5 ${
                             selectedApp === 'studio' ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-600/30' :
@@ -1308,7 +1315,7 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
                       <span>{t('btn_import_rvp')}</span>
                     </button>
 
-                    <button 
+                    <button
                       onClick={() => onNewProject(currentFolder === '__general__' ? undefined : currentFolder, appInfo?.defaultCategory)}
                       className={`px-5 py-2.5 text-white font-bold text-xs rounded-xl transition shadow-lg flex items-center gap-2 hover:scale-[1.02] active:scale-95 ${
                         selectedApp === 'studio' ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-600/25' :
@@ -1326,7 +1333,7 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
                 <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 mb-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 shadow-sm">
                   {/* Search Bar */}
                   <div className="relative flex-1 max-w-md">
-                    <input 
+                    <input
                       type="text"
                       placeholder={t('search_projects')}
                       value={searchQuery}
@@ -1335,7 +1342,7 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
                     />
                     <span className="absolute left-3 top-2.5 text-neutral-400 text-xs">🔍</span>
                     {searchQuery && (
-                      <button 
+                      <button
                         onClick={() => setSearchQuery('')}
                         className="absolute right-3 top-2 text-neutral-400 hover:text-black dark:hover:text-white text-xs"
                       >
@@ -1362,7 +1369,7 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
                 {/* PROJECTS GRID INSIDE FOLDER */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {appProjectsInCurrentFolder.map(proj => (
-                    <ProjectCardItem 
+                    <ProjectCardItem
                       key={proj.id}
                       proj={proj}
                       folders={folders}
@@ -1378,7 +1385,7 @@ export default function ProjectManager({ onOpenProject, onNewProject }: ProjectM
                       <Folder className="w-12 h-12 text-neutral-300 dark:text-neutral-700 mb-3" />
                       <p className="text-base font-bold text-neutral-700 dark:text-neutral-300 mb-1">{t('folder_empty')}</p>
                       <p className="text-xs text-neutral-500 mb-6">{t('folder_empty_desc')}</p>
-                      <button 
+                      <button
                         onClick={() => onNewProject(currentFolder === '__general__' ? undefined : currentFolder, appInfo?.defaultCategory)}
                         className={`px-6 py-2.5 rounded-xl text-white text-xs font-bold transition shadow-lg flex items-center gap-1.5 ${
                           selectedApp === 'studio' ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-600/30' :

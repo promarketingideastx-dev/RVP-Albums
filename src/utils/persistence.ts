@@ -81,16 +81,14 @@ export async function hydrateProjectBlobs(project: EditorProject): Promise<Edito
   const hydratedAssets = await Promise.all(
     rawAssets.map(async (asset) => {
       const newAsset = { ...asset };
-      if (!newAsset.previewUrl || !newAsset.previewUrl.startsWith('blob:')) {
-        newAsset.previewUrl =
-          (await resolveBlobUrl(newAsset.previewBlobId)) ||
-          (await resolveBlobUrl(newAsset.originalBlobId)) ||
-          newAsset.previewUrl;
-      }
-      // Point originalUrl to previewUrl in memory; exportEngine resolves originalBlobId directly from IDB
-      if (!newAsset.originalUrl || !newAsset.originalUrl.startsWith('blob:')) {
-        newAsset.originalUrl = newAsset.previewUrl;
-      }
+      // Always generate fresh, live ObjectURLs from IndexedDB blobs across reloads/locale swaps
+      const freshThumb = await resolveBlobUrl(newAsset.thumbnailBlobId);
+      const freshPreview = await resolveBlobUrl(newAsset.previewBlobId);
+      const freshOriginal = await resolveBlobUrl(newAsset.originalBlobId);
+
+      newAsset.previewUrl = freshPreview || freshOriginal || newAsset.previewUrl;
+      newAsset.thumbnailUrl = freshThumb || freshPreview || newAsset.thumbnailUrl || newAsset.previewUrl;
+      newAsset.originalUrl = freshPreview || freshOriginal || newAsset.originalUrl || newAsset.previewUrl;
       return newAsset;
     })
   );
@@ -116,20 +114,16 @@ export async function hydrateProjectBlobs(project: EditorProject): Promise<Edito
             if (matchedAsset) {
               newEl.previewBlobId = newEl.previewBlobId || matchedAsset.previewBlobId;
               newEl.originalBlobId = newEl.originalBlobId || matchedAsset.originalBlobId;
-              if (matchedAsset.previewUrl) {
-                newEl.previewUrl = matchedAsset.previewUrl;
-                newEl.originalUrl = matchedAsset.originalUrl || matchedAsset.previewUrl;
-              }
-            }
-
-            if (!newEl.previewUrl || !newEl.previewUrl.startsWith('blob:')) {
-              newEl.previewUrl =
+              newEl.previewUrl = matchedAsset.previewUrl;
+              newEl.originalUrl = matchedAsset.originalUrl || matchedAsset.previewUrl;
+            } else {
+              const freshPreview =
                 (await resolveBlobUrl(newEl.previewBlobId)) ||
-                (await resolveBlobUrl(newEl.originalBlobId)) ||
-                newEl.previewUrl;
-            }
-            if (!newEl.originalUrl || !newEl.originalUrl.startsWith('blob:')) {
-              newEl.originalUrl = newEl.previewUrl;
+                (await resolveBlobUrl(newEl.originalBlobId));
+              if (freshPreview) {
+                newEl.previewUrl = freshPreview;
+                newEl.originalUrl = freshPreview;
+              }
             }
 
             return newEl;

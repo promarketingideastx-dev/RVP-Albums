@@ -59,6 +59,7 @@ interface TabsHeaderProps {
   activeTab: 'properties' | 'layout' | 'layers' | 'global';
   setActiveTab: (tab: 'properties' | 'layout' | 'layers' | 'global') => void;
   isStudio: boolean;
+  isRawSession: boolean;
   propertiesLabel: string;
   layersLabel: string;
 }
@@ -67,9 +68,26 @@ const TabsHeader = React.memo(function TabsHeader({
   activeTab,
   setActiveTab,
   isStudio,
+  isRawSession,
   propertiesLabel,
   layersLabel,
 }: TabsHeaderProps) {
+  if (isRawSession) {
+    return (
+      <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 shrink-0">
+        <div className="flex items-center gap-2">
+          <SlidersHorizontal className="w-4 h-4 text-emerald-500" />
+          <span className="text-xs font-bold uppercase tracking-wider text-neutral-800 dark:text-neutral-200">
+            Camera Raw Pro
+          </span>
+        </div>
+        <span className="text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-800">
+          {propertiesLabel}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div className="flex border-b border-neutral-200 dark:border-neutral-800 shrink-0">
       <button
@@ -657,9 +675,17 @@ export default function Inspector() {
   }, [selectedElementId]);
 
   const isStudio = project?.projectCategory === 'studio_print';
+  const isRawSession = project?.type === 'type_raw_session' || (project as { workflowMode?: string })?.workflowMode === 'raw';
 
   // Handle intelligent auto-switching of tabs when selecting elements
   useEffect(() => {
+    if (isRawSession) {
+      if (activeTab !== 'properties') {
+        setActiveTab('properties');
+      }
+      return;
+    }
+
     if (!isStudio) {
       if (!selectedElementId && activeTab === 'properties') {
         setActiveTab('global');
@@ -671,7 +697,7 @@ export default function Inspector() {
         setActiveTab('properties');
       }
     }
-  }, [selectedElementId, isStudio, activeTab]);
+  }, [selectedElementId, isStudio, isRawSession, activeTab]);
 
   const propertiesLabel = t('properties') || 'Prop.';
   const layersLabel = t('layers') || 'Capas';
@@ -684,13 +710,14 @@ export default function Inspector() {
     );
   }
 
-  if (activeTab === 'global' && !isStudio) {
+  if (activeTab === 'global' && !isStudio && !isRawSession) {
     return (
       <aside className="w-64 shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full overflow-hidden">
         <TabsHeader
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           isStudio={Boolean(isStudio)}
+          isRawSession={Boolean(isRawSession)}
           propertiesLabel={propertiesLabel}
           layersLabel={layersLabel}
         />
@@ -699,13 +726,14 @@ export default function Inspector() {
     );
   }
 
-  if (activeTab === 'layout' && !isStudio) {
+  if (activeTab === 'layout' && !isStudio && !isRawSession) {
     return (
       <aside className="w-64 shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full overflow-hidden">
         <TabsHeader
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           isStudio={Boolean(isStudio)}
+          isRawSession={Boolean(isRawSession)}
           propertiesLabel={propertiesLabel}
           layersLabel={layersLabel}
         />
@@ -714,13 +742,14 @@ export default function Inspector() {
     );
   }
 
-  if (activeTab === 'layers') {
+  if (activeTab === 'layers' && !isRawSession) {
     return (
       <aside className="w-64 shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex flex-col h-full overflow-hidden">
         <TabsHeader
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           isStudio={Boolean(isStudio)}
+          isRawSession={Boolean(isRawSession)}
           propertiesLabel={propertiesLabel}
           layersLabel={layersLabel}
         />
@@ -737,6 +766,7 @@ export default function Inspector() {
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             isStudio={Boolean(isStudio)}
+            isRawSession={Boolean(isRawSession)}
             propertiesLabel={propertiesLabel}
             layersLabel={layersLabel}
           />
@@ -773,6 +803,7 @@ export default function Inspector() {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           isStudio={Boolean(isStudio)}
+          isRawSession={Boolean(isRawSession)}
           propertiesLabel={propertiesLabel}
           layersLabel={layersLabel}
         />
@@ -1031,6 +1062,7 @@ export default function Inspector() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         isStudio={Boolean(isStudio)}
+        isRawSession={Boolean(isRawSession)}
         propertiesLabel={propertiesLabel}
         layersLabel={layersLabel}
       />

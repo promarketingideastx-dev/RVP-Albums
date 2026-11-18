@@ -366,6 +366,20 @@
     "pixels_calculated": "Calculated output resolution:",
     "btn_create_studio": "Create Studio Project",
     "btn_create_album": "Create Album",
+    "btn_create_raw": "Create Camera Raw Pro Session",
+    "mode_raw": "Camera Raw Pro / RAW Session",
+    "mode_raw_desc": "Photo catalog, batch rating, and non-destructive develop with dynamic orientation and resolution.",
+    "raw_title": "Photo Session / Camera Raw Develop",
+    "raw_name_label": "Photo Session Name",
+    "raw_name_placeholder": "e.g. Wedding Valentina & Carlos - Main Session",
+    "raw_name_desc": "Assign a name to this photo catalog or batch for organization and development.",
+    "raw_dynamic_size_title": "Adaptive Size & Orientation (Native Resolution)",
+    "raw_dynamic_size_badge": "🔒 Locked / Dynamic per Photograph",
+    "raw_dynamic_size_desc": "In Camera Raw Pro, the workspace is not constrained to a fixed print size (like 8x10 or 16x20). Each photo preserves its native aspect ratio (3:2, 4:3, etc.) and original orientation (landscape or portrait).",
+    "raw_benefit_orientation": "Automatic orientation from camera sensor EXIF (Landscape / Portrait)",
+    "raw_benefit_aspect": "Native photo proportions with zero crop distortion",
+    "raw_benefit_develop": "Non-destructive develop, star ratings, and batch export",
+    "raw_studio_hint": "Want to compose a framed print in a fixed lab size with layers and frames? Select the 'Photo Studio' tab above.",
     "single_sheet_notice": "Single enlargement canvas (1 page). It will export exactly to the selected dimensions at 300 DPI."
   },
   "Export": {
@@ -448,6 +462,19 @@
     "status_error": "An error occurred during export.",
     "invalid_range_error": "Invalid spread range. Must be between 1 and {max}.",
     "invalid_format_error": "Invalid range format. Use e.g. 1-5 or 3.",
-    "empty_filename_error": "File name cannot be empty."
+    "empty_filename_error": "File name cannot be empty.",
+    "browser_title": "Photo Library",
+    "browser_all_photos": "All Photographs",
+    "browser_folders": "Folders",
+    "browser_collections": "Collections",
+    "browser_filters": "Filters",
+    "browser_favorites": "Favorites",
+    "browser_edited": "Edited with Camera Raw",
+    "browser_unedited": "Unedited",
+    "browser_rating_filter": "Filter by Rating",
+    "browser_orientation": "Orientation",
+    "browser_search": "Search by filename...",
+    "browser_import": "Import Photos",
+    "browser_to_canvas": "To Canvas"
   }
 }

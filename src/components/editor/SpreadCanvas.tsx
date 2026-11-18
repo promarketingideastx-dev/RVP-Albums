@@ -1,4 +1,5 @@
 "use client";
+import { getCachedRawImage } from '@/utils/rawImageCache';
 
 import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import { Stage, Layer, Rect, Ellipse, Transformer, Image as KonvaImage, Text, Group, Line, Circle } from 'react-konva';
@@ -19,6 +20,8 @@ import {
 import { TYPOGRAPHY_PRESETS } from '@/lib/typography-presets';
 import { useEditorStore } from '@/store/useEditorStore';
 import { EditorElement } from '@/types/editor';
+import { CropOverlay } from './CropOverlay';
+import { PhotoAttributesMenuSection } from '../common/PhotoAttributesMenuSection';
 import { extractAssetMetadataFromFile } from '@/utils/metadataEngine';
 import { processLocalImage } from '@/utils/imageIngestion';
 import {
@@ -74,7 +77,7 @@ export const smartGuidesEmitter = {
 const SmartGuidesRenderer = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const groupRef = useRef<any>(null);
-  
+
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handler = (g: any[]) => {
@@ -84,7 +87,7 @@ const SmartGuidesRenderer = () => {
        const lines = group.getChildren();
        // eslint-disable-next-line @typescript-eslint/no-explicit-any
        lines.forEach((line: any) => line.visible(false));
-       
+
        g.forEach((guide, i) => {
           if (i < lines.length) {
              lines[i].points(guide.points);
@@ -102,12 +105,12 @@ const SmartGuidesRenderer = () => {
   return (
     <Group ref={groupRef} listening={false}>
        {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
-         <Line 
-           key={i} 
-           points={[-8000, -8000, -8000, -8000]} 
-           stroke="#00ffff" 
-           strokeWidth={1.5} 
-           dash={[6, 4]} 
+         <Line
+           key={i}
+           points={[-8000, -8000, -8000, -8000]}
+           stroke="#00ffff"
+           strokeWidth={1.5}
+           dash={[6, 4]}
            visible={false}
          />
        ))}
@@ -122,15 +125,15 @@ export function buildSmartSnapBoundFunc(
 ) {
   return (pos: { x: number, y: number }) => {
     // Gentle 0.65mm snap threshold so dragging layers feels smooth without magnetic sticking friction
-    const SNAP_THRESHOLD_MM = 0.65; 
-    
+    const SNAP_THRESHOLD_MM = 0.65;
+
     const dragBox = {
        x: pos.x,
        y: pos.y,
        w: element.w_mm * (element.scale || 1),
        h: element.h_mm * (element.scale || 1)
     };
-    
+
     const dragEdges = {
        top: dragBox.y,
        centerY: dragBox.y + dragBox.h / 2,
@@ -144,7 +147,7 @@ export function buildSmartSnapBoundFunc(
     let newY = pos.y;
     let snappedX = false;
     let snappedY = false;
-    
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const activeGuides: any[] = [];
 
@@ -161,7 +164,7 @@ export function buildSmartSnapBoundFunc(
     ];
 
     scanTargets.forEach(sibBox => {
-      
+
       const sibEdges = {
          top: sibBox.y,
          centerY: sibBox.y + sibBox.h / 2,
@@ -222,34 +225,36 @@ export function buildSmartSnapBoundFunc(
 const ShadowDragAnchor = ({ element, spreadId, isSelected }: { element: EditorElement, spreadId: string, isSelected: boolean }) => {
   const updateElement = useEditorStore((state) => state.updateElement);
   const globalStyles = useEditorStore((state) => state.project?.globalImageStyles);
-  
+  const project = useEditorStore((state) => state.project);
+  const isRawSession = project?.type === 'type_raw_session' || (project as { workflowMode?: string })?.workflowMode === 'raw';
+
   const appliedShadowOpacity = element.shadowOpacity ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowOpacity ?? 0.5) : 0);
   const appliedShadowColor = element.shadowColor || (globalStyles?.shadowEnabled ? (globalStyles.shadowColor || 'transparent') : 'transparent');
   const appliedShadowOffsetX = element.shadowOffsetX ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetX ?? 0) : 0);
   const appliedShadowOffsetY = element.shadowOffsetY ?? (globalStyles?.shadowEnabled ? (globalStyles.shadowOffsetY ?? 0) : 0);
 
-  if (!isSelected || element.locked || appliedShadowOpacity <= 0 || appliedShadowColor === 'transparent') return null;
+  if (isRawSession || !isSelected || element.locked || appliedShadowOpacity <= 0 || appliedShadowColor === 'transparent') return null;
 
   const centerPt = getWorldPivotPoint(element, 0.5, 0.5);
 
   return (
     <Group x={centerPt.x} y={centerPt.y}>
-      <Line 
-        points={[0, 0, appliedShadowOffsetX, appliedShadowOffsetY]} 
-        stroke="#3b82f6" 
-        dash={[4,4]} 
-        strokeWidth={1.5} 
+      <Line
+        points={[0, 0, appliedShadowOffsetX, appliedShadowOffsetY]}
+        stroke="#3b82f6"
+        dash={[4,4]}
+        strokeWidth={1.5}
         opacity={0.8}
         listening={false}
       />
-      <Circle 
-        x={appliedShadowOffsetX} 
-        y={appliedShadowOffsetY} 
-        radius={7} 
-        fill="#ffffff" 
-        stroke="#3b82f6" 
-        strokeWidth={3} 
-        draggable 
+      <Circle
+        x={appliedShadowOffsetX}
+        y={appliedShadowOffsetY}
+        radius={7}
+        fill="#ffffff"
+        stroke="#3b82f6"
+        strokeWidth={3}
+        draggable
         onDragMove={(e) => {
           updateElement(spreadId, element.id, {
             shadowOffsetX: Math.round(e.target.x()),
@@ -279,8 +284,11 @@ const PivotAnchorOverlay = ({
   isSelected: boolean;
 }) => {
   const updateElement = useEditorStore((state) => state.updateElement);
+  const showPivotGuides = useEditorStore((state) => state.showPivotGuides);
+  const project = useEditorStore((state) => state.project);
+  const isRawSession = project?.type === 'type_raw_session' || (project as { workflowMode?: string })?.workflowMode === 'raw';
 
-  if (!isSelected || element.locked) return null;
+  if (!isSelected || element.locked || !showPivotGuides || isRawSession) return null;
 
   const centerPt = getWorldPivotPoint(element, 0.5, 0.5);
   const pivotU = element.pivotX ?? 0;
@@ -350,22 +358,24 @@ const PivotAnchorOverlay = ({
   );
 };
 
-const EditorImage = React.memo(function EditorImage({ 
-  element, 
+const EditorImage = React.memo(function EditorImage({
+  element,
   elements,
-  spreadId, 
-  isSelected, 
+  spreadId,
+  isSelected,
   isHovered = false,
   onSelect,
-  onContextMenu
-}: { 
-  element: EditorElement, 
+  onContextMenu,
+  canvasScale = 2.5,
+}: {
+  element: EditorElement,
   elements: EditorElement[],
-  spreadId: string, 
-  isSelected: boolean, 
+  spreadId: string,
+  isSelected: boolean,
   isHovered?: boolean,
   onSelect: () => void,
-  onContextMenu: (x: number, y: number, id: string) => void
+  onContextMenu: (x: number, y: number, id: string) => void,
+  canvasScale?: number,
 }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const groupRef = useRef<any>(null);
@@ -392,34 +402,63 @@ const EditorImage = React.memo(function EditorImage({
       const idx = state.project?.spreads.findIndex(s => s.id === spreadId) ?? -1;
       return idx !== -1 && state.project && idx < state.project.spreads.length - 1 ? state.project.spreads[idx + 1].id : null;
   });
-  
+
   // Phase 8.B: Extract sequential logic strictly mapped inside Editor Store explicitly natively
   const isStagingMode = element.stageType === 'staged';
   const stagingIndex = isStagingMode ? elements.filter(e => e.type === 'image' && e.stageType === 'staged').findIndex(e => e.id === element.id) : -1;
 
-  // Always use working viewport proxy (previewUrl) for 60fps interactive rendering;
-  // full-resolution originalBlobId is used untouched by exportEngine at export time.
-  const imageSrc = element.previewUrl || element.originalUrl || element.src || 'https://via.placeholder.com/150';
-  const [image] = useImage(imageSrc);
+  // In Camera Raw Pro, use element.originalUrl when available for 100% full uncompressed quality,
+  // falling back to previewUrl. In Album mode, use previewUrl for snappy multi-photo layouts.
+  const project = useEditorStore((state) => state.project);
+  const isRawSession = project?.type === 'type_raw_session' || (project as { workflowMode?: string })?.workflowMode === 'raw';
+
+  const imageSrc = (isRawSession && element.originalUrl)
+    ? element.originalUrl
+    : (element.previewUrl || element.originalUrl || element.src || 'https://via.placeholder.com/150');
+  const [loadedImage] = useImage(imageSrc);
+  const cachedRawImage = isRawSession
+    ? getCachedRawImage(imageSrc)
+    : undefined;
+  const image = cachedRawImage || loadedImage;
   const isSelectedStaged = useEditorStore(state => state.selectedStagedElementIds.includes(element.id));
 
+  const isCropMode = useEditorStore((state) => state.isCropMode);
+  const activeCropElementId = useEditorStore((state) => state.activeCropElementId);
+  const flipHDraft = useEditorStore((state) => state.flipHDraft);
+  const flipVDraft = useEditorStore((state) => state.flipVDraft);
+  const isCropActiveForThis = isCropMode && activeCropElementId === element.id;
+
+  const s = Math.max(0.1, canvasScale);
+  const isSinglePhotoMode = isRawSession || project?.projectCategory === 'studio_print';
+  const showBeforeAfterSplit = beforeAfterMode === 'split' && (isSelected || isSinglePhotoMode);
+
   useEffect(() => {
-    if (isSelected && !element.locked && trRef.current && groupRef.current) {
-      if (beforeAfterMode === 'split') {
+    if (!isRawSession && isSelected && !element.locked && trRef.current && groupRef.current) {
+      if (showBeforeAfterSplit || isCropActiveForThis) {
         trRef.current.nodes([]);
       } else {
         trRef.current.nodes([groupRef.current]);
       }
       trRef.current.getLayer()?.batchDraw();
     }
-  }, [isSelected, element.locked, beforeAfterMode]);
+  }, [isSelected, element.locked, showBeforeAfterSplit, isRawSession, isCropActiveForThis]);
 
   // Object-Fit Cover Math ONLY for Album Auto-Layout slots (never crop free Photo Studio layers or decorations!)
   let computedCrop = undefined;
   const isAutoLayoutSlot = Boolean(
     element.type === 'image' && (element.isAutoLayoutManaged || element.stageType === 'layout')
   );
-  if (image && isAutoLayoutSlot) {
+
+  if (image && !isCropActiveForThis && element.cropData) {
+    const imgW = image.width;
+    const imgH = image.height;
+    computedCrop = {
+      x: (element.cropData.xPercent / 100) * imgW,
+      y: (element.cropData.yPercent / 100) * imgH,
+      width: Math.max(1, (element.cropData.widthPercent / 100) * imgW),
+      height: Math.max(1, (element.cropData.heightPercent / 100) * imgH),
+    };
+  } else if (image && isAutoLayoutSlot) {
     const imgW = image.width;
     const imgH = image.height;
     const imgRatio = imgW / imgH;
@@ -465,7 +504,7 @@ const EditorImage = React.memo(function EditorImage({
           (element.photoAdjustments.pointColor && element.photoAdjustments.pointColor.enabled)
         )
       );
-      
+
       if ((hasLegacyFilter || hasAdj) && element.id !== previewOriginalPhotoId) {
         if (filterRafRef.current) cancelAnimationFrame(filterRafRef.current);
         filterRafRef.current = requestAnimationFrame(() => {
@@ -474,7 +513,7 @@ const EditorImage = React.memo(function EditorImage({
           currentNode.clearCache();
           registerKonvaRawFilters(Konva);
           const intensity = element.filterIntensity !== undefined ? element.filterIntensity : 1;
-          
+
           // Single unified raw & photographic LUT processing pipeline
           const finalFilters = applyRawAdjustmentsToKonvaNode(
             currentNode,
@@ -484,18 +523,20 @@ const EditorImage = React.memo(function EditorImage({
             element.photoFilter,
             intensity
           );
-          
+
           currentNode.filters(finalFilters);
-          
-          // HIGH PERFORMANCE INTERACTIVE CACHE RATIO
-          // During interactive editing, cap preview canvas size to crisp screen resolution (max 720px)
-          // so real-time slider drags run in ~3ms (>60fps) without blocking the UI thread.
-          // Full 300 DPI high-res caching is executed during actual file export in exportEngine.
+
+          // HIGH PERFORMANCE RETINA HIGH-FIDELITY CACHE RATIO
+          // Full physical screen pixel caching preserving crystal-clear sharpness at 100% zoom and high-DPI displays.
           const naturalWidth = image.naturalWidth || image.width;
           const logicalWidth = element.w_mm;
-          
-          const maxInteractiveWidth = 720;
-          const targetWidth = Math.min(maxInteractiveWidth, Math.max(300, naturalWidth));
+
+          const stageScale = currentNode.getStage()?.scaleX() || 1;
+          const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
+          const screenPixelWidth = Math.round(logicalWidth * stageScale * dpr);
+
+          // Caching up to full natural resolution or at least physical screen pixels (min 2560px)
+          const targetWidth = Math.min(naturalWidth, Math.max(screenPixelWidth, 2560));
           const computedPixelRatio = logicalWidth > 0 ? (targetWidth / logicalWidth) : 1;
 
           currentNode.cache({ pixelRatio: computedPixelRatio, imageSmoothingEnabled: true });
@@ -513,7 +554,7 @@ const EditorImage = React.memo(function EditorImage({
       if (filterRafRef.current) cancelAnimationFrame(filterRafRef.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [element.id, element.photoFilter, element.photoAdjustments, image, element.filterIntensity, previewOriginalPhotoId]);
+  }, [element.id, element.photoFilter, element.photoAdjustments, image, element.filterIntensity, previewOriginalPhotoId, element.cropData, isCropActiveForThis]);
 
   // Debounced cache geometry refresh when w_mm or h_mm changes on an already-filtered node,
   // avoiding synchronous CPU filter execution on every single resize frame.
@@ -524,7 +565,10 @@ const EditorImage = React.memo(function EditorImage({
       if (filterLayerRef.current && filterLayerRef.current.isCached()) {
         const naturalWidth = image.naturalWidth || image.width;
         const logicalWidth = element.w_mm;
-        const targetWidth = Math.min(960, Math.max(300, naturalWidth));
+        const stageScale = filterLayerRef.current.getStage()?.scaleX() || 1;
+        const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
+        const screenPixelWidth = Math.round(logicalWidth * stageScale * dpr);
+        const targetWidth = Math.min(naturalWidth, Math.max(screenPixelWidth, 2560));
         const computedPixelRatio = logicalWidth > 0 ? (targetWidth / logicalWidth) : 1;
         filterLayerRef.current.cache({ pixelRatio: computedPixelRatio, imageSmoothingEnabled: true });
         filterLayerRef.current.getLayer()?.batchDraw();
@@ -535,15 +579,15 @@ const EditorImage = React.memo(function EditorImage({
 
   // Phase 8.D: Apply Layout Hook Tracking Transition bridging semantic to geometric mapping natively
   const prevIsManaged = useRef(element.isAutoLayoutManaged);
-  
+
   useLayoutEffect(() => {
     if (groupRef.current) {
         if (!prevIsManaged.current && element.isAutoLayoutManaged) {
             // Flash-Pop Design Transition Sequence (Native Konva Math)
             const node = groupRef.current;
-            node.opacity(0); // Instantly conceal raw geometry 
+            node.opacity(0); // Instantly conceal raw geometry
             node.scale({ x: 0.85, y: 0.85 }); // Contract aggressively for dramatic Snap-Out
-            
+
             const tween = new Konva.Tween({
                node: node,
                duration: 0.35,
@@ -553,13 +597,21 @@ const EditorImage = React.memo(function EditorImage({
                easing: Konva.Easings.EaseOut
             });
             tween.play();
-            
+
             // Phase 8.D FIX: Native memory cleanup garbage collection properly handled interceptors smoothly
             return () => { tween.destroy(); };
         }
     }
     prevIsManaged.current = element.isAutoLayoutManaged;
   }, [element.isAutoLayoutManaged, element.opacity]);
+
+  // Invalidate Konva filter cache immediately whenever cropData or crop mode changes
+  useLayoutEffect(() => {
+    if (filterLayerRef.current) {
+      filterLayerRef.current.clearCache();
+      filterLayerRef.current.getLayer()?.batchDraw();
+    }
+  }, [element.cropData, isCropActiveForThis]);
 
   const appliedShadowColor = element.shadowColor || (!element.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowColor || '#000000') : 'transparent');
   const appliedShadowBlur = element.shadowBlur ?? (!element.isolateFromGlobalStyles && globalStyles?.shadowEnabled ? (globalStyles.shadowBlur ?? 0) : 0);
@@ -573,23 +625,33 @@ const EditorImage = React.memo(function EditorImage({
   const strokeEnabled = !element.isolateFromGlobalStyles && (globalStyles?.strokeEnabled ?? false);
   const appliedStrokeWidth = element.strokeWidth ?? (strokeEnabled ? (globalStyles?.strokeWidth ?? 0) : 0);
   const appliedStrokeColor = element.strokeColor ?? (strokeEnabled ? (globalStyles?.strokeColor ?? '#ffffff') : undefined);
-  
+
   const cornerRadiusEnabled = !element.isolateFromGlobalStyles && (globalStyles?.borderRadiusEnabled ?? false);
   const appliedBorderRadius = element.borderRadius ?? (cornerRadiusEnabled ? (globalStyles?.borderRadius ?? 0) : 0);
+
+  // The background photo remains firm and fixed on canvas - what rotates/adjusts is the crop guide!
+  const currentRotation = element.rotation_deg || 0;
+  const currentFlipH = isCropActiveForThis ? flipHDraft : !!element.flipHorizontal;
+  const currentFlipV = isCropActiveForThis ? flipVDraft : !!element.flipVertical;
+
+  const cx = element.w_mm / 2;
+  const cy = element.h_mm / 2;
 
   return (
     <React.Fragment>
       <Group
         ref={groupRef}
-        x={element.x_mm}
-        y={element.y_mm}
+        x={isRawSession ? cx : (element.x_mm + (currentFlipH ? element.w_mm : 0))}
+        y={isRawSession ? cy : (element.y_mm + (currentFlipV ? element.h_mm : 0))}
+        offsetX={isRawSession ? cx : 0}
+        offsetY={isRawSession ? cy : 0}
         width={element.w_mm}
         height={element.h_mm}
-        rotation={element.rotation_deg || 0}
-        scaleX={element.scale || 1}
-        scaleY={element.scale || 1}
+        rotation={currentRotation}
+        scaleX={(element.scale || 1) * (currentFlipH ? -1 : 1)}
+        scaleY={(element.scale || 1) * (currentFlipV ? -1 : 1)}
         listening={!element.locked}
-        draggable={!element.locked && (isSelected || isSelectedStaged)} // Allow drag if unlocked and selected!
+        draggable={!isRawSession && !isCropActiveForThis && !element.locked && (isSelected || isSelectedStaged)} // Strictly locked/anchored in Camera Raw Pro and during Crop mode
         onClick={(e) => {
            if (element.locked) return;
            if (element.stageType === 'staged') {
@@ -629,13 +691,13 @@ const EditorImage = React.memo(function EditorImage({
               const dropX = e.target.x() + (element.w_mm / 2);
               const dropY = e.target.y() + (element.h_mm / 2);
               const stagingImages = elements.filter(el => el.type === 'image' && el.stageType === 'staged');
-              
-              const hoverElement = stagingImages.find(el => 
+
+              const hoverElement = stagingImages.find(el =>
                  el.id !== element.id &&
                  dropX >= el.x_mm && dropX <= el.x_mm + el.w_mm &&
                  dropY >= el.y_mm && dropY <= el.y_mm + el.h_mm
               );
-              
+
               if (hoverElement) {
                   const hoverIdx = stagingImages.findIndex(el => el.id === hoverElement.id);
                   useEditorStore.getState().setStagingDropPreviewIndex(hoverIdx);
@@ -647,22 +709,22 @@ const EditorImage = React.memo(function EditorImage({
                const dropX = e.target.x() + (element.w_mm / 2);
                const dropY = e.target.y() + (element.h_mm / 2);
                const layoutImages = elements.filter(el => el.type === 'image' && el.stageType === 'layout');
-               
+
                let candidateId: string | null = null;
                for (const neighbor of layoutImages) {
                    if (neighbor.id === element.id) continue;
-                   
+
                    const nX = neighbor.x_mm + neighbor.w_mm / 2;
                    const nY = neighbor.y_mm + neighbor.h_mm / 2;
                    const dist = Math.hypot(dropX - nX, dropY - nY);
-                   
+
                    // Math proximity threshold (Center distance close to another element's center)
                    // Using 30mm or significant overlap area
                    const intersectX = Math.max(0, Math.min(e.target.x() + element.w_mm, neighbor.x_mm + neighbor.w_mm) - Math.max(e.target.x(), neighbor.x_mm));
                    const intersectY = Math.max(0, Math.min(e.target.y() + element.h_mm, neighbor.y_mm + neighbor.h_mm) - Math.max(e.target.y(), neighbor.y_mm));
                    const overlapArea = intersectX * intersectY;
                    const neighborArea = neighbor.w_mm * neighbor.h_mm;
-                   
+
                    // 40% area penetration or extreme center center proximity (<35mm)
                    if (overlapArea > neighborArea * 0.4 || dist < 35) {
                         candidateId = neighbor.id;
@@ -696,7 +758,7 @@ const EditorImage = React.memo(function EditorImage({
           if (isStagingMode) {
              useEditorStore.getState().setDraggingStagedElementId(null);
              useEditorStore.getState().setStagingDropPreviewIndex(null);
-             
+
              // Phase 8.C: Cross-Spread Native Traversal Target Math Context relative
              const dropX = e.target.x() + (element.w_mm / 2);
              const dropY = e.target.y() + (element.h_mm / 2);
@@ -711,8 +773,8 @@ const EditorImage = React.memo(function EditorImage({
              }
 
              const allImages = elements.filter(el => el.type === 'image' && el.stageType === 'staged');
-             
-             const targetElement = allImages.find(el => 
+
+             const targetElement = allImages.find(el =>
                 el.id !== element.id &&
                 dropX >= el.x_mm && dropX <= el.x_mm + el.w_mm &&
                 dropY >= el.y_mm && dropY <= el.y_mm + el.h_mm
@@ -720,7 +782,7 @@ const EditorImage = React.memo(function EditorImage({
 
              // Trigger explicit semantic grid-reorder (recalculates all X/Y globally)
              useEditorStore.getState().reorderStagedPhotos(spreadId, element.id, targetElement ? targetElement.id : element.id);
-             return; 
+             return;
           }
 
           // Phase 10: Enforce strict Grid Locks for mathematical tracking
@@ -787,12 +849,12 @@ const EditorImage = React.memo(function EditorImage({
         }}
       >
         {/* Base Unadjusted Original Photo (visible on the left or during toggle) */}
-        {beforeAfterMode === 'split' && isSelected && (
-          <KonvaImage 
-            image={image} 
+        {showBeforeAfterSplit && (
+          <KonvaImage
+            image={image}
             x={0} y={0}
-            width={element.w_mm} 
-            height={element.h_mm} 
+            width={element.w_mm}
+            height={element.h_mm}
             crop={computedCrop}
             cornerRadius={appliedBorderRadius}
             imageSmoothingEnabled={true}
@@ -802,19 +864,19 @@ const EditorImage = React.memo(function EditorImage({
         )}
 
         {/* Filtered / Adjusted Photo (clipped to right side in split mode, or full normally) */}
-        {beforeAfterMode === 'split' && isSelected ? (
+        {showBeforeAfterSplit ? (
           <Group
             clipX={element.w_mm * beforeAfterSplitPosition}
             clipY={0}
             clipWidth={element.w_mm * (1 - beforeAfterSplitPosition)}
             clipHeight={element.h_mm}
           >
-            <KonvaImage 
+            <KonvaImage
               ref={filterLayerRef}
-              image={image} 
+              image={image}
               x={0} y={0}
-              width={element.w_mm} 
-              height={element.h_mm} 
+              width={element.w_mm}
+              height={element.h_mm}
               crop={computedCrop}
               cornerRadius={appliedBorderRadius}
               stroke={appliedStrokeWidth > 0 ? appliedStrokeColor : undefined}
@@ -829,12 +891,12 @@ const EditorImage = React.memo(function EditorImage({
             />
           </Group>
         ) : (
-          <KonvaImage 
+          <KonvaImage
             ref={filterLayerRef}
-            image={image} 
+            image={image}
             x={0} y={0}
-            width={element.w_mm} 
-            height={element.h_mm} 
+            width={element.w_mm}
+            height={element.h_mm}
             crop={computedCrop}
             cornerRadius={appliedBorderRadius}
             stroke={appliedStrokeWidth > 0 ? appliedStrokeColor : undefined}
@@ -849,10 +911,10 @@ const EditorImage = React.memo(function EditorImage({
           />
         )}
 
-        {/* Interactive Split Divider Line & Draggable Handle on Canvas */}
-        {beforeAfterMode === 'split' && isSelected && (
+        {/* Interactive Split Divider Line & Draggable Handle on Canvas (Crisp constant screen scale) */}
+        {showBeforeAfterSplit && (
           <Group listening={true}>
-            {/* Vertical Divider Line */}
+            {/* 1. Visible Fine Hairline Divider (Always 1.5px on screen) */}
             <Line
               points={[
                 element.w_mm * beforeAfterSplitPosition,
@@ -861,14 +923,52 @@ const EditorImage = React.memo(function EditorImage({
                 element.h_mm,
               ]}
               stroke="#ffffff"
-              strokeWidth={2}
+              strokeWidth={Math.max(0.15, 1.4 / s)}
               shadowColor="#000000"
-              shadowBlur={4}
-              shadowOpacity={0.8}
+              shadowBlur={Math.max(0.4, 3 / s)}
+              shadowOpacity={0.7}
               listening={false}
             />
 
-            {/* Draggable Center Knob */}
+            {/* 2. Full-height Invisible Draggable Hit Zone (Allows dragging along the entire vertical line) */}
+            <Line
+              points={[
+                element.w_mm * beforeAfterSplitPosition,
+                0,
+                element.w_mm * beforeAfterSplitPosition,
+                element.h_mm,
+              ]}
+              stroke="transparent"
+              strokeWidth={Math.max(4, 26 / s)}
+              draggable
+              dragBoundFunc={(pos) => {
+                const groupNode = groupRef.current;
+                if (!groupNode) return pos;
+                const transform = groupNode.getAbsoluteTransform().copy().invert();
+                const local = transform.point(pos);
+                const clampedLocalX = Math.max(element.w_mm * 0.01, Math.min(element.w_mm * 0.99, local.x));
+                return groupNode.getAbsoluteTransform().point({ x: clampedLocalX, y: 0 });
+              }}
+              onDragMove={(e) => {
+                e.cancelBubble = true;
+                const groupNode = groupRef.current;
+                if (!groupNode) return;
+                const transform = groupNode.getAbsoluteTransform().copy().invert();
+                const local = transform.point(e.target.getAbsolutePosition());
+                const ratio = Math.max(0.01, Math.min(0.99, local.x / element.w_mm));
+                setBeforeAfterSplitPosition(ratio);
+              }}
+              onMouseEnter={(e) => {
+                const stage = e.target.getStage();
+                if (stage) stage.container().style.cursor = 'ew-resize';
+              }}
+              onMouseLeave={(e) => {
+                const stage = e.target.getStage();
+                if (stage) stage.container().style.cursor = 'default';
+              }}
+            />
+
+            {/* 3. Draggable Center Knob (Constant screen size: 20px diameter) */}
             <Group
               x={element.w_mm * beforeAfterSplitPosition}
               y={element.h_mm / 2}
@@ -878,7 +978,7 @@ const EditorImage = React.memo(function EditorImage({
                 if (!groupNode) return pos;
                 const transform = groupNode.getAbsoluteTransform().copy().invert();
                 const local = transform.point(pos);
-                const clampedLocalX = Math.max(element.w_mm * 0.02, Math.min(element.w_mm * 0.98, local.x));
+                const clampedLocalX = Math.max(element.w_mm * 0.01, Math.min(element.w_mm * 0.99, local.x));
                 return groupNode.getAbsoluteTransform().point({ x: clampedLocalX, y: element.h_mm / 2 });
               }}
               onDragStart={(e) => {
@@ -890,7 +990,7 @@ const EditorImage = React.memo(function EditorImage({
                 if (!groupNode) return;
                 const transform = groupNode.getAbsoluteTransform().copy().invert();
                 const local = transform.point(e.target.getAbsolutePosition());
-                const ratio = Math.max(0.02, Math.min(0.98, local.x / element.w_mm));
+                const ratio = Math.max(0.01, Math.min(0.99, local.x / element.w_mm));
                 setBeforeAfterSplitPosition(ratio);
               }}
               onDragEnd={(e) => {
@@ -906,56 +1006,72 @@ const EditorImage = React.memo(function EditorImage({
               }}
             >
               <Circle
-                radius={11}
+                radius={Math.max(1, 10 / s)}
                 fill="#ffffff"
-                stroke="#111111"
-                strokeWidth={1.5}
+                stroke="#1f2937"
+                strokeWidth={Math.max(0.2, 1 / s)}
                 shadowColor="#000000"
-                shadowBlur={6}
-                shadowOpacity={0.6}
+                shadowBlur={Math.max(0.5, 4 / s)}
+                shadowOpacity={0.35}
               />
-              <Line points={[-4, 0, -1, -3, -1, 3]} fill="#222222" closed />
-              <Line points={[4, 0, 1, -3, 1, 3]} fill="#222222" closed />
+              <Line
+                points={[
+                  -3.5 / s, 0,
+                  -1.2 / s, -2.5 / s,
+                  -1.2 / s, 2.5 / s
+                ]}
+                fill="#1f2937"
+                closed
+              />
+              <Line
+                points={[
+                  3.5 / s, 0,
+                  1.2 / s, -2.5 / s,
+                  1.2 / s, 2.5 / s
+                ]}
+                fill="#1f2937"
+                closed
+              />
             </Group>
 
-            {/* "ANTES" Badge (Left) */}
-            <Group x={6} y={6} listening={false}>
+            {/* 4. "ANTES" Badge (Left - Constant Screen Size: 18px height) */}
+            <Group x={Math.max(1, 8 / s)} y={Math.max(1, 8 / s)} listening={false}>
               <Rect
-                width={38}
-                height={15}
-                fill="rgba(0,0,0,0.75)"
-                cornerRadius={3}
+                width={Math.max(4, 40 / s)}
+                height={Math.max(2, 18 / s)}
+                fill="rgba(0,0,0,0.7)"
+                cornerRadius={Math.max(1, 3.5 / s)}
                 stroke="rgba(255,255,255,0.2)"
-                strokeWidth={0.8}
+                strokeWidth={Math.max(0.1, 0.6 / s)}
               />
               <Text
                 text="ANTES"
-                fontSize={8}
+                fontSize={Math.max(1, 8 / s)}
                 fontStyle="bold"
                 fill="#ffffff"
-                x={4}
-                y={3}
+                x={Math.max(0.5, 5 / s)}
+                y={Math.max(0.5, 4.5 / s)}
                 fontFamily="sans-serif"
               />
             </Group>
 
-            {/* "DESPUÉS" Badge (Right) */}
-            <Group x={Math.max(6, element.w_mm - 52)} y={6} listening={false}>
+            {/* 5. "DESPUÉS" Badge (Right - Constant Screen Size: 18px height) */}
+            <Group x={Math.max(8 / s, element.w_mm - (58 / s))} y={Math.max(1, 8 / s)} listening={false}>
               <Rect
-                width={46}
-                height={15}
-                fill="rgba(0,0,0,0.75)"
-                cornerRadius={3}
+                width={Math.max(5, 50 / s)}
+                height={Math.max(2, 18 / s)}
+                fill="rgba(0,0,0,0.7)"
+                cornerRadius={Math.max(1, 3.5 / s)}
                 stroke="rgba(255,255,255,0.2)"
-                strokeWidth={0.8}
+                strokeWidth={Math.max(0.1, 0.6 / s)}
               />
               <Text
                 text="DESPUÉS"
-                fontSize={8}
+                fontSize={Math.max(1, 8 / s)}
                 fontStyle="bold"
-                fill="#ffcc00"
-                x={4}
-                y={3}
+                fill="#f59e0b"
+                x={Math.max(0.5, 5 / s)}
+                y={Math.max(0.5, 4.5 / s)}
                 fontFamily="sans-serif"
               />
             </Group>
@@ -976,7 +1092,7 @@ const EditorImage = React.memo(function EditorImage({
             listening={false}
           />
         ) : null}
-        
+
         {/* Pro Vignette Overlay */}
         {element.photoAdjustments?.vignette && element.photoAdjustments.vignette !== 0 ? (
            <Rect
@@ -990,23 +1106,23 @@ const EditorImage = React.memo(function EditorImage({
              fillRadialGradientEndRadius={Math.max(element.w_mm, element.h_mm) * 0.75}
              fillRadialGradientColorStops={[
                0, 'rgba(0,0,0,0)',
-               1, element.photoAdjustments.vignette < 0 
+               1, element.photoAdjustments.vignette < 0
                    ? `rgba(0,0,0,${Math.min(1, Math.abs(element.photoAdjustments.vignette) / 100)})`
                    : `rgba(255,255,255,${Math.min(1, element.photoAdjustments.vignette / 100)})`
              ]}
            />
         ) : null}
-        
+
         {/* Phase 8.B: Narrative Sequence Badge for Staging Mode */}
         {isStagingMode && stagingIndex !== -1 && (
           <Group x={10} y={10}>
-             <Rect 
-               width={24} height={24} 
-               cornerRadius={12} 
-               fill="#F59E0B" 
+             <Rect
+               width={24} height={24}
+               cornerRadius={12}
+               fill="#F59E0B"
                shadowColor="black" shadowBlur={4} shadowOpacity={0.3} shadowOffsetY={2}
              />
-             <Text 
+             <Text
                text={(stagingIndex + 1).toString()}
                fill="white"
                fontSize={11}
@@ -1024,12 +1140,12 @@ const EditorImage = React.memo(function EditorImage({
         {element.editorialRole && element.editorialRole !== 'auto' && (
           <Group x={10} y={10}>
              {/* Backdrop preventing color bleeding */}
-             <Rect 
-               width={28} height={28} 
-               cornerRadius={6} 
-               fill="rgba(0,0,0,0.65)" 
+             <Rect
+               width={28} height={28}
+               cornerRadius={6}
+               fill="rgba(0,0,0,0.65)"
              />
-             <Text 
+             <Text
                text={element.editorialRole === 'hero' ? 'H' : element.editorialRole === 'supporting' ? 'S' : 'F'}
                fill="white"
                fontSize={16}
@@ -1080,8 +1196,13 @@ const EditorImage = React.memo(function EditorImage({
             listening={false}
           />
         )}
+
+        {/* Interactive Non-destructive Crop & Thirds Overlay */}
+        {isCropActiveForThis && (
+          <CropOverlay element={element} />
+        )}
       </Group>
-      {isSelected && !element.locked && (
+      {!isRawSession && isSelected && !element.locked && (
         <Transformer
           ref={trRef}
           centeredRotation={
@@ -1098,21 +1219,21 @@ const EditorImage = React.memo(function EditorImage({
       <ShadowDragAnchor element={element} spreadId={spreadId} isSelected={isSelected} />
     </React.Fragment>
   );
-}, (prev, next) => prev.element === next.element && prev.isSelected === next.isSelected && prev.isHovered === next.isHovered && prev.spreadId === next.spreadId);
+}, (prev, next) => prev.element === next.element && prev.isSelected === next.isSelected && prev.isHovered === next.isHovered && prev.spreadId === next.spreadId && prev.canvasScale === next.canvasScale);
 
-const EditorShape = React.memo(function EditorShape({ 
-  element, 
+const EditorShape = React.memo(function EditorShape({
+  element,
   elements,
-  spreadId, 
-  isSelected, 
+  spreadId,
+  isSelected,
   isHovered = false,
   onSelect,
   onContextMenu
-}: { 
-  element: EditorElement, 
+}: {
+  element: EditorElement,
   elements: EditorElement[],
-  spreadId: string, 
-  isSelected: boolean, 
+  spreadId: string,
+  isSelected: boolean,
   isHovered?: boolean,
   onSelect: () => void,
   onContextMenu: (x: number, y: number, id: string) => void
@@ -1280,7 +1401,7 @@ const EditorText = React.memo(function EditorText({ element, elements, spreadId,
     const ratioY = node.scaleY() / baseScale;
     node.scaleX(baseScale);
     node.scaleY(baseScale);
-    
+
     updateElement(spreadId, element.id, {
       x_mm: Number(node.x().toFixed(3)),
       y_mm: Number(node.y().toFixed(3)),
@@ -1405,7 +1526,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
     fontsSet.add(activePreset.fonts.h2);
     fontsSet.add(activePreset.fonts.body);
     fontsSet.add(activePreset.fonts.small);
-    return Array.from(fontsSet).map(font => 
+    return Array.from(fontsSet).map(font =>
       `@import url('https://fonts.googleapis.com/css2?family=${font.replace(/ /g, '+')}&display=swap');`
     ).join('\n');
   }, [project?.typographyPresetId]);
@@ -1420,7 +1541,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
 
   const prevSpreadId = spreadIndex > 0 ? project.spreads[spreadIndex - 1].id : null;
   const nextSpreadId = spreadIndex < project.spreads.length - 1 ? project.spreads[spreadIndex + 1].id : null;
-
+  const isRawSession = project.type === 'type_raw_session' || (project as { workflowMode?: string })?.workflowMode === 'raw';
 
   // Sorting elements by zIndex to render properly
   const elements = [...spread.elements].sort((a, b) => a.zIndex - b.zIndex);
@@ -1429,7 +1550,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
   const bgConfig = spread.bg_config || { type: 'none' };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let bgProps: any = { fill: spread.bg_color || '#ffffff' };
-  
+
   if (bgConfig.type === 'solid' && bgConfig.color1) {
     bgProps = { fill: bgConfig.color1 };
   } else if (bgConfig.type === 'linear' && bgConfig.color1 && bgConfig.color2) {
@@ -1480,7 +1601,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
   };
 
   return (
-    <div 
+    <div
       className="flex-1 w-full h-full p-8 relative"
       onClick={checkDeselect}
       onContextMenu={(e) => {
@@ -1492,9 +1613,9 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
           // Prevent child elements from falsely triggering drag leave
           if (e.currentTarget === e.target) setIsDraggingOverCanvas(false);
       }}
-      onDragOver={(e) => { 
-         e.preventDefault(); 
-         e.dataTransfer.dropEffect = 'copy'; 
+      onDragOver={(e) => {
+         e.preventDefault();
+         e.dataTransfer.dropEffect = 'copy';
          if (!isDraggingOverCanvas) setIsDraggingOverCanvas(true);
       }}
       onDrop={(e) => {
@@ -1509,11 +1630,12 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
               dropX = (e.clientX - rect.left - panX) / scale;
               dropY = (e.clientY - rect.top - panY) / scale;
           }
-          
+
           const spreadIndex = project.spreads.findIndex((s) => s.id === activeSpreadId);
           const isLastSpread = spreadIndex === project.spreads.length - 1;
           const isStudio = project.projectCategory === 'studio_print';
-          const isGhostDrop = !isStudio && isLastSpread && dropX > project.size.w_mm + 25;
+          const isRawSession = project.type === 'type_raw_session' || (project as { workflowMode?: string })?.workflowMode === 'raw';
+          const isGhostDrop = !isStudio && !isRawSession && isLastSpread && dropX > project.size.w_mm + 25;
 
            // Native OS Files Drop Interceptor (Folders / Desktop)
            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
@@ -1540,8 +1662,15 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
                     useEditorStore.getState().addAsset(asset);
                     return asset;
                  })).then(newAssets => {
-                    if (isStudio || spread.elements.length === 0) {
-                       // Studio Print / Empty Canvas: Proportional Auto-Fit & Auto-Center
+                    if (isStudio || isRawSession) {
+                       if (newAssets.length > 0) {
+                          useEditorStore.getState().loadAssetToCanvas(newAssets[0]);
+                       }
+                       return;
+                    }
+
+                    if (spread.elements.length === 0) {
+                       // Empty Canvas: Proportional Auto-Fit & Auto-Center
                        newAssets.forEach((asset, idx) => {
                           const imgRatio = (asset.width && asset.height) ? (asset.width / asset.height) : (asset.aspectRatio || 1);
                           const canvasW = project.size.w_mm;
@@ -1618,14 +1747,14 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
                     useEditorStore.getState().flushSave();
                  });
                  // Stop default JSON payload parsing for these raw payloads
-                 return; 
+                 return;
               }
            }
 
           const rawPayload = e.dataTransfer.getData('application/json');
           if (!rawPayload) return;
           const payload = JSON.parse(rawPayload);
-          
+
           if (payload) {
              if (isGhostDrop && payload.type === 'image') {
                    const idsToProcess = payload.assetIds || [payload.assetId];
@@ -1634,7 +1763,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
                    if (stagedAssets.length > 0) {
                        import('uuid').then(({ v4: uuidv4 }) => {
                           const newSpreadId = uuidv4();
-                          
+
                           useEditorStore.setState(prev => {
                              if (!prev.project) return prev;
                              return { project: { ...prev.project, spreads: [...prev.project.spreads, { id: newSpreadId, elements: [], bg_color: '#FFFFFF', status: 'empty' as const }] } };
@@ -1654,7 +1783,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
               const role = payload.sourceId === 'txt-heading' ? 'h1' : payload.sourceId === 'txt-subheading' ? 'h2' : 'body';
               const textW = role === 'h1' ? 250 : role === 'h2' ? 200 : 150;
               const textH = role === 'h1' ? 80 : role === 'h2' ? 60 : 40;
-              
+
               useEditorStore.getState().addElement(activeSpreadId, {
                 id: `el_${Date.now()}`,
                 type: 'text',
@@ -1685,8 +1814,15 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
                const idsToProcess = payload.assetIds || [payload.assetId];
                const stagedAssets = idsToProcess.map((id: string) => project.assets?.find(a => a.id === id)).filter(Boolean) as import('@/types/editor').ProjectAsset[];
                const isStudio = project.projectCategory === 'studio_print';
+               const isRawSession = project.type === 'type_raw_session' || (project as { workflowMode?: string })?.workflowMode === 'raw';
+
+               if (payload.type === 'image' && (isStudio || isRawSession) && stagedAssets.length > 0) {
+                  useEditorStore.getState().loadAssetToCanvas(stagedAssets[0]);
+                  return;
+               }
+
                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-               const isFundyMode = !isStudio && ((spread.autoLayout?.mode as any) === 'fundy-masonry-experimental' || spread.status === 'empty' || spread.elements.length === 0);
+               const isFundyMode = !isStudio && !isRawSession && ((spread.autoLayout?.mode as any) === 'fundy-masonry-experimental' || spread.status === 'empty' || spread.elements.length === 0);
 
                if (payload.type === 'image' && isFundyMode && stagedAssets.length > 0) {
                     useEditorStore.getState().ingestAndDropToSpread(activeSpreadId, stagedAssets);
@@ -1741,7 +1877,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
                           let didSwap = false;
                           // Only swap if it's the primary lead dragged item (first one)
                           if (idx === 0 && spread?.autoLayout?.isActive) {
-                             const targetManagedElement = spread.elements.find(el => 
+                             const targetManagedElement = spread.elements.find(el =>
                                 el.isAutoLayoutManaged &&
                                 dropX >= el.x_mm && dropX <= el.x_mm + el.w_mm &&
                                 dropY >= el.y_mm && dropY <= el.y_mm + el.h_mm
@@ -1884,7 +2020,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
           if (el.groupId) {
              const parent = spread.elements.find(g => g.id === el.groupId);
              if (parent && parent.visible === false) return null; // Cascade Visibility
-             
+
              if (parent && parent.opacity !== undefined && parent.opacity !== 1) {
                 // If parent has non-1 opacity, merge it natively
                 const childOpacity = el.opacity !== undefined ? el.opacity : 1;
@@ -1930,21 +2066,22 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
               isHovered={hoveredElementId === el.id}
               onSelect={() => setSelectedElement(el.id)}
               onContextMenu={openElementContextMenu}
+              canvasScale={scale}
             />
           );
         })}
 
-        {elements.length === 0 && (
+        {elements.length === 0 && !isRawSession && (
            <Group>
              <Rect x={project.size.w_mm * 0.2} y={project.size.h_mm * 0.25} width={project.size.w_mm * 0.6} height={project.size.h_mm * 0.5} fill="#d4d4d4" cornerRadius={4} listening={false} />
              <Text text="↓" x={0} y={project.size.h_mm * 0.5 - 15} width={project.size.w_mm} fontSize={18} fill="#666666" align="center" listening={false} />
-             <Text text={project.projectCategory === 'studio_print' ? "Arrastra tu foto o fondo aquí" : "Drop images to Add Spread"} x={0} y={project.size.h_mm * 0.5 + 10} width={project.size.w_mm} fontSize={12} fontFamily="Inter" fill="#666666" align="center" listening={false} />
+             <Text text={project.projectCategory === 'studio_print' ? "Haz clic en una foto para revelarla" : "Drop images to Add Spread"} x={0} y={project.size.h_mm * 0.5 + 10} width={project.size.w_mm} fontSize={12} fontFamily="Inter" fill="#666666" align="center" listening={false} />
            </Group>
         )}
 
         {(() => {
             const isStudio = project.projectCategory === 'studio_print';
-            if (isStudio) return null; // A Studio Print is a single standalone document - never render ghost spreads or pages 3-4!
+            if (isStudio || isRawSession) return null; // Standalone documents - never render ghost spreads
             const spreadIndex = project.spreads.findIndex((s) => s.id === activeSpreadId);
             const isLastSpread = spreadIndex === project.spreads.length - 1;
             return (isLastSpread && elements.length > 0) ? (
@@ -1967,12 +2104,12 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
               const margin = 20;
               const gap = 10;
               const cols = Math.max(1, Math.floor((projectW - (margin * 2)) / (thumbnailW + gap)));
-              
+
               const col = stagingDropPreviewIndex % cols;
               const row = Math.floor(stagingDropPreviewIndex / cols);
-              
+
               return (
-                 <Rect 
+                 <Rect
                     x={margin + (col * (thumbnailW + gap)) - 4}
                     y={margin + (row * (thumbMaxH + gap))}
                     width={2}
@@ -2001,43 +2138,47 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
               <Text x={30} y={project.size.h_mm / 2 - 70} text="NEXT SPREAD →" fill="white" rotation={90} align="center" fontStyle="bold" fontSize={14} letterSpacing={2} />
            </Group>
         )}
-        
-      {/* Print Guides Overlay separated safely from elements */}
-        {/* Bleed Guide: Red Dashed */}
-        <Rect
-           x={project.bleed_mm}
-           y={project.bleed_mm}
-           width={project.size.w_mm - (project.bleed_mm * 2)}
-           height={project.size.h_mm - (project.bleed_mm * 2)}
-           stroke="#ff0000"
-           strokeWidth={1 / scale}
-           dash={[6 / scale, 4 / scale]}
-           opacity={0.6}
-           listening={false}
-        />
-        
-        {/* Safe Zone Guide: Blue Dashed */}
-        <Rect
-           x={project.bleed_mm + project.safe_zone_mm}
-           y={project.bleed_mm + project.safe_zone_mm}
-           width={project.size.w_mm - ((project.bleed_mm + project.safe_zone_mm) * 2)}
-           height={project.size.h_mm - ((project.bleed_mm + project.safe_zone_mm) * 2)}
-           stroke="#0000ff"
-           strokeWidth={1 / scale}
-           dash={[4 / scale, 4 / scale]}
-           opacity={0.4}
-           listening={false}
-        />
-        
+
+      {/* Print Guides Overlay separated safely from elements (hidden in Camera Raw Pro) */}
+      {!isRawSession && (
+        <>
+          {/* Bleed Guide: Red Dashed */}
+          <Rect
+             x={project.bleed_mm}
+             y={project.bleed_mm}
+             width={project.size.w_mm - (project.bleed_mm * 2)}
+             height={project.size.h_mm - (project.bleed_mm * 2)}
+             stroke="#ff0000"
+             strokeWidth={1 / scale}
+             dash={[6 / scale, 4 / scale]}
+             opacity={0.6}
+             listening={false}
+          />
+
+          {/* Safe Zone Guide: Blue Dashed */}
+          <Rect
+             x={project.bleed_mm + project.safe_zone_mm}
+             y={project.bleed_mm + project.safe_zone_mm}
+             width={project.size.w_mm - ((project.bleed_mm + project.safe_zone_mm) * 2)}
+             height={project.size.h_mm - ((project.bleed_mm + project.safe_zone_mm) * 2)}
+             stroke="#0000ff"
+             strokeWidth={1 / scale}
+             dash={[4 / scale, 4 / scale]}
+             opacity={0.4}
+             listening={false}
+          />
+        </>
+      )}
+
         {/* Center Fold Line Component replaced by individual Spread Canvases - No Center Fold needed here */}
-      
+
       {/* Dynamic Native Ruler Guides Overlay */}
         {project?.globalGuides?.map(guide => (
           <Line
             key={guide.id}
             points={
-              guide.orientation === 'vertical' 
-                ? [guide.position_mm, -500, guide.position_mm, project.size.h_mm + 500] 
+              guide.orientation === 'vertical'
+                ? [guide.position_mm, -500, guide.position_mm, project.size.h_mm + 500]
                 : [-500, guide.position_mm, project.size.w_mm + 500, guide.position_mm]
             }
             stroke={guide.color || '#00ffff'}
@@ -2052,13 +2193,13 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
               const node = e.target;
               const delta = guide.orientation === 'vertical' ? node.x() : node.y();
               const newPos = guide.position_mm + delta;
-              
+
               if (newPos < -10 || (guide.orientation === 'vertical' && newPos > project.size.w_mm + 10) || (guide.orientation === 'horizontal' && newPos > project.size.h_mm + 10)) {
                  useEditorStore.getState().removeGuide(guide.id);
               } else {
                  useEditorStore.getState().updateGuide(guide.id, { position_mm: newPos });
               }
-              node.position({ x: 0, y: 0 }); 
+              node.position({ x: 0, y: 0 });
             }}
             onMouseEnter={(e) => {
               if (!guide.locked) {
@@ -2099,7 +2240,7 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
       )}
 
       {contextMenu && (
-        <div 
+        <div
           className="fixed z-50 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-2xl py-1.5 min-w-[190px] text-xs font-medium overflow-hidden"
           style={{ top: contextMenu.y, left: contextMenu.x }}
           onClick={(e) => e.stopPropagation()}
@@ -2136,9 +2277,9 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
                <button
                  type="button"
                  className="w-full text-left px-4 py-2 hover:bg-red-500 hover:text-white text-red-500 transition-colors"
-                 onClick={() => { 
-                    useEditorStore.getState().removeGuide(contextMenu.elementId.replace('guide:', '')); 
-                    setContextMenu(null); 
+                 onClick={() => {
+                    useEditorStore.getState().removeGuide(contextMenu.elementId.replace('guide:', ''));
+                    setContextMenu(null);
                  }}
                >
                  Delete Guide
@@ -2184,6 +2325,18 @@ export default function SpreadCanvas({ stageWidth, stageHeight, scale, panX, pan
                  </button>
 
                  <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1 mx-2" />
+
+                 {ctxEl?.type === 'image' && ctxEl.assetId && (
+                   <>
+                     <PhotoAttributesMenuSection
+                       isEs={typeof window !== 'undefined' ? window.location.pathname.startsWith('/es') : true}
+                       source={{ assetId: ctxEl.assetId, elementId: ctxEl.id }}
+                       target={{ assetIds: [ctxEl.assetId], elementId: ctxEl.id }}
+                       onDone={() => setContextMenu(null)}
+                     />
+                     <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1 mx-2" />
+                   </>
+                 )}
 
                  <button
                    type="button"

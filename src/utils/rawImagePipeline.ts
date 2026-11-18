@@ -838,3 +838,94 @@ export function applyRawAdjustmentsToKonvaNode(
 
   return filtersArray;
 }
+
+/**
+ * Generates high-performance CSS filter string matching active photo adjustments.
+ * Allows instant hardware-accelerated preview rendering in Filmstrip and Photo Browser thumbnails
+ * without requiring expensive offscreen canvas rasterization.
+ */
+export function buildCssFilterForAdjustments(
+  adj?: Partial<PhotoAdjustments>,
+  photoFilter?: string,
+  filterIntensity?: number
+): string {
+  if (!adj && (!photoFilter || photoFilter === 'none')) {
+    return 'none';
+  }
+
+  const parts: string[] = [];
+  const intensity = filterIntensity !== undefined ? Math.max(0, Math.min(10, filterIntensity)) : 1;
+
+  // 1. Exposure and Tone Levels
+  const exposure = !adj?.bypassLight ? (adj?.exposure || 0) : 0;
+  const highlights = !adj?.bypassLight ? (adj?.highlights || 0) : 0;
+  const shadows = !adj?.bypassLight ? (adj?.shadows || 0) : 0;
+  const whites = !adj?.bypassLight ? (adj?.whites || 0) : 0;
+  const blacks = !adj?.bypassLight ? (adj?.blacks || 0) : 0;
+
+  let brightnessVal = 1;
+  brightnessVal += (exposure / 5) * 0.70;
+  if (highlights) brightnessVal += (highlights / 100) * 0.28;
+  if (whites) brightnessVal += (whites / 100) * 0.22;
+  if (shadows) brightnessVal += (shadows / 100) * 0.28;
+  if (blacks) brightnessVal += (blacks / 100) * 0.22;
+
+  brightnessVal = Math.max(0.05, Math.min(3, brightnessVal));
+  if (Math.abs(brightnessVal - 1) > 0.01) {
+    parts.push(`brightness(${brightnessVal.toFixed(3)})`);
+  }
+
+  // 2. Contrast
+  const lightContrast = !adj?.bypassLight ? (adj?.lightContrast || 0) : 0;
+  let contrastVal = 1 + (lightContrast / 100) * 0.75;
+  contrastVal = Math.max(0.1, Math.min(3, contrastVal));
+  if (Math.abs(contrastVal - 1) > 0.01) {
+    parts.push(`contrast(${contrastVal.toFixed(3)})`);
+  }
+
+  // 3. Saturation & Vibrance
+  const saturation = !adj?.bypassColor ? (adj?.saturation || 0) : 0;
+  const vibrance = !adj?.bypassColor ? (adj?.vibrance || 0) : 0;
+  let satVal = 1 + (saturation / 100) * 1.0 + (vibrance / 100) * 0.5;
+  satVal = Math.max(0, Math.min(3, satVal));
+  if (Math.abs(satVal - 1) > 0.01) {
+    parts.push(`saturate(${satVal.toFixed(3)})`);
+  }
+
+  // 4. Temperature & Tint
+  const temp = !adj?.bypassColor ? (adj?.temperature || 0) : 0;
+  const tint = !adj?.bypassColor ? (adj?.tint || 0) : 0;
+  if (temp > 0) {
+    parts.push(`sepia(${(temp * 0.35 / 100).toFixed(3)})`);
+  } else if (temp < 0) {
+    parts.push(`hue-rotate(${(temp * 0.2).toFixed(1)}deg)`);
+  }
+  if (tint !== 0) {
+    parts.push(`hue-rotate(${(tint * 0.3).toFixed(1)}deg)`);
+  }
+
+  // 5. Blur
+  const blurVal = !adj?.bypassEffects ? (adj?.blur || 0) : 0;
+  if (blurVal > 0) {
+    parts.push(`blur(${Math.min(8, blurVal / 10).toFixed(1)}px)`);
+  }
+
+  // 6. Photographic Filters / LUTs
+  if (photoFilter && photoFilter !== 'none') {
+    if (photoFilter === 'bw' || photoFilter === 'grayscale' || photoFilter === 'monochrome') {
+      parts.push(`grayscale(${(100 * Math.min(1, intensity)).toFixed(0)}%)`);
+    } else if (photoFilter === 'sepia') {
+      parts.push(`sepia(${(100 * Math.min(1, intensity)).toFixed(0)}%)`);
+    } else if (photoFilter === 'invert') {
+      parts.push(`invert(${(100 * Math.min(1, intensity)).toFixed(0)}%)`);
+    } else if (photoFilter === 'vintage' || photoFilter === 'matte') {
+      parts.push(`sepia(30%) contrast(90%) brightness(105%)`);
+    } else if (photoFilter === 'vivid' || photoFilter === 'chrome') {
+      parts.push(`saturate(130%) contrast(115%)`);
+    } else if (photoFilter === 'dramatic') {
+      parts.push(`contrast(140%) brightness(95%)`);
+    }
+  }
+
+  return parts.length > 0 ? parts.join(' ') : 'none';
+}

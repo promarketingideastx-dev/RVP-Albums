@@ -62,6 +62,29 @@ export interface PhotoAdjustments {
    };
 }
 
+export interface CropData {
+  xPercent: number;     // 0 to 100 (% of image width)
+  yPercent: number;     // 0 to 100 (% of image height)
+  widthPercent: number; // 0 to 100 (% of image width)
+  heightPercent: number;// 0 to 100 (% of image height)
+  aspectPreset?: 'free' | 'original' | '1:1' | '2:3' | '3:2' | '4:5' | '5:4' | '16:9' | '9:16' | string;
+}
+
+export type AttributeCopyMode = 'all' | 'adjustments' | 'crop';
+
+export interface CopiedPhotoAttributes {
+  mode: AttributeCopyMode;
+  sourceAssetId?: string;
+  sourceName?: string;
+  developSettings?: Partial<PhotoAdjustments>;
+  photoFilter?: string;
+  filterIntensity?: number;
+  cropData?: CropData;
+  rotation_deg?: number;
+  flipHorizontal?: boolean;
+  flipVertical?: boolean;
+}
+
 // Coordinates strictly in absolute mm. Precision mapping is applied in presentation components.
 export interface EditorElement {
   id: string;
@@ -76,9 +99,9 @@ export interface EditorElement {
   libraryCategory?: string; // Phase 7.G: Category discriminator strictly for decoration variants
   sourceType?: 'default' | 'user-decoration'; // Phase 7.G.2.A: Stable local decoration rendering persistence discriminator
   sourceId?: string; // Phase 7.G.2.A: Strict persistence reference decoupled from runtime objectURLs
-  opacity?: number; // Phase 7.G.4: Editable transparency multiplier (0 to 1) 
+  opacity?: number; // Phase 7.G.4: Editable transparency multiplier (0 to 1)
   scale?: number; // Phase 7.G.4: Generic internal dimension multiplier decoupling generic bounding constraints
-  color?: string; // Phase 7.G.4: Configurable base shape/stroke overlay styling mapping hex variants 
+  color?: string; // Phase 7.G.4: Configurable base shape/stroke overlay styling mapping hex variants
   variant?: string; // Phase 7.G.4: Strict variant discriminator supporting parametric overrides
   shadowOffsetX?: number;
   shadowOffsetY?: number;
@@ -89,12 +112,12 @@ export interface EditorElement {
   isolateFromGlobalStyles?: boolean; // Phase 7.G.10: Manual decoupling from cascading style overrides
   blendMode?: string;
   visible?: boolean; // Phase 7.G.6.C: Visibility cascade mapping
-  locked?: boolean; // Phase 7.G.6.C: Selection and Dragging constraint 
+  locked?: boolean; // Phase 7.G.6.C: Selection and Dragging constraint
   groupId?: string; // Phase 7.G.6.C: Advanced generic nested folders
   isCollapsed?: boolean; // Phase 7.G.6.C: Folder structural bounds
   layerName?: string; // Phase 7.G.6.C: UI-level naming override
   isAutoLayoutManaged?: boolean; // Phase 7.H: Managed by auto layout bounding box strictly
-  stageType?: 'staged' | 'layout' | 'free'; // Phase 8.D FIX: Explicit structural staging mode discriminator 
+  stageType?: 'staged' | 'layout' | 'free'; // Phase 8.D FIX: Explicit structural staging mode discriminator
   editorialRole?: 'hero' | 'supporting' | 'filler' | 'auto'; // Phase 7.J: User Control Override
   assignmentReason?: string; // Phase 7.K: Explanable Editor Feedback
   assetId?: string; // Phase 7.H: Primary connection to uploaded external image pool
@@ -120,6 +143,10 @@ export interface EditorElement {
   w_mm: number;
   h_mm: number;
   rotation_deg: number;
+  cropData?: CropData;
+  naturalAspect?: number;
+  flipHorizontal?: boolean;
+  flipVertical?: boolean;
   pivotX?: number; // Normalized anchor X (0 = left, 0.5 = center, 1 = right; default 0 for anchor rotation)
   pivotY?: number; // Normalized anchor Y (0 = top, 0.5 = center, 1 = bottom; default 0 for anchor rotation)
   zIndex: number;
@@ -127,12 +154,12 @@ export interface EditorElement {
 
 export interface SpreadBackgroundConfig {
   type: 'none' | 'solid' | 'linear' | 'radial';
-  color1?: string; 
-  color2?: string; 
-  gradientAngle?: number; 
-  radialSize?: number; 
-  radialCenterX?: number; 
-  radialCenterY?: number; 
+  color1?: string;
+  color2?: string;
+  gradientAngle?: number;
+  radialSize?: number;
+  radialCenterX?: number;
+  radialCenterY?: number;
 }
 
 export interface SpreadGuide {
@@ -176,7 +203,7 @@ export interface Spread {
   pageCount?: number;
   autoBookManaged?: boolean; // Phase 14: Discriminates pristine autobook layouts from manually handcrafted spaces
   bg_config?: SpreadBackgroundConfig; // Phase 7.G.9: Advanced Gradient spread backgrounds
-  autoLayout?: SpreadAutoLayout; // Phase 7.H: Auto Layout Engine Structural bounds 
+  autoLayout?: SpreadAutoLayout; // Phase 7.H: Auto Layout Engine Structural bounds
   status?: 'empty' | 'staging' | 'designed' | 'completed'; // Phase Final A: Explict Structural Pagination Status
 }
 
@@ -203,8 +230,10 @@ export interface ProjectAsset {
   name: string;
   previewUrl?: string; // local blob URL
   originalUrl?: string;
+  thumbnailUrl?: string; // Phase DAM: Low-memory 320px thumbnail for fast Photo Browser grid
   previewBlobId?: string; // IndexedDB internal ref
   originalBlobId?: string;
+  thumbnailBlobId?: string;
   rating?: number; // 0-5 stars
   isFavorite?: boolean;
   width?: number; // Phase 7.H: Extracted native photo dimensions
@@ -213,8 +242,19 @@ export interface ProjectAsset {
   aspectRatio?: number; // Phase 7.I: Intrinsic ratio preservation
   visualWeight?: number; // Phase 7.I: Narrative mapping
   isWide?: boolean;
-  isTall?: boolean;
   metadata?: AssetMetadata; // Phase 15: Sequencing Intelligence Layer
+  // Camera Raw Pro V4 Non-Destructive Develop & DAM Properties:
+  developSettings?: Partial<PhotoAdjustments>;
+  photoFilter?: string;
+  filterIntensity?: number;
+  cropData?: CropData;
+  rotation_deg?: number;
+  flipHorizontal?: boolean;
+  flipVertical?: boolean;
+  isEdited?: boolean;
+  folderPath?: string; // e.g. "Ceremonia", "Recepción", "Exteriores"
+  collections?: string[]; // e.g. ["Destacadas", "Retratos"]
+  labelColor?: 'none' | 'red' | 'yellow' | 'green' | 'blue' | 'purple';
 }
 
 export interface PhotoMetadata {
@@ -265,6 +305,8 @@ export interface EditorProject {
   totalSpreads?: number; // Phase Final A: Fixed album capacity bounds natively
   spreads: Spread[];
   assets?: ProjectAsset[];
+  assetFolders?: string[]; // Phase DAM: Custom folders defined for this project's photo catalog
+  assetCollections?: string[]; // Phase DAM: Custom collections defined for this project
   sequenceMode?: 'ORIGINAL_ORDER' | 'CHRONOLOGICAL' | 'MANUAL_PRIORITY'; // Phase 16
 }
 

@@ -365,6 +365,20 @@
     "pixels_calculated": "Resolución final calculada:",
     "btn_create_studio": "Crear Proyecto de Estudio",
     "btn_create_album": "Crear Álbum",
+    "btn_create_raw": "Crear Sesión de Camera Raw Pro",
+    "mode_raw": "Camera Raw Pro / Sesión RAW",
+    "mode_raw_desc": "Catálogo de fotografías, selección por lotes y revelado no destructivo con orientación y resolución dinámica.",
+    "raw_title": "Sesión Fotográfica / Revelado Camera Raw",
+    "raw_name_label": "Nombre de la Sesión Fotográfica",
+    "raw_name_placeholder": "ej. Boda Valentina & Carlos - Sesión Principal",
+    "raw_name_desc": "Asigna un nombre a este catálogo o lote de fotografías para su clasificación y revelado.",
+    "raw_dynamic_size_title": "Tamaño y Orientación Dinámicos (Resolución Nativa)",
+    "raw_dynamic_size_badge": "🔒 Formato Dinámico por Fotografía",
+    "raw_dynamic_size_desc": "En Camera Raw Pro, el espacio de trabajo no se fija a un tamaño de impresión (como 8x10 o 16x20). Cada fotografía conserva su relación de aspecto nativa (3:2, 4:3) y su orientación original (horizontal o vertical).",
+    "raw_benefit_orientation": "Orientación automática según sensor de la cámara (Horizontal / Vertical)",
+    "raw_benefit_aspect": "Proporción nativa de cada fotografía sin recorte forzado",
+    "raw_benefit_develop": "Revelado no destructivo, clasificación por estrellas y exportación por lotes",
+    "raw_studio_hint": "¿Deseas diseñar un cuadro para sala en medida fija de laboratorio con capas y marcos? Selecciona la pestaña 'Photo Studio' arriba.",
     "single_sheet_notice": "Lienzo de ampliación individual (1 hoja). Se exportará exactamente al tamaño seleccionado a 300 DPI."
   },
   "Export": {
@@ -447,6 +461,19 @@
     "status_error": "Ocurrió un error durante la exportación.",
     "invalid_range_error": "Rango de pliegos inválido. Debe estar entre 1 y {max}.",
     "invalid_format_error": "Formato de rango no válido. Usa ej. 1-5 o 3.",
-    "empty_filename_error": "El nombre del archivo no puede estar vacío."
+    "empty_filename_error": "El nombre del archivo no puede estar vacío.",
+    "browser_title": "Biblioteca de Fotografías",
+    "browser_all_photos": "Todas las fotografías",
+    "browser_folders": "Carpetas",
+    "browser_collections": "Colecciones",
+    "browser_filters": "Filtros",
+    "browser_favorites": "Favoritas",
+    "browser_edited": "Editadas con Camera Raw",
+    "browser_unedited": "Sin editar",
+    "browser_rating_filter": "Filtro por estrellas",
+    "browser_orientation": "Orientación",
+    "browser_search": "Buscar por nombre...",
+    "browser_import": "Importar Fotos",
+    "browser_to_canvas": "Ir al Lienzo"
   }
 }
