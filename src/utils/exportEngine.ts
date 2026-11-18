@@ -750,9 +750,12 @@ export async function exportRawBatchToJPG(project: EditorProject, options: Profe
       const cw = crop ? Math.max(1, Math.min(w - sx, Math.round(w * crop.widthPercent / 100))) : w;
       const ch = crop ? Math.max(1, Math.min(h - sy, Math.round(h * crop.heightPercent / 100))) : h;
       const rotation = currentImage?.rotation_deg ?? asset.rotation_deg ?? 0;
-      const radians = (rotation * Math.PI) / 180;
-      const outW = Math.max(1, Math.ceil(Math.abs(cw * Math.cos(radians)) + Math.abs(ch * Math.sin(radians))));
-      const outH = Math.max(1, Math.ceil(Math.abs(cw * Math.sin(radians)) + Math.abs(ch * Math.cos(radians))));
+      // RAW export keeps the crop's pixel dimensions; rotating the photo must
+      // not rotate or resize the output canvas.
+      const outW = cw;
+      const outH = ch;
+      const quarterTurn = Math.abs(Math.round(rotation / 90)) % 2 === 1;
+      const rotationCover = quarterTurn ? Math.max(cw / ch, ch / cw) : 1;
 
       const container = document.createElement('div');
       stage = new Konva.Stage({ container, width: outW, height: outH });
@@ -763,8 +766,8 @@ export async function exportRawBatchToJPG(project: EditorProject, options: Profe
         width: cw, height: ch,
         crop: { x: sx, y: sy, width: cw, height: ch },
         rotation,
-        scaleX: (currentImage?.flipHorizontal ?? asset.flipHorizontal) ? -1 : 1,
-        scaleY: (currentImage?.flipVertical ?? asset.flipVertical) ? -1 : 1,
+        scaleX: rotationCover * ((currentImage?.flipHorizontal ?? asset.flipHorizontal) ? -1 : 1),
+        scaleY: rotationCover * ((currentImage?.flipVertical ?? asset.flipVertical) ? -1 : 1),
         imageSmoothingEnabled: false,
       });
       const adjustments = currentImage?.photoAdjustments || asset.developSettings || {};
