@@ -278,7 +278,7 @@ export const useEditorStore = create<EditorState>()(
 
     const initialCrop: CropData = targetEl.cropData
       ? { ...targetEl.cropData }
-      : { xPercent: 0, yPercent: 0, widthPercent: 100, heightPercent: 100, aspectPreset: 'free' };
+      : { xPercent: 0, yPercent: 0, widthPercent: 100, heightPercent: 100, aspectPreset: 'original' };
 
     return {
       project: {
