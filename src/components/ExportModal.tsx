@@ -390,7 +390,7 @@ export default function ExportModal({
 
           <button
             type="button"
-            onClick={() => setModuleTab('camera_raw')
+            onClick={() => setModuleTab('camera_raw')}
             className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition flex items-center gap-1.5 ${
               moduleTab === 'camera_raw'
                 ? 'border-blue-600 text-blue-600 dark:text-blue-400'
