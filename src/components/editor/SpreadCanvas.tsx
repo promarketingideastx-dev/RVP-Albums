@@ -631,6 +631,7 @@ const EditorImage = React.memo(function EditorImage({
 
   // The background photo remains firm and fixed on canvas - what rotates/adjusts is the crop guide!
   const currentRotation = element.rotation_deg || 0;
+  const photoRotation = isRawSession ? (isCropActiveForThis ? rotationDraft : currentRotation) : 0;
   const currentFlipH = isCropActiveForThis ? flipHDraft : !!element.flipHorizontal;
   const currentFlipV = isCropActiveForThis ? flipVDraft : !!element.flipVertical;
 
@@ -647,7 +648,11 @@ const EditorImage = React.memo(function EditorImage({
         offsetY={isRawSession ? cy : 0}
         width={element.w_mm}
         height={element.h_mm}
-        rotation={currentRotation}
+        rotation={isRawSession ? 0 : currentRotation}
+        clipX={isRawSession ? 0 : undefined}
+        clipY={isRawSession ? 0 : undefined}
+        clipWidth={isRawSession ? element.w_mm : undefined}
+        clipHeight={isRawSession ? element.h_mm : undefined}
         scaleX={(element.scale || 1) * (currentFlipH ? -1 : 1)}
         scaleY={(element.scale || 1) * (currentFlipV ? -1 : 1)}
         listening={!element.locked}
@@ -852,7 +857,10 @@ const EditorImage = React.memo(function EditorImage({
         {showBeforeAfterSplit && (
           <KonvaImage
             image={image}
-            x={0} y={0}
+            x={isRawSession ? cx : 0} y={isRawSession ? cy : 0}
+            offsetX={isRawSession ? cx : 0}
+            offsetY={isRawSession ? cy : 0}
+            rotation={photoRotation}
             width={element.w_mm}
             height={element.h_mm}
             crop={computedCrop}
@@ -874,7 +882,10 @@ const EditorImage = React.memo(function EditorImage({
             <KonvaImage
               ref={filterLayerRef}
               image={image}
-              x={0} y={0}
+              x={isRawSession ? cx : 0} y={isRawSession ? cy : 0}
+            offsetX={isRawSession ? cx : 0}
+            offsetY={isRawSession ? cy : 0}
+            rotation={photoRotation}
               width={element.w_mm}
               height={element.h_mm}
               crop={computedCrop}
@@ -894,7 +905,10 @@ const EditorImage = React.memo(function EditorImage({
           <KonvaImage
             ref={filterLayerRef}
             image={image}
-            x={0} y={0}
+            x={isRawSession ? cx : 0} y={isRawSession ? cy : 0}
+            offsetX={isRawSession ? cx : 0}
+            offsetY={isRawSession ? cy : 0}
+            rotation={photoRotation}
             width={element.w_mm}
             height={element.h_mm}
             crop={computedCrop}
