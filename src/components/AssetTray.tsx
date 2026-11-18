@@ -24,6 +24,7 @@ export default function AssetTray() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedAssetIds, setSelectedAssetIds] = useState<Set<string>>(new Set());
+  const rawSelectionAnchorRef = useRef<string | null>(null);
 
   // Phase 13/14: Auto-Book Native Engine Trigger
   const [showAutoBookMenu, setShowAutoBookMenu] = useState(false);
@@ -46,6 +47,7 @@ export default function AssetTray() {
   const isRawSession = project?.type === 'type_raw_session' || (project as { workflowMode?: string })?.workflowMode === 'raw';
   const activeBrowserAssetId = useEditorStore((state) => state.activeBrowserAssetId);
   const selectedBrowserAssetIds = useEditorStore((state) => state.selectedBrowserAssetIds);
+  const setSelectedBrowserAssetIds = useEditorStore((state) => state.setSelectedBrowserAssetIds);
   const canvasBatchAssetIds = useEditorStore((state) => state.canvasBatchAssetIds);
   const loadAssetToCanvas = useEditorStore((state) => state.loadAssetToCanvas);
   const activeSpreadId = useEditorStore((state) => state.activeSpreadId);
@@ -85,13 +87,9 @@ export default function AssetTray() {
   const visibleAssets = useMemo(() => {
     let filtered = [...assets];
 
-    // In Raw session: strictly show ONLY the photos sent to the canvas batch!
+    // In Raw session, selection for export must not change which thumbnails are visible.
     if (isRawSession) {
-      const batch = canvasBatchAssetIds.length > 0
-        ? canvasBatchAssetIds
-        : selectedBrowserAssetIds.length > 0
-        ? selectedBrowserAssetIds
-        : null;
+      const batch = canvasBatchAssetIds.length > 0 ? canvasBatchAssetIds : null;
       if (batch && batch.length > 0) {
         filtered = filtered.filter((a) => batch.includes(a.id));
       }
@@ -109,7 +107,7 @@ export default function AssetTray() {
       }
     }
     return filtered;
-  }, [assets, filterFavorite, filterRating, sortMode, isRawSession, canvasBatchAssetIds, selectedBrowserAssetIds]);
+  }, [assets, filterFavorite, filterRating, sortMode, isRawSession, canvasBatchAssetIds]);
 
 
 
@@ -183,6 +181,31 @@ export default function AssetTray() {
       originalBlobId: asset.originalBlobId
     }));
     e.dataTransfer.effectAllowed = 'copy';
+  };
+
+  const handleRawThumbnailClick = (e: React.MouseEvent, asset: ProjectAsset, index: number) => {
+    const visibleIds = visibleAssets.map(item => item.id);
+    if (e.shiftKey) {
+      const anchorIndex = visibleIds.indexOf(rawSelectionAnchorRef.current || activeBrowserAssetId || '');
+      const start = Math.min(anchorIndex >= 0 ? anchorIndex : index, index);
+      const end = Math.max(anchorIndex >= 0 ? anchorIndex : index, index);
+      const rangeIds = visibleIds.slice(start, end + 1);
+      setSelectedBrowserAssetIds(e.metaKey || e.ctrlKey
+        ? Array.from(new Set([...selectedBrowserAssetIds, ...rangeIds]))
+        : rangeIds);
+      return;
+    }
+    if (e.metaKey || e.ctrlKey) {
+      const next = new Set(selectedBrowserAssetIds);
+      if (next.has(asset.id)) next.delete(asset.id);
+      else next.add(asset.id);
+      setSelectedBrowserAssetIds(Array.from(next));
+      rawSelectionAnchorRef.current = asset.id;
+      return;
+    }
+    setSelectedBrowserAssetIds([asset.id]);
+    rawSelectionAnchorRef.current = asset.id;
+    loadAssetToCanvas(asset);
   };
 
   const toggleSelection = (e: React.MouseEvent, id: string) => {
@@ -422,9 +445,9 @@ export default function AssetTray() {
       </div>
 
       {/* Scrollable Asset Strip */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden pt-2 pb-0 px-3 flex gap-2 fundy-scroll relative">
-        {visibleAssets.map(asset => {
-          const isSelected = selectedAssetIds.has(asset.id);
+      <div className={`flex-1 overflow-x-auto overflow-y-hidden pt-2 pb-0 px-3 flex gap-2 fundy-scroll relative ${isRawSession ? 'select-none' : ''}`}>
+        {visibleAssets.map((asset, index) => {
+          const isSelected = isRawSession ? selectedBrowserAssetIds.includes(asset.id) : selectedAssetIds.has(asset.id);
           const currentRating = asset.rating || 0;
           const isActiveOnCanvas = (isRawSession || projectCategory === 'studio_print') && (currentCanvasAssetId === asset.id || activeBrowserAssetId === asset.id);
 
@@ -449,8 +472,13 @@ export default function AssetTray() {
                 e.stopPropagation();
                 setTrayMenu({ x: e.clientX, y: e.clientY, assetId: asset.id });
               }}
-              onClick={() => {
-                if (isRawSession || projectCategory === 'studio_print') {
+              onMouseDown={(e) => {
+                if (isRawSession && e.shiftKey) e.preventDefault();
+              }}
+              onClick={(e) => {
+                if (isRawSession) {
+                  handleRawThumbnailClick(e, asset, index);
+                } else if (projectCategory === 'studio_print') {
                   loadAssetToCanvas(asset);
                 }
               }}
@@ -458,13 +486,18 @@ export default function AssetTray() {
                 isActiveOnCanvas
                   ? 'border-emerald-500 ring-2 ring-emerald-400 shadow-md'
                   : isSelected
-                  ? 'border-orange-500'
+                  ? 'border-orange-500 ring-2 ring-orange-400/60'
                   : 'border-neutral-200 dark:border-neutral-700'
               } overflow-hidden ${
                 isRawSession ? 'cursor-pointer hover:border-emerald-400' : 'cursor-grab active:cursor-grabbing'
               } relative group shrink-0 flex flex-col shadow-sm hover:shadow-md transition-all`}
               style={{ aspectRatio: (asset.aspectRatio && asset.aspectRatio > 0.1) ? asset.aspectRatio : 1 }}
             >
+              {/* Camera Raw export selection indicator; separate from the active canvas photo. */}
+              {isRawSession && isSelected && (
+                <div className="absolute top-2 right-10 z-20 w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold shadow pointer-events-none" title={isEs ? 'Seleccionada para exportar' : 'Selected for export'}>✓</div>
+              )}
+
               {/* Checkbox / Sequential Selection Badge Layer (Only for Album Designer) */}
               {!isRawSession && (
                 <div
