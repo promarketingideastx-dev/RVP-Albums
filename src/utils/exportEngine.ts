@@ -754,8 +754,12 @@ export async function exportRawBatchToJPG(project: EditorProject, options: Profe
       // not rotate or resize the output canvas.
       const outW = cw;
       const outH = ch;
-      const quarterTurn = Math.abs(Math.round(rotation / 90)) % 2 === 1;
-      const rotationCover = quarterTurn ? Math.max(cw / ch, ch / cw) : 1;
+      // Match the RAW preview's proportional cover at any rotation angle.
+      const radians = (rotation * Math.PI) / 180;
+      const cos = Math.abs(Math.cos(radians));
+      const sin = Math.abs(Math.sin(radians));
+      const aspect = cw / Math.max(1, ch);
+      const rotationCover = Math.max(cos + sin * aspect, cos + sin / aspect);
 
       const container = document.createElement('div');
       stage = new Konva.Stage({ container, width: outW, height: outH });
