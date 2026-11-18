@@ -95,6 +95,8 @@ export default function ExportModal({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [preSelectedDirHandle, setPreSelectedDirHandle] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [folderPermissionNotice, setFolderPermissionNotice] = useState<'choose' | 'export' | null>(null);
+  const [folderPermissionExplained, setFolderPermissionExplained] = useState(false);
 
   // Browser support detection for File System Access API
   const [supportsDirectoryPicker, setSupportsDirectoryPicker] = useState(false);
@@ -218,6 +220,24 @@ export default function ExportModal({
     }
   };
 
+  const requestFolderPermissionExplanation = (action: 'choose' | 'export') => {
+    if (isRawContext && saveDestination === 'directory_picker' && !folderPermissionExplained) {
+      setFolderPermissionNotice(action);
+      return;
+    }
+    if (action === 'choose') void handleChooseTargetDirectly();
+    else void handleExportSubmit();
+  };
+
+  const confirmFolderPermissionExplanation = () => {
+    const action = folderPermissionNotice;
+    setFolderPermissionExplained(true);
+    setFolderPermissionNotice(null);
+    // Trigger the native picker synchronously from the user's click.
+    if (action === 'choose') void handleChooseTargetDirectly();
+    else if (action === 'export') void handleExportSubmit();
+  };
+
   const handleExportSubmit = async () => {
     setErrorMsg('');
 
@@ -323,6 +343,34 @@ export default function ExportModal({
   const currentTier = getQualityTier(jpegQuality);
 
   return (
+    <>
+    {folderPermissionNotice && (
+      <div className="fixed inset-0 z-[10030] bg-black/85 backdrop-blur-md flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="rvp-folder-permission-title">
+        <div className="w-full max-w-md overflow-hidden rounded-2xl border border-blue-500/30 bg-[#15191f] shadow-[0_25px_90px_rgba(0,0,0,0.7)] text-white">
+          <div className="h-1 bg-gradient-to-r from-blue-700 via-blue-400 to-cyan-400" />
+          <div className="p-6 sm:p-7 space-y-5">
+            <div className="flex items-start gap-4">
+              <div className="h-12 w-12 shrink-0 rounded-xl bg-blue-500/15 border border-blue-500/25 flex items-center justify-center text-2xl">📁</div>
+              <div>
+                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-400 mb-1">RVP Albums · Camera Raw Pro</div>
+                <h3 id="rvp-folder-permission-title" className="text-xl font-bold tracking-tight">{isEs ? 'Permiso para guardar fotografías' : 'Permission to save photographs'}</h3>
+              </div>
+            </div>
+            <p className="text-sm leading-relaxed text-neutral-300">{isEs ? 'Para guardar las fotografías directamente en la carpeta que elegiste, tu navegador solicitará autorización para escribir archivos en esa ubicación.' : 'To save photographs directly in your chosen folder, your browser will request permission to write files there.'}</p>
+            <div className="rounded-xl border border-white/10 bg-white/[0.035] px-4 py-3 space-y-2">
+              <div className="flex items-center gap-2 text-sm font-semibold text-neutral-100"><span className="text-emerald-400">✓</span>{isEs ? 'Tus fotografías originales no se modificarán' : 'Your original photographs will not be modified'}</div>
+              <div className="flex items-center gap-2 text-sm font-semibold text-neutral-100"><span className="text-emerald-400">✓</span>{isEs ? 'Los nombres originales se conservarán' : 'Original filenames will be preserved'}</div>
+              <div className="flex items-center gap-2 text-sm font-semibold text-neutral-100"><span className="text-emerald-400">✓</span>{isEs ? 'Puedes cancelar el permiso en Chrome' : 'You can decline permission in Chrome'}</div>
+            </div>
+            <p className="text-xs leading-relaxed text-neutral-400">{isEs ? 'Chrome mostrará su propia ventana de seguridad. Esta autorización no puede sustituirse por una ventana personalizada.' : 'Chrome will show its own security dialog. This browser permission cannot be replaced by a custom dialog.'}</p>
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <button type="button" onClick={() => setFolderPermissionNotice(null)} className="rounded-xl border border-white/15 px-4 py-3 text-sm font-semibold text-neutral-200 hover:bg-white/10 transition">{isEs ? 'Cancelar' : 'Cancel'}</button>
+              <button type="button" onClick={confirmFolderPermissionExplanation} className="rounded-xl bg-blue-600 hover:bg-blue-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/30 transition">{isEs ? 'Continuar y permitir' : 'Continue to permission'}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
     <div 
       className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-in fade-in p-4 overflow-y-auto"
       onClick={(e) => {
@@ -763,7 +811,7 @@ export default function ExportModal({
                   </div>
                   <button
                     type="button"
-                    onClick={handleChooseTargetDirectly}
+                    onClick={() => requestFolderPermissionExplanation('choose')}
                     className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-sm whitespace-nowrap"
                   >
                     {chosenTargetName ? (isEs ? 'Cambiar...' : 'Change...') : (isEs ? 'Examinar...' : 'Browse...')}
@@ -940,7 +988,7 @@ export default function ExportModal({
 
           <button
             type="button"
-            onClick={handleExportSubmit}
+            onClick={() => requestFolderPermissionExplanation('export')}
             disabled={isExporting}
             className="px-6 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg rounded-lg transition disabled:opacity-50 flex items-center gap-2"
           >
@@ -960,5 +1008,6 @@ export default function ExportModal({
 
       </div>
     </div>
+    </>
   );
 }
