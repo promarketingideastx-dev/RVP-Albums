@@ -347,7 +347,13 @@ export const useEditorStore = create<EditorState>()(
       // Crop aspect is strictly computed from natural photo aspect and crop percentages (never compounding!)
       const cropW_pct = Math.max(1, cropData.widthPercent || 100);
       const cropH_pct = Math.max(1, cropData.heightPercent || 100);
-      const cropAspect = naturalAspect * (cropW_pct / cropH_pct);
+      const unrotatedAspect = naturalAspect * (cropW_pct / cropH_pct);
+      // Only 90-degree turns change the canvas orientation. Fine
+      // straightening rotates pixels inside the existing viewport.
+      const quarterTurns = Math.round(rotation_deg / 90);
+      const cropAspect = Math.abs(quarterTurns % 2) === 1
+        ? 1 / unrotatedAspect
+        : unrotatedAspect;
 
       const baseDim = 300;
       if (cropAspect >= 1) {
@@ -436,6 +442,9 @@ export const useEditorStore = create<EditorState>()(
         let aspect = naturalAspect;
         if (targetEl.cropData && targetEl.cropData.widthPercent && targetEl.cropData.heightPercent) {
           aspect = naturalAspect * (targetEl.cropData.widthPercent / targetEl.cropData.heightPercent);
+        }
+        if (Math.abs(Math.round((targetEl.rotation_deg || 0) / 90) % 2) === 1) {
+          aspect = 1 / aspect;
         }
 
         const baseDim = 300;
