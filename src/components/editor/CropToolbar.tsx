@@ -201,59 +201,10 @@ export const CropToolbar: React.FC = () => {
   };
 
   const handleRotateCropGuide = (direction: 'cw' | 'ccw') => {
-    void direction;
-    if (!cropDraft) return;
-
-    // Locate current target element dimensions
-    const currentEl = project?.spreads
-      .flatMap((s) => s.elements)
-      .find((el) => el.id === activeCropElementId);
-    const elementW = currentEl?.w_mm || 300;
-    const elementH = currentEl?.h_mm || 200;
-
-    // Current crop dimensions in mm
-    const currentCropW_mm = (cropDraft.widthPercent / 100) * elementW;
-    const currentCropH_mm = (cropDraft.heightPercent / 100) * elementH;
-
-    // Swap dimensions (90° rotation of the crop frame)
-    const targetCropW_mm = currentCropH_mm;
-    const targetCropH_mm = currentCropW_mm;
-
-    // Scale down proportionally if it exceeds element boundaries
-    const scale = Math.min(1, Math.min(elementW / targetCropW_mm, elementH / targetCropH_mm));
-    const fittedW_mm = targetCropW_mm * scale;
-    const fittedH_mm = targetCropH_mm * scale;
-
-    const newW_pct = Math.min(100, Math.max(5, (fittedW_mm / elementW) * 100));
-    const newH_pct = Math.min(100, Math.max(5, (fittedH_mm / elementH) * 100));
-
-    // Center the rotated crop guide in the photo
-    const newX_pct = Math.max(0, (100 - newW_pct) / 2);
-    const newY_pct = Math.max(0, (100 - newH_pct) / 2);
-
-    // Swap aspect ratio preset if applicable
-    let nextPreset = cropDraft.aspectPreset;
-    if (nextPreset === '2:3') nextPreset = '3:2';
-    else if (nextPreset === '3:2') nextPreset = '2:3';
-    else if (nextPreset === '4:5') nextPreset = '5:4';
-    else if (nextPreset === '5:4') nextPreset = '4:5';
-    else if (nextPreset === '16:9') nextPreset = '9:16';
-    else if (nextPreset === '9:16') nextPreset = '16:9';
-    else if (nextPreset && nextPreset.includes(':')) {
-      const parts = nextPreset.split(':');
-      if (parts.length === 2) {
-        nextPreset = `${parts[1]}:${parts[0]}`;
-      }
-    }
-
-    setCropDraft({
-      ...cropDraft,
-      aspectPreset: nextPreset,
-      xPercent: Number(newX_pct.toFixed(2)),
-      yPercent: Number(newY_pct.toFixed(2)),
-      widthPercent: Number(newW_pct.toFixed(2)),
-      heightPercent: Number(newH_pct.toFixed(2)),
-    });
+    // Rotate the photograph, not the crop guide. The preview and RAW export
+    // consume rotationDraft/rotation_deg respectively.
+    const delta = direction === 'cw' ? 90 : -90;
+    setRotationDraft(((rotationDraft + delta) % 360 + 360) % 360);
   };
 
   const standardPresets = [
