@@ -633,6 +633,11 @@ const EditorImage = React.memo(function EditorImage({
   // The background photo remains firm and fixed on canvas - what rotates/adjusts is the crop guide!
   const currentRotation = element.rotation_deg || 0;
   const photoRotation = isRawSession ? (isCropActiveForThis ? rotationDraft : currentRotation) : 0;
+  // Fill the fixed RAW canvas after quarter-turns; never stretch the photo.
+  const rawQuarterTurn = Math.abs(Math.round(photoRotation / 90)) % 2 === 1;
+  const rawRotationCover = isRawSession && rawQuarterTurn
+    ? Math.max(element.w_mm / element.h_mm, element.h_mm / element.w_mm)
+    : 1;
   const currentFlipH = isCropActiveForThis ? flipHDraft : !!element.flipHorizontal;
   const currentFlipV = isCropActiveForThis ? flipVDraft : !!element.flipVertical;
 
@@ -862,6 +867,8 @@ const EditorImage = React.memo(function EditorImage({
             offsetX={isRawSession ? cx : 0}
             offsetY={isRawSession ? cy : 0}
             rotation={photoRotation}
+            scaleX={rawRotationCover}
+            scaleY={rawRotationCover}
             width={element.w_mm}
             height={element.h_mm}
             crop={computedCrop}
@@ -887,6 +894,8 @@ const EditorImage = React.memo(function EditorImage({
             offsetX={isRawSession ? cx : 0}
             offsetY={isRawSession ? cy : 0}
             rotation={photoRotation}
+            scaleX={rawRotationCover}
+            scaleY={rawRotationCover}
               width={element.w_mm}
               height={element.h_mm}
               crop={computedCrop}
@@ -910,6 +919,8 @@ const EditorImage = React.memo(function EditorImage({
             offsetX={isRawSession ? cx : 0}
             offsetY={isRawSession ? cy : 0}
             rotation={photoRotation}
+            scaleX={rawRotationCover}
+            scaleY={rawRotationCover}
             width={element.w_mm}
             height={element.h_mm}
             crop={computedCrop}
