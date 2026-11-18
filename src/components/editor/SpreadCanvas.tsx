@@ -863,6 +863,14 @@ const EditorImage = React.memo(function EditorImage({
           });
         }}
       >
+        {/* RAW: clip the rotated pixels to the fixed image viewport, independently
+            of the crop controls and the unrotated canvas. */}
+        <Group
+          clipX={isRawSession ? 0 : undefined}
+          clipY={isRawSession ? 0 : undefined}
+          clipWidth={isRawSession ? element.w_mm : undefined}
+          clipHeight={isRawSession ? element.h_mm : undefined}
+        >
         {/* Base Unadjusted Original Photo (visible on the left or during toggle) */}
         {showBeforeAfterSplit && (
           <KonvaImage
@@ -940,6 +948,8 @@ const EditorImage = React.memo(function EditorImage({
             imageSmoothingQuality="high"
           />
         )}
+
+        </Group>
 
         {/* Interactive Split Divider Line & Draggable Handle on Canvas (Crisp constant screen scale) */}
         {showBeforeAfterSplit && (
