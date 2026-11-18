@@ -642,14 +642,37 @@ const EditorImage = React.memo(function EditorImage({
   // The background photo remains firm and fixed on canvas - what rotates/adjusts is the crop guide!
   const currentRotation = element.rotation_deg || 0;
   const photoRotation = isRawSession ? (isCropActiveForThis ? rotationDraft : currentRotation) : 0;
-  // Cover the fixed RAW viewport at every angle, including fractional
-  // straighten adjustments. Uniform scale avoids stretching and white corners.
+  // Render the source at its own aspect ratio. Quarter turns swap the
+  // photo's dimensions, while fine straightening only rotates its pixels.
+  // The viewport never rotates and remains fully covered at every angle.
   const rawRadians = (photoRotation * Math.PI) / 180;
   const rawCos = Math.abs(Math.cos(rawRadians));
   const rawSin = Math.abs(Math.sin(rawRadians));
-  const rawAspect = element.w_mm / Math.max(0.001, element.h_mm);
+  const viewportW = Math.max(0.001, element.w_mm);
+  const viewportH = Math.max(0.001, element.h_mm);
+  const sourceAspect = image
+    ? image.width / Math.max(1, image.height)
+    : (element.naturalAspect || viewportW / viewportH);
+  const cropAspect = computedCrop
+    ? computedCrop.width / Math.max(1, computedCrop.height)
+    : sourceAspect;
+  const rawQuarterTurn = ((Math.round(photoRotation / 90) % 4) + 4) % 4;
+  const rawOrientedAspect = rawQuarterTurn % 2 ? 1 / cropAspect : cropAspect;
+  const rawImageW = isRawSession
+    ? (rawOrientedAspect >= viewportW / viewportH ? viewportH * rawOrientedAspect : viewportW)
+    : element.w_mm;
+  const rawImageH = isRawSession
+    ? (rawOrientedAspect >= viewportW / viewportH ? viewportH : viewportW / rawOrientedAspect)
+    : element.h_mm;
+  const rawDrawW = isRawSession && rawQuarterTurn % 2 ? rawImageH : rawImageW;
+  const rawDrawH = isRawSession && rawQuarterTurn % 2 ? rawImageW : rawImageH;
+  // Minimum uniform scale that guarantees every viewport corner lies
+  // inside the rotated image (no white wedges when straightening).
   const rawRotationCover = isRawSession
-    ? Math.max(rawCos + rawSin * rawAspect, rawCos + rawSin / rawAspect)
+    ? Math.max(
+        (viewportW * rawCos + viewportH * rawSin) / Math.max(0.001, rawDrawW),
+        (viewportW * rawSin + viewportH * rawCos) / Math.max(0.001, rawDrawH),
+      )
     : 1;
   const currentFlipH = isCropActiveForThis ? flipHDraft : !!element.flipHorizontal;
   const currentFlipV = isCropActiveForThis ? flipVDraft : !!element.flipVertical;
@@ -663,8 +686,8 @@ const EditorImage = React.memo(function EditorImage({
         ref={groupRef}
         x={isRawSession ? element.x_mm + cx : (element.x_mm + (currentFlipH ? element.w_mm : 0))}
         y={isRawSession ? element.y_mm + cy : (element.y_mm + (currentFlipV ? element.h_mm : 0))}
-        offsetX={isRawSession ? cx : 0}
-        offsetY={isRawSession ? cy : 0}
+        offsetX={isRawSession ? rawDrawW / 2 : 0}
+        offsetY={isRawSession ? rawDrawH / 2 : 0}
         width={element.w_mm}
         height={element.h_mm}
         rotation={isRawSession ? 0 : currentRotation}
@@ -885,13 +908,13 @@ const EditorImage = React.memo(function EditorImage({
           <KonvaImage
             image={image}
             x={isRawSession ? cx : 0} y={isRawSession ? cy : 0}
-            offsetX={isRawSession ? cx : 0}
-            offsetY={isRawSession ? cy : 0}
+            offsetX={isRawSession ? rawDrawW / 2 : 0}
+            offsetY={isRawSession ? rawDrawH / 2 : 0}
             rotation={photoRotation}
             scaleX={rawRotationCover}
             scaleY={rawRotationCover}
-            width={element.w_mm}
-            height={element.h_mm}
+            width={rawDrawW}
+            height={rawDrawH}
             crop={computedCrop}
             cornerRadius={appliedBorderRadius}
             imageSmoothingEnabled={true}
@@ -912,13 +935,13 @@ const EditorImage = React.memo(function EditorImage({
               ref={filterLayerRef}
               image={image}
               x={isRawSession ? cx : 0} y={isRawSession ? cy : 0}
-            offsetX={isRawSession ? cx : 0}
-            offsetY={isRawSession ? cy : 0}
+            offsetX={isRawSession ? rawDrawW / 2 : 0}
+            offsetY={isRawSession ? rawDrawH / 2 : 0}
             rotation={photoRotation}
             scaleX={rawRotationCover}
             scaleY={rawRotationCover}
-              width={element.w_mm}
-              height={element.h_mm}
+              width={rawDrawW}
+              height={rawDrawH}
               crop={computedCrop}
               cornerRadius={appliedBorderRadius}
               stroke={appliedStrokeWidth > 0 ? appliedStrokeColor : undefined}
@@ -937,13 +960,13 @@ const EditorImage = React.memo(function EditorImage({
             ref={filterLayerRef}
             image={image}
             x={isRawSession ? cx : 0} y={isRawSession ? cy : 0}
-            offsetX={isRawSession ? cx : 0}
-            offsetY={isRawSession ? cy : 0}
+            offsetX={isRawSession ? rawDrawW / 2 : 0}
+            offsetY={isRawSession ? rawDrawH / 2 : 0}
             rotation={photoRotation}
             scaleX={rawRotationCover}
             scaleY={rawRotationCover}
-            width={element.w_mm}
-            height={element.h_mm}
+            width={rawDrawW}
+            height={rawDrawH}
             crop={computedCrop}
             cornerRadius={appliedBorderRadius}
             stroke={appliedStrokeWidth > 0 ? appliedStrokeColor : undefined}
