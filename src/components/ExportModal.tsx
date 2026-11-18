@@ -34,6 +34,9 @@ interface ExportModalProps {
   project?: EditorProject | null;
   activeSpreadId?: string | null;
   selectedElementId?: string | null;
+  selectedBrowserAssetIds?: string[];
+  activeBrowserAssetId?: string | null;
+  isRawSession?: boolean;
   currentSpreadIndex?: number;
   totalPages?: number;
   onExport: (options: ProfessionalExportOptions) => void;
@@ -46,6 +49,9 @@ export default function ExportModal({
   onClose,
   project,
   selectedElementId,
+  selectedBrowserAssetIds = [],
+  activeBrowserAssetId,
+  isRawSession = false,
   currentSpreadIndex = 0,
   onExport,
   isExporting = false,
@@ -56,14 +62,19 @@ export default function ExportModal({
   // Determine initial module tab
   const isStudioProject = project?.projectCategory === 'studio_print';
   const [moduleTab, setModuleTab] = useState<'album' | 'studio' | 'camera_raw'>('album');
+  const [rawScope, setRawScope] = useState<'current' | 'selected' | 'all'>('selected');
+  const [rawSubfolderName, setRawSubfolderName] = useState('');
 
   useEffect(() => {
-    if (isStudioProject) {
+    if (isRawSession) {
+      setFormat('jpg');
+      setModuleTab('camera_raw');
+    } else if (isStudioProject) {
       setModuleTab('studio');
     } else {
       setModuleTab('album');
     }
-  }, [isStudioProject, isOpen]);
+  }, [isStudioProject, isRawSession, isOpen]);
 
   // General export configuration states
   const [format, setFormat] = useState<'jpg' | 'pdf'>('jpg');
@@ -166,7 +177,13 @@ export default function ExportModal({
     return `${safeBase}_Spread_001.jpg ... (ZIP / Carpeta)`;
   }, [fileNameBase, format, moduleTab, calculatedDimensions, scope, activeSpreadNum, sequentialDigits]);
 
-  const isSingleFileExport = moduleTab === 'studio' || moduleTab === 'camera_raw' || format === 'pdf' || scope === 'current';
+  const rawAssetIds = moduleTab !== 'camera_raw' ? [] : rawScope === 'all'
+    ? (project?.assets || []).map(a => a.id)
+    : rawScope === 'selected'
+      ? selectedBrowserAssetIds
+      : [activeBrowserAssetId || project?.spreads.flatMap(s => s.elements).find(e => e.id === selectedElementId)?.assetId || ''].filter(Boolean);
+  const isRawBatch = moduleTab === 'camera_raw';
+  const isSingleFileExport = !isRawBatch && (moduleTab === 'studio' || format === 'pdf' || scope === 'current');
 
   const handleChooseTargetDirectly = async () => {
     setErrorMsg('');
@@ -199,6 +216,14 @@ export default function ExportModal({
   const handleExportSubmit = async () => {
     setErrorMsg('');
 
+    if (moduleTab === 'camera_raw' && !rawAssetIds.length) {
+      setErrorMsg(isEs ? 'Selecciona al menos una fotografía.' : 'Select at least one photograph.');
+      return;
+    }
+    if (moduleTab === 'camera_raw' && format === 'pdf') {
+      setErrorMsg(isEs ? 'Camera Raw exporta fotografías en JPEG.' : 'Camera Raw exports JPEG photographs.');
+      return;
+    }
     const safeBase = sanitizeFileName(fileNameBase || project?.title || 'Export');
     if (!safeBase.trim()) {
       setErrorMsg(t('empty_filename_error'));
@@ -261,10 +286,16 @@ export default function ExportModal({
       }
     }
 
+    if (moduleTab === 'camera_raw' && saveDestination === 'directory_picker' && !targetDirHandle) {
+      setErrorMsg(isEs ? 'Selecciona una carpeta de destino.' : 'Choose a destination folder.');
+      return;
+    }
     const options: ProfessionalExportOptions = {
       moduleContext: moduleTab,
       format,
-      rangeMode: moduleTab === 'studio' ? 'current' : scope,
+      rawAssetIds: moduleTab === 'camera_raw' ? rawAssetIds : undefined,
+      rawSubfolderName: moduleTab === 'camera_raw' ? rawSubfolderName : undefined,
+      rangeMode: moduleTab === 'studio' ? 'current' : moduleTab === 'camera_raw' ? rawScope : scope,
       rangeStart,
       rangeEnd,
       activeSpreadIndex: currentSpreadIndex,
@@ -409,6 +440,7 @@ export default function ExportModal({
 
               <button
                 type="button"
+                disabled={moduleTab === 'camera_raw'}
                 onClick={() => setFormat('pdf')}
                 className={`p-3 rounded-xl border text-left flex flex-col justify-between transition ${
                   format === 'pdf'
@@ -503,6 +535,17 @@ export default function ExportModal({
 
           {moduleTab === 'camera_raw' && (
             <div className="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200 dark:border-neutral-800 space-y-2">
+              <div className="grid grid-cols-3 gap-2">
+                {(['current', 'selected', 'all'] as const).map(mode => (
+                  <button key={mode} type="button" onClick={() => { setRawScope(mode); setPreSelectedFileHandle(null); setPreSelectedDirHandle(null); setChosenTargetName(''); }}
+                    className={`p-2 rounded-lg text-xs border ${rawScope === mode ? 'bg-blue-600 text-white border-blue-600' : 'border-neutral-300 dark:border-neutral-700'}`}>
+                    {mode === 'current' ? (isEs ? 'Actual (1)' : 'Current (1)') : mode === 'selected'
+                      ? (isEs ? `Seleccionadas (${selectedBrowserAssetIds.length})` : `Selected (${selectedBrowserAssetIds.length})`)
+                      : (isEs ? `Todas (${project?.assets?.length || 0})` : `All (${project?.assets?.length || 0})`)}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-neutral-500">{isEs ? 'Se conservará el nombre original de cada fotografía. Las exportaciones múltiples se guardarán en una carpeta o ZIP.' : 'Each photo keeps its original filename. Multiple photos export to a folder or ZIP.'}</p>
               <span className="text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider block">
                 {t('scope_label')}
               </span>
@@ -620,7 +663,13 @@ export default function ExportModal({
 
           {/* SECTION 5: FILE NAMING & DESTINATION */}
           <div className="space-y-4">
-            <div className="space-y-2">
+            {moduleTab === 'camera_raw' ? (
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider block">{isEs ? 'Subcarpeta opcional' : 'Optional subfolder'}</label>
+                <input type="text" value={rawSubfolderName} onChange={e => setRawSubfolderName(e.target.value)} placeholder={isEs ? 'Dejar vacío para usar la carpeta elegida' : 'Leave empty to use chosen folder'} className="w-full bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-lg px-3 py-2 text-xs" />
+                <p className="text-xs text-neutral-500">{isEs ? 'Los nombres originales se conservarán automáticamente.' : 'Original filenames are preserved automatically.'}</p>
+              </div>
+            ) : <div className="space-y-2">
               <label className="text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider block">
                 {t('naming_label')}
               </label>
@@ -649,7 +698,7 @@ export default function ExportModal({
                   {previewFileName}
                 </span>
               </div>
-            </div>
+            </div>}
 
             {/* Destination Selection */}
             <div className="space-y-2">

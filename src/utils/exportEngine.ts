@@ -64,6 +64,8 @@ export interface ProfessionalExportOptions {
   rangeEnd?: number;   // 0-indexed
   activeSpreadIndex?: number;
   selectedElementId?: string;
+  rawAssetIds?: string[];
+  rawSubfolderName?: string;
   dpi: number;
   jpegQualityLevel: number; // 1 - 12
   colorSpace?: ExportColorSpace; // 'srgb' (default) | 'adobe_rgb_1998'
@@ -697,6 +699,145 @@ export async function exportRawPhotoToJPG(project: EditorProject, options: Profe
   if (onProgress) onProgress(1, 1);
 }
 
+
+/**
+ * Camera Raw Pro batch export. Does not affect album or studio routes.
+ * Uses native source blobs and each asset's own develop settings.
+ */
+export async function exportRawBatchToJPG(project: EditorProject, options: ProfessionalExportOptions): Promise<void> {
+  const ids = options.rawAssetIds || [];
+  if (!ids.length) throw new Error('No photographs selected for export.');
+  const { get: idbGet } = await import('idb-keyval');
+  const Konva = (await import('konva')).default;
+  const selected = ids.map(id => project.assets?.find(a => a.id === id));
+  if (selected.some(a => !a)) throw new Error('Selected photographs are no longer in the project.');
+
+  let directory = options.targetDirHandle;
+  if (options.saveDestination === 'directory_picker' && !directory) {
+    throw new Error('Choose a destination folder before starting batch export.');
+  }
+  if (directory && options.rawSubfolderName?.trim()) {
+    const folderName = sanitizeFileName(options.rawSubfolderName.trim());
+    directory = await directory.getDirectoryHandle(folderName, { create: true });
+  }
+
+  const zip = directory ? null : new JSZip();
+  const reserved = new Set<string>();
+  const failures: string[] = [];
+  let exported = 0;
+  const quality = JPEG_QUALITY_SCALE_MAP[options.jpegQualityLevel] ?? 1;
+  const colorSpace: ActiveRGBColorSpace = options.colorSpace === 'adobe_rgb_1998' ? 'adobe_rgb_1998' : 'srgb';
+
+  for (let i = 0; i < selected.length; i++) {
+    const asset = selected[i]!;
+    options.onProgress?.(i, selected.length, asset.name);
+    let url = '';
+    let stage: InstanceType<typeof Konva.Stage> | null = null;
+    try {
+      if (!asset.originalBlobId) throw new Error('Missing original image reference');
+      const blob = await idbGet<Blob>(asset.originalBlobId);
+      if (!blob) throw new Error('Original image unavailable in IndexedDB');
+      url = URL.createObjectURL(blob);
+      const image = await loadHtmlImage(url);
+      const w = image.naturalWidth;
+      const h = image.naturalHeight;
+      if (!w || !h) throw new Error('Invalid source image dimensions');
+
+      const crop = asset.cropData;
+      const sx = crop ? Math.max(0, Math.min(w - 1, Math.round(w * crop.xPercent / 100))) : 0;
+      const sy = crop ? Math.max(0, Math.min(h - 1, Math.round(h * crop.yPercent / 100))) : 0;
+      const cw = crop ? Math.max(1, Math.min(w - sx, Math.round(w * crop.widthPercent / 100))) : w;
+      const ch = crop ? Math.max(1, Math.min(h - sy, Math.round(h * crop.heightPercent / 100))) : h;
+      const radians = ((asset.rotation_deg || 0) * Math.PI) / 180;
+      const outW = Math.max(1, Math.ceil(Math.abs(cw * Math.cos(radians)) + Math.abs(ch * Math.sin(radians))));
+      const outH = Math.max(1, Math.ceil(Math.abs(cw * Math.sin(radians)) + Math.abs(ch * Math.cos(radians))));
+
+      const container = document.createElement('div');
+      stage = new Konva.Stage({ container, width: outW, height: outH });
+      const layer = new Konva.Layer();
+      const node = new Konva.Image({
+        image, x: outW / 2, y: outH / 2,
+        offsetX: cw / 2, offsetY: ch / 2,
+        width: cw, height: ch,
+        crop: { x: sx, y: sy, width: cw, height: ch },
+        rotation: asset.rotation_deg || 0,
+        scaleX: asset.flipHorizontal ? -1 : 1,
+        scaleY: asset.flipVertical ? -1 : 1,
+        imageSmoothingEnabled: false,
+      });
+      const adjustments = asset.developSettings || {};
+      const active = Object.values(adjustments).some(v => typeof v === 'number' ? v !== 0 : !!v) ||
+        (!!asset.photoFilter && asset.photoFilter !== 'none');
+      if (active) {
+        registerKonvaRawFilters(Konva);
+        const filters = applyRawAdjustmentsToKonvaNode(node, adjustments, [], Konva, asset.photoFilter, asset.filterIntensity ?? 1);
+        node.filters(filters);
+        node.cache({ pixelRatio: 1, imageSmoothingEnabled: false });
+      }
+      layer.add(node);
+      stage.add(layer);
+      layer.draw();
+
+      let dataUrl: string;
+      if (colorSpace === 'adobe_rgb_1998') {
+        const canvas = stage.toCanvas({ pixelRatio: 1 });
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Could not create export color buffer');
+        const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        convertSRGBBufferToAdobeRGB1998(pixels.data);
+        ctx.putImageData(pixels, 0, 0);
+        dataUrl = canvas.toDataURL('image/jpeg', quality);
+      } else {
+        dataUrl = stage.toDataURL({ mimeType: 'image/jpeg', quality });
+      }
+      const tagged = injectPrintMetadataIntoDataURL(dataUrl, {
+        widthPx: outW, heightPx: outH, dpi: options.dpi || 300, colorSpace,
+      });
+      const result = base64ToBlob(tagged, 'image/jpeg');
+
+      const original = asset.metadata?.fileName || asset.name || asset.id;
+      const stem = sanitizeFileName(original.replace(/\.[^.]+$/, ''), 'Photo');
+      let candidate = stem + '.jpg';
+      let suffix = 2;
+      const exists = async (name: string): Promise<boolean> => {
+        if (!directory) return false;
+        try { await directory.getFileHandle(name, { create: false }); return true; }
+        catch (e) { if ((e as Error).name === 'NotFoundError') return false; throw e; }
+      };
+      while (reserved.has(candidate.toLowerCase()) || await exists(candidate)) {
+        candidate = stem + '_' + suffix++ + '.jpg';
+      }
+      reserved.add(candidate.toLowerCase());
+      if (directory) {
+        const handle = await directory.getFileHandle(candidate, { create: true });
+        const writable = await handle.createWritable();
+        await writable.write(result);
+        await writable.close();
+      } else {
+        zip!.file(candidate, result);
+      }
+      exported++;
+    } catch (error) {
+      failures.push(asset.name + ': ' + (error instanceof Error ? error.message : String(error)));
+      console.error('[Camera Raw batch export]', asset.name, error);
+    } finally {
+      stage?.destroy();
+      if (url) URL.revokeObjectURL(url);
+      options.onProgress?.(i + 1, selected.length, asset.name);
+      // Allow the browser to update progress and release canvas resources between photos.
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+  }
+
+  if (zip && exported) {
+    const archive = await zip.generateAsync({ type: 'blob', streamFiles: true });
+    saveAs(archive, sanitizeFileName(project.title || 'CameraRaw') + '_Photos.zip');
+  }
+  if (failures.length) {
+    throw new Error(exported + ' exported; ' + failures.length + ' failed. ' + failures.slice(0, 5).join(' | '));
+  }
+}
+
 export async function exportToPDF(project: EditorProject, options?: PDFExportOptions | ProfessionalExportOptions): Promise<void> {
   const onProgress = options?.onProgress;
   const pdfW = project.size.w_mm;
@@ -817,7 +958,7 @@ export async function exportToJPG(project: EditorProject, options: AdvancedExpor
       return exportStudioPrintToJPG(project, profOpts);
     }
     if (profOpts.moduleContext === 'camera_raw') {
-      return exportRawPhotoToJPG(project, profOpts);
+      return profOpts.rawAssetIds ? exportRawBatchToJPG(project, profOpts) : exportRawPhotoToJPG(project, profOpts);
     }
   }
 

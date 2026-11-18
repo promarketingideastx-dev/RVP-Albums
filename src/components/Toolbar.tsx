@@ -23,6 +23,8 @@ export default function Toolbar() {
   const pathname = usePathname();
 
   const selectedElementId = useEditorStore((state) => state.selectedElementId);
+  const selectedBrowserAssetIds = useEditorStore((state) => state.selectedBrowserAssetIds);
+  const activeBrowserAssetId = useEditorStore((state) => state.activeBrowserAssetId);
   const activeSpreadId = useEditorStore((state) => state.activeSpreadId);
   const bringForward = useEditorStore((state) => state.bringForward);
   const sendBackward = useEditorStore((state) => state.sendBackward);
@@ -627,6 +629,9 @@ export default function Toolbar() {
         project={project}
         activeSpreadId={activeSpreadId}
         selectedElementId={selectedElementId}
+        selectedBrowserAssetIds={selectedBrowserAssetIds}
+        activeBrowserAssetId={activeBrowserAssetId}
+        isRawSession={isRawSession}
         currentSpreadIndex={currentIdx !== -1 ? currentIdx : 0}
         totalPages={totalPages}
         onExport={handleAdvancedExport}
