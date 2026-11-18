@@ -200,6 +200,14 @@ export const CropToolbar: React.FC = () => {
     saveCustomPresetsToStorage(next);
   };
 
+  // Keep quarter-turn orientation and fine straightening independently
+  // controllable, while preserving the existing persisted rotation format.
+  const quarterTurnAngle = Math.round(rotationDraft / 90) * 90;
+  const straightenAngle = Math.max(-45, Math.min(45, rotationDraft - quarterTurnAngle));
+  const setStraightenAngle = (angle: number) => {
+    setRotationDraft(quarterTurnAngle + angle);
+  };
+
   const handleRotateCropGuide = (direction: 'cw' | 'ccw') => {
     // Rotate the photograph, not the crop guide. The preview and RAW export
     // consume rotationDraft/rotation_deg respectively.
@@ -346,12 +354,12 @@ export const CropToolbar: React.FC = () => {
               <span>{isEs ? 'Enderezar (Ángulo)' : 'Straighten (Angle)'}</span>
               <div className="flex items-center gap-1.5">
                 <span className="font-mono text-neutral-800 dark:text-neutral-200 font-semibold">
-                  {rotationDraft >= 0 ? `+${rotationDraft.toFixed(1)}°` : `${rotationDraft.toFixed(1)}°`}
+                  {straightenAngle >= 0 ? `+${straightenAngle.toFixed(1)}°` : `${straightenAngle.toFixed(1)}°`}
                 </span>
-                {rotationDraft !== 0 && (
+                {straightenAngle !== 0 && (
                   <button
                     type="button"
-                    onClick={() => setRotationDraft(0)}
+                    onClick={() => setStraightenAngle(0)}
                     className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline font-bold"
                     title={isEs ? 'Restablecer a 0°' : 'Reset to 0°'}
                   >
@@ -365,8 +373,8 @@ export const CropToolbar: React.FC = () => {
               min={-45}
               max={45}
               step={0.1}
-              value={rotationDraft}
-              onChange={(e) => setRotationDraft(parseFloat(e.target.value))}
+              value={straightenAngle}
+              onChange={(e) => setStraightenAngle(parseFloat(e.target.value))}
               className="w-full accent-blue-600 dark:accent-blue-500 cursor-pointer h-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-lg appearance-none"
             />
           </div>
