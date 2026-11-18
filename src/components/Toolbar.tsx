@@ -109,7 +109,15 @@ export default function Toolbar() {
       setExportStatus('idle');
 
       try {
-        if (options.format === 'pdf') {
+        if (options.moduleContext === 'camera_raw') {
+          await flushSave();
+          const currentProject = useEditorStore.getState().project;
+          if (!currentProject) throw new Error('Camera Raw project unavailable');
+          await exportToJPG(currentProject, {
+            ...options,
+            onProgress: (current: number, total: number) => setExportProgress(Math.round((current / total) * 100))
+          });
+        } else if (options.format === 'pdf') {
            await exportToPDF(project, {
                ...options,
                onProgress: (current: number, total: number) => setExportProgress(Math.round((current / total) * 100))

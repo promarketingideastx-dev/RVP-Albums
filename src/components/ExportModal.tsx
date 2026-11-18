@@ -62,12 +62,13 @@ export default function ExportModal({
   // Determine initial module tab
   const isStudioProject = project?.projectCategory === 'studio_print';
   const [moduleTab, setModuleTab] = useState<'album' | 'studio' | 'camera_raw'>('album');
-  const [rawScope, setRawScope] = useState<'current' | 'selected' | 'all'>('selected');
+  const [rawScope, setRawScope] = useState<'current' | 'selected' | 'all'>('current');
   const [rawSubfolderName, setRawSubfolderName] = useState('');
 
   useEffect(() => {
     if (isRawSession) {
       setFormat('jpg');
+      setRawScope('current');
       setModuleTab('camera_raw');
     } else if (isStudioProject) {
       setModuleTab('studio');
@@ -98,7 +99,7 @@ export default function ExportModal({
   // Browser support detection for File System Access API
   const [supportsDirectoryPicker, setSupportsDirectoryPicker] = useState(false);
   useEffect(() => {
-    if (typeof window !== 'undefined' && ('showDirectoryPicker' in window || 'showSaveFilePicker' in window)) {
+    if (typeof window !== 'undefined' && 'showDirectoryPicker' in window) {
       setSupportsDirectoryPicker(true);
       setSaveDestination('directory_picker');
     }
@@ -181,8 +182,11 @@ export default function ExportModal({
     ? (project?.assets || []).map(a => a.id)
     : rawScope === 'selected'
       ? selectedBrowserAssetIds
-      : [activeBrowserAssetId || project?.spreads.flatMap(s => s.elements).find(e => e.id === selectedElementId)?.assetId || ''].filter(Boolean);
+      : [project?.spreads.flatMap(s => s.elements).find(e => e.id === selectedElementId)?.assetId || activeBrowserAssetId || ''].filter(Boolean);
   const isRawBatch = moduleTab === 'camera_raw';
+  const rawTargetAsset = project?.assets.find(a => a.id === rawAssetIds[0]);
+  const rawPixelWidth = rawTargetAsset?.metadata?.widthPx || rawTargetAsset?.width || 0;
+  const rawPixelHeight = rawTargetAsset?.metadata?.heightPx || rawTargetAsset?.height || 0;
   const isSingleFileExport = !isRawBatch && (moduleTab === 'studio' || format === 'pdf' || scope === 'current');
 
   const handleChooseTargetDirectly = async () => {
@@ -355,7 +359,7 @@ export default function ExportModal({
 
         {/* MODULE CONTEXT TABS */}
         <div className="flex border-b border-neutral-200 dark:border-neutral-800 bg-neutral-100/60 dark:bg-neutral-900 px-6 gap-2 pt-2">
-          {!isStudioProject && (
+          {!isStudioProject && !isRawSession && (
             <button
               type="button"
               onClick={() => setModuleTab('album')}
@@ -370,7 +374,7 @@ export default function ExportModal({
             </button>
           )}
 
-          <button
+          {!isRawSession && <button
             type="button"
             onClick={() => setModuleTab('studio')}
             className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition flex items-center gap-1.5 ${
@@ -381,9 +385,9 @@ export default function ExportModal({
           >
             <span>🖼️</span>
             <span>{t('tab_studio')}</span>
-          </button>
+          </button>}
 
-          <button
+          {!isStudioProject && <button
             type="button"
             onClick={() => setModuleTab('camera_raw')}
             className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition flex items-center gap-1.5 ${
@@ -394,7 +398,7 @@ export default function ExportModal({
           >
             <span>📷</span>
             <span>{t('tab_camera_raw')}</span>
-          </button>
+          </button>}
         </div>
 
         {/* BODY (SCROLLABLE) */}
@@ -576,7 +580,7 @@ export default function ExportModal({
                 {t('resolution_label')}
               </label>
               <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400">
-                {calculatedDimensions.pxW} × {calculatedDimensions.pxH} px ({calculatedDimensions.megapixels} MP)
+                {isRawBatch ? (rawScope === 'current' && rawPixelWidth && rawPixelHeight ? `${rawPixelWidth} × ${rawPixelHeight} px` : (isEs ? 'Dimensiones originales por fotografía' : 'Original dimensions per photo')) : `${calculatedDimensions.pxW} × ${calculatedDimensions.pxH} px (${calculatedDimensions.megapixels} MP)`}
               </span>
             </div>
 
@@ -876,7 +880,7 @@ export default function ExportModal({
               <div className="flex justify-between items-center border-b border-neutral-100 dark:border-neutral-800/70 pb-1">
                 <span className="text-neutral-500 dark:text-neutral-400">{t('cm_spec_pixel_dims')}:</span>
                 <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
-                  {calculatedDimensions.pxW} × {calculatedDimensions.pxH} px ({calculatedDimensions.megapixels} MP)
+                  {isRawBatch ? (isEs ? 'Resolución original de cada fotografía' : 'Each photograph’s original resolution') : `${calculatedDimensions.pxW} × ${calculatedDimensions.pxH} px (${calculatedDimensions.megapixels} MP)`}
                 </span>
               </div>
 

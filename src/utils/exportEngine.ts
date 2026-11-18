@@ -743,12 +743,14 @@ export async function exportRawBatchToJPG(project: EditorProject, options: Profe
       const h = image.naturalHeight;
       if (!w || !h) throw new Error('Invalid source image dimensions');
 
-      const crop = asset.cropData;
+      const currentImage = project.spreads.flatMap(s => s.elements).find(el => el.type === 'image' && el.assetId === asset.id);
+      const crop = currentImage?.cropData || asset.cropData;
       const sx = crop ? Math.max(0, Math.min(w - 1, Math.round(w * crop.xPercent / 100))) : 0;
       const sy = crop ? Math.max(0, Math.min(h - 1, Math.round(h * crop.yPercent / 100))) : 0;
       const cw = crop ? Math.max(1, Math.min(w - sx, Math.round(w * crop.widthPercent / 100))) : w;
       const ch = crop ? Math.max(1, Math.min(h - sy, Math.round(h * crop.heightPercent / 100))) : h;
-      const radians = ((asset.rotation_deg || 0) * Math.PI) / 180;
+      const rotation = currentImage?.rotation_deg ?? asset.rotation_deg ?? 0;
+      const radians = (rotation * Math.PI) / 180;
       const outW = Math.max(1, Math.ceil(Math.abs(cw * Math.cos(radians)) + Math.abs(ch * Math.sin(radians))));
       const outH = Math.max(1, Math.ceil(Math.abs(cw * Math.sin(radians)) + Math.abs(ch * Math.cos(radians))));
 
@@ -760,17 +762,19 @@ export async function exportRawBatchToJPG(project: EditorProject, options: Profe
         offsetX: cw / 2, offsetY: ch / 2,
         width: cw, height: ch,
         crop: { x: sx, y: sy, width: cw, height: ch },
-        rotation: asset.rotation_deg || 0,
-        scaleX: asset.flipHorizontal ? -1 : 1,
-        scaleY: asset.flipVertical ? -1 : 1,
+        rotation,
+        scaleX: (currentImage?.flipHorizontal ?? asset.flipHorizontal) ? -1 : 1,
+        scaleY: (currentImage?.flipVertical ?? asset.flipVertical) ? -1 : 1,
         imageSmoothingEnabled: false,
       });
-      const adjustments = asset.developSettings || {};
-      const active = Object.values(adjustments).some(v => typeof v === 'number' ? v !== 0 : !!v) ||
-        (!!asset.photoFilter && asset.photoFilter !== 'none');
+      const adjustments = currentImage?.photoAdjustments || asset.developSettings || {};
+      const photoFilter = currentImage?.photoFilter ?? asset.photoFilter;
+      const intensity = currentImage?.filterIntensity ?? asset.filterIntensity ?? 1;
+      const active = Object.entries(adjustments).some(([, v]) => typeof v === 'number' ? v !== 0 : (v && typeof v === 'object' && Object.values(v).some(inner => typeof inner === 'number' ? inner !== 0 : inner != null && typeof inner === 'object' && Object.values(inner).some(n => typeof n === 'number' && n !== 0)))) ||
+        (!!photoFilter && photoFilter !== 'none');
       if (active) {
         registerKonvaRawFilters(Konva);
-        const filters = applyRawAdjustmentsToKonvaNode(node, adjustments, [], Konva, asset.photoFilter, asset.filterIntensity ?? 1);
+        const filters = applyRawAdjustmentsToKonvaNode(node, adjustments, [], Konva, photoFilter, intensity);
         node.filters(filters);
         node.cache({ pixelRatio: 1, imageSmoothingEnabled: false });
       }
