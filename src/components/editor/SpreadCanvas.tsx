@@ -652,8 +652,8 @@ const EditorImage = React.memo(function EditorImage({
     <React.Fragment>
       <Group
         ref={groupRef}
-        x={isRawSession ? cx : (element.x_mm + (currentFlipH ? element.w_mm : 0))}
-        y={isRawSession ? cy : (element.y_mm + (currentFlipV ? element.h_mm : 0))}
+        x={isRawSession ? element.x_mm + cx : (element.x_mm + (currentFlipH ? element.w_mm : 0))}
+        y={isRawSession ? element.y_mm + cy : (element.y_mm + (currentFlipV ? element.h_mm : 0))}
         offsetX={isRawSession ? cx : 0}
         offsetY={isRawSession ? cy : 0}
         width={element.w_mm}
