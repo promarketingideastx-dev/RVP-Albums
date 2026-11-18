@@ -158,7 +158,7 @@ export default function ExportModal({
     }
 
     if (moduleTab === 'camera_raw') {
-      return `${safeBase}_RawPhoto.${ext}`;
+      return rawScope === 'current' ? `${safeBase}.jpg` : (isEs ? 'Nombres originales (.jpg)' : 'Original filenames (.jpg)');
     }
 
     // Album mode
@@ -176,18 +176,19 @@ export default function ExportModal({
     }
 
     return `${safeBase}_Spread_001.jpg ... (ZIP / Carpeta)`;
-  }, [fileNameBase, format, moduleTab, calculatedDimensions, scope, activeSpreadNum, sequentialDigits]);
+  }, [fileNameBase, format, moduleTab, calculatedDimensions, scope, activeSpreadNum, sequentialDigits, rawScope, isEs]);
 
   const rawAssetIds = moduleTab !== 'camera_raw' ? [] : rawScope === 'all'
     ? (project?.assets || []).map(a => a.id)
     : rawScope === 'selected'
       ? selectedBrowserAssetIds
       : [project?.spreads.flatMap(s => s.elements).find(e => e.id === selectedElementId)?.assetId || activeBrowserAssetId || ''].filter(Boolean);
-  const isRawBatch = moduleTab === 'camera_raw';
+  const isRawContext = moduleTab === 'camera_raw';
+  const isRawBatch = isRawContext && rawScope !== 'current';
   const rawTargetAsset = project?.assets?.find(a => a.id === rawAssetIds[0]);
   const rawPixelWidth = rawTargetAsset?.metadata?.widthPx || rawTargetAsset?.width || 0;
   const rawPixelHeight = rawTargetAsset?.metadata?.heightPx || rawTargetAsset?.height || 0;
-  const isSingleFileExport = !isRawBatch && (moduleTab === 'studio' || format === 'pdf' || scope === 'current');
+  const isSingleFileExport = !isRawBatch && (moduleTab === 'studio' || isRawContext || format === 'pdf' || scope === 'current');
 
   const handleChooseTargetDirectly = async () => {
     setErrorMsg('');
@@ -297,7 +298,7 @@ export default function ExportModal({
     const options: ProfessionalExportOptions = {
       moduleContext: moduleTab,
       format,
-      rawAssetIds: moduleTab === 'camera_raw' ? rawAssetIds : undefined,
+      rawAssetIds: isRawBatch ? rawAssetIds : undefined,
       rawSubfolderName: moduleTab === 'camera_raw' ? rawSubfolderName : undefined,
       rangeMode: moduleTab === 'studio' ? 'current' : moduleTab === 'camera_raw' ? rawScope : scope,
       rangeStart,
@@ -387,9 +388,9 @@ export default function ExportModal({
             <span>{t('tab_studio')}</span>
           </button>}
 
-          {!isStudioProject && <button
+          <button
             type="button"
-            onClick={() => setModuleTab('camera_raw')}
+            onClick={() => setModuleTab('camera_raw')
             className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition flex items-center gap-1.5 ${
               moduleTab === 'camera_raw'
                 ? 'border-blue-600 text-blue-600 dark:text-blue-400'
@@ -398,7 +399,7 @@ export default function ExportModal({
           >
             <span>📷</span>
             <span>{t('tab_camera_raw')}</span>
-          </button>}
+          </button>
         </div>
 
         {/* BODY (SCROLLABLE) */}
@@ -580,7 +581,7 @@ export default function ExportModal({
                 {t('resolution_label')}
               </label>
               <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400">
-                {isRawBatch ? (rawScope === 'current' && rawPixelWidth && rawPixelHeight ? `${rawPixelWidth} × ${rawPixelHeight} px` : (isEs ? 'Dimensiones originales por fotografía' : 'Original dimensions per photo')) : `${calculatedDimensions.pxW} × ${calculatedDimensions.pxH} px (${calculatedDimensions.megapixels} MP)`}
+                {isRawContext ? (rawScope === 'current' && rawPixelWidth && rawPixelHeight ? `${rawPixelWidth} × ${rawPixelHeight} px` : (isEs ? 'Dimensiones originales por fotografía' : 'Original dimensions per photo')) : `${calculatedDimensions.pxW} × ${calculatedDimensions.pxH} px (${calculatedDimensions.megapixels} MP)`}
               </span>
             </div>
 
@@ -667,7 +668,7 @@ export default function ExportModal({
 
           {/* SECTION 5: FILE NAMING & DESTINATION */}
           <div className="space-y-4">
-            {moduleTab === 'camera_raw' ? (
+            {isRawBatch ? (
               <div className="space-y-2">
                 <label className="text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider block">{isEs ? 'Subcarpeta opcional' : 'Optional subfolder'}</label>
                 <input type="text" value={rawSubfolderName} onChange={e => setRawSubfolderName(e.target.value)} placeholder={isEs ? 'Dejar vacío para usar la carpeta elegida' : 'Leave empty to use chosen folder'} className="w-full bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-lg px-3 py-2 text-xs" />
@@ -880,7 +881,7 @@ export default function ExportModal({
               <div className="flex justify-between items-center border-b border-neutral-100 dark:border-neutral-800/70 pb-1">
                 <span className="text-neutral-500 dark:text-neutral-400">{t('cm_spec_pixel_dims')}:</span>
                 <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
-                  {isRawBatch ? (isEs ? 'Resolución original de cada fotografía' : 'Each photograph’s original resolution') : `${calculatedDimensions.pxW} × ${calculatedDimensions.pxH} px (${calculatedDimensions.megapixels} MP)`}
+                  {isRawContext ? (isEs ? 'Resolución original de cada fotografía' : 'Each photograph’s original resolution') : `${calculatedDimensions.pxW} × ${calculatedDimensions.pxH} px (${calculatedDimensions.megapixels} MP)`}
                 </span>
               </div>
 

@@ -818,7 +818,9 @@ export async function exportRawBatchToJPG(project: EditorProject, options: Profe
         await writable.write(result);
         await writable.close();
       } else {
-        zip!.file(candidate, result);
+        const folderName = options.rawSubfolderName?.trim() ? sanitizeFileName(options.rawSubfolderName.trim()) : '';
+        const archiveFolder = folderName ? zip!.folder(folderName) : zip!;
+        archiveFolder!.file(candidate, result);
       }
       exported++;
     } catch (error) {
