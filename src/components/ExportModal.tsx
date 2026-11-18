@@ -184,7 +184,7 @@ export default function ExportModal({
       ? selectedBrowserAssetIds
       : [project?.spreads.flatMap(s => s.elements).find(e => e.id === selectedElementId)?.assetId || activeBrowserAssetId || ''].filter(Boolean);
   const isRawBatch = moduleTab === 'camera_raw';
-  const rawTargetAsset = project?.assets.find(a => a.id === rawAssetIds[0]);
+  const rawTargetAsset = project?.assets?.find(a => a.id === rawAssetIds[0]);
   const rawPixelWidth = rawTargetAsset?.metadata?.widthPx || rawTargetAsset?.width || 0;
   const rawPixelHeight = rawTargetAsset?.metadata?.heightPx || rawTargetAsset?.height || 0;
   const isSingleFileExport = !isRawBatch && (moduleTab === 'studio' || format === 'pdf' || scope === 'current');
